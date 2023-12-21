@@ -1,30 +1,114 @@
 [
-  {
+	{
+	
+		"editor_id": "Nazeem",
+		"type": "NPC_ FULL",
+		"string": "Kleiner Scheißer"
+	
+	},
+	{
+	
+		"editor_id": "Tamriel",
+		"type": "WRLD FULL",
+		"string": "Himmelsrand"
+	
+	},
+	{
+		"editor_id": "Book3ValuableDragonborn",
+		"type": "BOOK FULL",
+		"string": "Es geht"
 
-    "editor_id": "JSwordsDagger",
-    "type": "WEAP FULL",
-    "string": "Dolch"
+    },
+	{
+		"editor_id": "Book3ValuableDragonborn",
+		"type": "BOOK DESC",
+		"string": "DESC geht"
 
-  },
-  {
+    },
+	{
+		"editor_id": "NordRace",
+		"type": "RACE FULL",
+		"string": "Es geht"
 
-    "editor_id": "JSwordsBlade1",
-    "type": "WEAP FULL",
-    "string": "Nordische Klinge"
+    },
+	{
+		"editor_id": "NordRace",
+		"type": "RACE DESC",
+		"string": "Hallo, ich bin jetzt in der Racemenu UI"
 
+    },
+	{
+		"editor_id": "Flames",
+		"type": "SPEL FULL",
+		"string": "Flammen - Es geht"
 
+    },
+	{
+		"editor_id": "WhiterunCarlottaValentiasHouse",
+		"type": "CELL FULL",
+		"string": "Es geht"
 
+    },
+	{
+		"editor_id": "BasicWoodenBowl01",
+		"type": "MISC FULL",
+		"string": "Schale - Geht"
 
-  },
-  {
-    "editor_id": "CYREnchAmuletRestorationAyleid03",
-    "type": "ARMO FULL",
-    "string": "Ayleidenamulett der Gro\u00dfen Wiederherstellung"
-  },
-  {
-    "editor_id": "CYRNewspaperBCHCYRBrumaMS11PostQuestA",
-    "type": "BOOK DESC",
-    "string": "<p align='center'>\r\n<font size='28'>GR\u00d6\u00dfERE BANDITENGRUPPE AUS DEN JERALL-BERGEN VERNICHTET</font>\r\n\r\nB\u00fcrger der Grafschaft Bruma, seiner Hauptstadt und der umliegenden Siedlungen feiern heute, da der Graf von Bruma eine wuchtige Nachricht verk\u00fcndet. \r\n\r\n\"Thorinas Schneider, jene Banditen, die so lange schon die ehrbaren B\u00fcrger der Grafschaft Bruma von den Jerall-Bergen bis zu den Grenzen des Gro\u00dfen Waldes terrorisierten, wurden heute vernichtet! Heil dir <Alias=Player>, neuer Freund Brumas, unser Held und Retter!\"\r\n\r\nBrumas Wachhauptmann, Adius Vilius, sagte zu diesem bescheidenen Berichterstatter. \"Es ist eine gro\u00dfe Sache\", sagte er, \"dass es uns gelang, diese Hundes\u00f6hne zu vernichten. Sie haben die Grafschaft schon zu lange heimgesucht. Ich kann <Alias=Player> nicht genug f\u00fcr all den Einsatz danken, der half, die Unternehmung auszuf\u00fchren. Es wurde wirklich Zeit.\"\r\n\r\n</p>\r\n<p align='left'>- Scipio Florian, Kulturkorrespondent des Rappen-Kuriers</p>\r\n<p align='center'>Der Rappen-Kurier ist Cyrodiils gr\u00f6\u00dfte Zeitung! Objektive Berichte \u00fcber aktuelle Ereignisse in Cyrodiil und dar\u00fcber hinaus. Du musst nicht weiter suchen, der Rappen-Kurier befriedigt deine Neugier nach Neuem!</p>"
-  }
+    },
+	{
+		"editor_id": "DestructionDualCasting",
+		"type": "PERK DESC",
+		"string": "Perk Description ersetzen geht"
 
+    },
+	{
+		"editor_id": "WhiterunLocation",
+		"type": "LCTN FULL",
+		"string": "Weißlauf - Es geht - Location"
+
+    },
+	{
+		"editor_id": "WhiterunMapMarkerREF",
+		"type": "CELL FULL",
+		"string": "Weißlauf - Geht"
+
+    },
+	{
+		"editor_id": "SpellTomeLightningCloak",
+		"type": "BOOK DESC",
+		"string": "Description richtig ersetzt"
+
+    },
+	{
+		"editor_id": "ShockCloakFFSelf",
+		"type": "MGEF DNAM",
+		"string": "Effektbeschreibung richtig ersetzt"
+
+    },
+	{
+		"editor_id": "ParalysisFFSelfArea",
+		"type": "MGEF DNAM",
+		"string": "Paralyze - Effektbeschreibung richtig ersetzt"
+
+    },
+	{
+		"editor_id": "ParalysisFFSelfArea",
+		"type": "INFO NAM1",
+		"original": "The finest weapons and armor.",
+		"string": "Es geht!!!!!!!!!!"
+
+    },
+	{
+		"editor_id": "MQ102",
+		"type": "QUST FULL",
+		"string": "Es geht!!!!!!!!!!"
+
+    },
+	{
+		"editor_id": "MQ102",
+		"type": "QUST NNAM",
+		"original": "Talk to the Jarl of Whiterun",
+		"string": "NNAM ersetzt."
+
+    }
 ]
