@@ -1,0 +1,30 @@
+[
+  {
+
+    "editor_id": "JSwordsDagger",
+    "type": "WEAP FULL",
+    "string": "Dolch"
+
+  },
+  {
+
+    "editor_id": "JSwordsBlade1",
+    "type": "WEAP FULL",
+    "string": "Nordische Klinge"
+
+
+
+
+  },
+  {
+    "editor_id": "CYREnchAmuletRestorationAyleid03",
+    "type": "ARMO FULL",
+    "string": "Ayleidenamulett der Gro\u00dfen Wiederherstellung"
+  },
+  {
+    "editor_id": "CYRNewspaperBCHCYRBrumaMS11PostQuestA",
+    "type": "BOOK DESC",
+    "string": "<p align='center'>\r\n<font size='28'>GR\u00d6\u00dfERE BANDITENGRUPPE AUS DEN JERALL-BERGEN VERNICHTET</font>\r\n\r\nB\u00fcrger der Grafschaft Bruma, seiner Hauptstadt und der umliegenden Siedlungen feiern heute, da der Graf von Bruma eine wuchtige Nachricht verk\u00fcndet. \r\n\r\n\"Thorinas Schneider, jene Banditen, die so lange schon die ehrbaren B\u00fcrger der Grafschaft Bruma von den Jerall-Bergen bis zu den Grenzen des Gro\u00dfen Waldes terrorisierten, wurden heute vernichtet! Heil dir <Alias=Player>, neuer Freund Brumas, unser Held und Retter!\"\r\n\r\nBrumas Wachhauptmann, Adius Vilius, sagte zu diesem bescheidenen Berichterstatter. \"Es ist eine gro\u00dfe Sache\", sagte er, \"dass es uns gelang, diese Hundes\u00f6hne zu vernichten. Sie haben die Grafschaft schon zu lange heimgesucht. Ich kann <Alias=Player> nicht genug f\u00fcr all den Einsatz danken, der half, die Unternehmung auszuf\u00fchren. Es wurde wirklich Zeit.\"\r\n\r\n</p>\r\n<p align='left'>- Scipio Florian, Kulturkorrespondent des Rappen-Kuriers</p>\r\n<p align='center'>Der Rappen-Kurier ist Cyrodiils gr\u00f6\u00dfte Zeitung! Objektive Berichte \u00fcber aktuelle Ereignisse in Cyrodiil und dar\u00fcber hinaus. Du musst nicht weiter suchen, der Rappen-Kurier befriedigt deine Neugier nach Neuem!</p>"
+  }
+
+]
