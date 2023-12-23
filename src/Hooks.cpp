@@ -24,7 +24,7 @@ namespace Hook
 		static void handleSpellTomes(RE::ItemCard* itemCard, RE::TESObjectBOOK* book, const ConfigurationInformation& information)
 		{
 			auto spell = book->GetSpell();
-			if (spell && spell->GetAVEffect()->formID == information.FormID)
+			if (spell && spell->GetAVEffect()->formID == information.Form->formID)
 			{
 				auto descriptionValue = RE::GFxValue(information.ReplacerText);
 				itemCard->obj.SetMember("effects", descriptionValue);
@@ -33,7 +33,7 @@ namespace Hook
 
 		static void handleMagicItem(RE::ItemCard* itemCard, RE::MagicItem* magicItem, const ConfigurationInformation& information)
 		{
-			if (magicItem && magicItem->GetAVEffect()->formID == information.FormID)
+			if (magicItem && magicItem->GetAVEffect()->formID == information.Form->formID)
 			{
 				auto descriptionValue = RE::GFxValue(information.ReplacerText);
 				itemCard->obj.SetMember("effects", descriptionValue);
@@ -64,7 +64,7 @@ namespace Hook
 		{
 			for (const auto& Information : g_ConfigurationInformationStruct)
 			{
-				if (a_item->formID == Information.FormID)
+				if (a_item->formID == Information.Form->formID)
 				{
 					if (Information.SubrecordType == "CNAM") // Replace the ItemCardDescription of books
 					{
@@ -87,6 +87,7 @@ namespace Hook
 
 	};
 
+
 	// Track if a book is valid between the two AE hooks
 	static bool IsDESC = false;
 	std::string SetDescription = "";
@@ -100,11 +101,10 @@ namespace Hook
 
 			func(a_out, nullptr, 0); // Invoke original (BSString::Set(a_out, 0, 0)
 
-			for (size_t i = 0; i < g_ConfigurationInformationStruct.size(); i++)
+			for (const auto& Information : g_ConfigurationInformationStruct)
 			{
-				const auto& Information = g_ConfigurationInformationStruct[i];
 
-				if (a_parent && a_parent->formID == Information.FormID && Information.SubrecordType == "DESC")
+				if (a_parent && a_parent->formID == Information.Form->formID && Information.SubrecordType == "DESC")
 				{
 					IsDESC = true;
 					SetDescription = Information.ReplacerText;
@@ -156,11 +156,9 @@ namespace Hook
 		{
 			func(a_description, a_out, a_parent, unk);  // invoke original to get original description string output
 
-			for (size_t i = 0; i < g_ConfigurationInformationStruct.size(); i++)
+			for (const auto& Information : g_ConfigurationInformationStruct)
 			{
-				const auto& Information = g_ConfigurationInformationStruct[i];
-
-				if (a_parent && a_parent->formID == Information.FormID && Information.SubrecordType == "DESC")
+				if (a_parent && a_parent->formID == Information.Form->formID && Information.SubrecordType == "DESC")
 				{
 					*a_out = Information.ReplacerText;
 				}
@@ -255,6 +253,37 @@ namespace Hook
 		if (a_message->type == RE::UI_MESSAGE_TYPE::kUpdate)
 		{
 			RE::GFxValue ObjectiveLineInstance, ObjectiveTextFieldInstance, TextFieldInstance, textField;
+
+			//"ObjectiveLineInstance.ObjectiveTextFieldInstance.TextFieldInstance.text"
+
+			auto ui = RE::UI::GetSingleton();
+			auto menu = ui->GetMenu(RE::HUDMenu::MENU_NAME);
+
+			bool success = menu->uiMovie->GetVariable(&ObjectiveLineInstance, "_root.HUDMovieBaseInstance.ObjectiveLineInstance."); //.objective1.ObjectiveTextFieldInstance.TextFieldInstance.text
+
+			if (!success)
+			{
+				g_Logger->info("Couldn't get ObjectiveLine_mc");
+			}
+			else
+			{
+				g_Logger->info("Got ObjectiveLine_mc");
+			}
+
+			/*
+			success = ObjectiveLineInstance.GetMember("text", &textField);
+			if (!success)
+			{
+				g_Logger->info("Couldn't get text");
+			}
+			else
+			{
+				g_Logger->info("Got text");
+
+			}
+			*/
+
+			/*
 			bool success = this->root.GetMember("ObjectiveLineInstance", &ObjectiveLineInstance);
 			if (!success)
 			{
@@ -270,11 +299,11 @@ namespace Hook
 			success = ObjectiveLineInstance.GetMember("ObjectiveTextFieldInstance", &ObjectiveTextFieldInstance);
 			if (!success)
 			{
-				g_Logger->info("Couldn't get MovieClipsA");
+				g_Logger->info("Couldn't get ObjectiveTextFieldInstance"); //MovieClipsA
 			}
 			else
 			{
-				g_Logger->info("Got MovieClipsA");
+				g_Logger->info("Got ObjectiveTextFieldInstance");
 
 			}
 
@@ -283,29 +312,29 @@ namespace Hook
 			success = ObjectiveTextFieldInstance.GetMember("TextFieldInstance", &TextFieldInstance);
 			if (!success)
 			{
-				g_Logger->info("Couldn't get ObjectiveText");
+				g_Logger->info("Couldn't get TextFieldInstance");
 			}
 			else
 			{
-				g_Logger->info("Got ObjectiveText");
+				g_Logger->info("Got TextFieldInstance");
 
 			}
 
 
-			success = TextFieldInstance.GetMember("text", &textField);
+			success = TextFieldInstance.GetMember("htmlText", &textField);
 			if (!success)
 			{
-				g_Logger->info("Couldn't get text");
+				g_Logger->info("Couldn't get htmlText");
 			}
 			else
 			{
-				g_Logger->info("Got text");
+				g_Logger->info("Got htmlText");
 
 			}
 
 
 			std::string string = textField.GetString();
-			//g_Logger->info("Text: {}", string.c_str());
+			g_Logger->info("Text: {}", string.c_str());
 
 
 			//RE::GFxValue newDes("Es wurde ersetzt.");
@@ -314,8 +343,8 @@ namespace Hook
 
 			//ObjectiveLineInstance.ObjectiveTextFieldInstance.TextFieldInstance.text
 
-		}
-		return func(this, a_message);
+}
+return func(this, a_message);
 	}
 	*/
 
@@ -351,8 +380,8 @@ namespace Hook
 
 	//RNAM in INFO; 
 	//NNAM in HudMenu
-	//TNAM Word of Power
 	//ITXT Message
+	//Overwrite Ordner
 
 	void InstallHooks()
 	{

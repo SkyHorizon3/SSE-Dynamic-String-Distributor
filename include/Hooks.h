@@ -39,7 +39,6 @@ namespace Hook
 
 
 	private:
-		//bool IsViewingMiscObjectives() noexcept;
 		bool ProcessMessageHook(RE::UIMessage* a_message);
 
 		static inline REL::Relocation<decltype(&RE::HUDNotifications::ProcessMessage)> func;

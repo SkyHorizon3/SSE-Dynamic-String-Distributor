@@ -4,10 +4,8 @@
 
 void Processor::RunConstTranslation()
 {
-	for (size_t i = 0; i < g_ConfigurationInformationStruct.size(); i++)
+	for (const auto& Information : g_ConstConfigurationInformationStruct)
 	{
-		const auto& Information = g_ConfigurationInformationStruct[i];
-
 		auto Form = Information.Form;
 		auto SubrecordType = Information.SubrecordType;
 		auto ReplacerText = Information.ReplacerText;
@@ -20,11 +18,44 @@ void Processor::RunConstTranslation()
 		{
 			SetSHRTName(Form, ReplacerText);
 		}
-
+		else if (SubrecordType == "TNAM")
+		{
+			SetTNAMName(Form, ReplacerText);
+		}
+		/*
+		else if (SubrecordType == "ITXT")
+		{
+			CollectITXTTexts(Information);
+			SetITXTName(Form);
+		}
+		*/
 	}
-
+	g_ConstConfigurationInformationStruct.clear(); //Structs only used once, so no need to keep them
 }
 
+/*
+void Processor::CollectITXTTexts(const ConstConfigurationInformation& information)
+{
+
+	// Überprüfen, ob die FormID in der ITXTMap vorhanden ist
+	auto it = g_ITXTMap.find(information.Form->formID);
+	if (it != g_ITXTMap.end())
+	{
+		// FormID existiert bereits, füge den neuen Replacertext zum vorhandenen Array hinzu
+		it->second.push_back(RE::BSString(information.ReplacerText.c_str()));
+	}
+	else
+	{
+		RE::BSTArray<RE::BSString> newArray;
+		newArray.push_back(RE::BSString(information.ReplacerText.c_str()));
+		g_ITXTMap.emplace(information.Form->formID, newArray);
+	}
+
+
+	// Jetzt enthält ITXTMap die gesammelten Replacetexts für jede FormID
+	// Sie können darauf zugreifen und weiter verwenden
+}
+*/
 void Processor::SetFULLName(RE::TESForm* Form, RE::BSFixedString newName) //Full names of everything
 {
 	RE::TESFullName* OrigName = skyrim_cast<RE::TESFullName*>(Form);
@@ -47,39 +78,28 @@ void Processor::SetSHRTName(RE::TESForm* Form, RE::BSFixedString newName) //Shor
 
 }
 
-/*
-//Stupid experiments :D
-void Processor::TEST()
+void Processor::SetTNAMName(RE::TESForm* Form, RE::BSFixedString newName) //Word of Power translation (TNAM)
 {
-	auto FormID = 0x0AB816;
-	RE::TESDataHandler* handler = RE::TESDataHandler::GetSingleton();
-	auto form = handler->LookupForm(FormID, "Skyrim.esm");
+	RE::TESWordOfPower* OrigName = skyrim_cast<RE::TESWordOfPower*>(Form);
 
-
-	//RE::TESForm* form = RE::TESForm::LookupByID(FormID);
-
-	if (form)
+	if (OrigName)
 	{
-		RE::TESFullName* OrigName = skyrim_cast<RE::TESFullName*>(form);
-
-		if (OrigName)
-		{
-			g_Logger->info("Name: {}", OrigName->fullName.c_str());
-		}
-		else
-		{
-			g_Logger->info("Couldn't get OrigName");
-		}
-
-	}
-	else
-	{
-
-		g_Logger->info("Couldn't get form");
-
+		OrigName->translation = newName;
 	}
 
+}
 
+/*
+void Processor::SetITXTName(RE::TESForm* Form)
+{
+	RE::MessageBoxData* OrigName = skyrim_cast<RE::MessageBoxData*>(Form);
 
+	auto it = g_ITXTMap.find(Form->formID);
+
+	if (OrigName && it != g_ITXTMap.end())
+	{
+		// Set new button text array
+		OrigName->buttonText = it->second;
+	}
 }
 */

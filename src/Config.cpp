@@ -1,8 +1,6 @@
 #include "../include/Globals.h"
 #include "../include/Config.h"
 
-using json = nlohmann::json;
-
 std::vector<std::string> Config::GetLoadOrder()
 {
 	// Get user directory path
@@ -124,6 +122,43 @@ bool Config::isSpecialType(const std::string& type)
 	return type == "INFO NAM1" || type == "QUST CNAM" || type == "QUST NNAM" || type == "INFO RNAM";
 }
 
+bool Config::isConstType(const std::string& subrecord)
+{
+	return subrecord == "FULL" || subrecord == "TNAM" || subrecord == "SHRT" || subrecord == "ITXT";
+}
+
+std::string Config::GetSubrecordType(const std::string& types) const
+{
+	size_t spacePos = types.find(' ');
+	if (spacePos != std::string::npos && spacePos + 1 < types.length())
+	{
+		return types.substr(spacePos + 1);
+	}
+	return "";
+}
+
+void Config::HandleSpecialType(const std::string& types, const json& entry, const std::string& stringValue)
+{
+	std::string original = entry["original"];
+
+	if (types == "INFO NAM1")
+	{
+		g_INFO_NAM1_Map.emplace(original, stringValue);
+	}
+	else if (types == "INFO RNAM")
+	{
+		g_INFO_RNAM_Map.emplace(original, stringValue);
+	}
+	else if (types == "QUST NNAM")
+	{
+		g_QUST_NNAM_Map.emplace(original, stringValue);
+	}
+	else if (types == "QUST CNAM")
+	{
+		g_QUST_CNAM_Map.emplace(original, stringValue);
+	}
+}
+
 void Config::ParseTranslationFiles()
 {
 	for (const auto& files : m_FilesInPluginFolder)
@@ -155,12 +190,7 @@ void Config::ParseTranslationFiles()
 				std::string type = types.substr(0, 4);
 
 				// All the other letters are the subrecord type
-				std::string subrecord;
-				size_t spacePos = types.find(' ');
-				if (spacePos != std::string::npos && spacePos + 1 < types.length())
-				{
-					subrecord = types.substr(spacePos + 1);
-				}
+				std::string subrecord = GetSubrecordType(types);
 
 				RE::TESForm* form = RE::TESForm::LookupByEditorID(editorId);
 				if (!form)
@@ -169,9 +199,19 @@ void Config::ParseTranslationFiles()
 					continue;
 				}
 
-				g_ConfigurationInformationStruct.emplace_back(form->formID, form, stringValue, type, subrecord);
-				//These information will be used in Hooks and Processor 
-				//to get the right description to right place
+
+				if (!isConstType(subrecord))
+				{
+					g_ConfigurationInformationStruct.emplace_back(form, stringValue, type, subrecord);
+					//These information will be used in Hooks
+					//to get the right description to right place
+
+				}
+				else
+				{
+					g_ConstConfigurationInformationStruct.emplace_back(form, stringValue, subrecord);
+					//These information will be used in Processor
+				}
 
 				/*
 				DEBUG_LOG(g_Logger, "Form ID: {0:08X}", g_ConfigurationInformationStruct.FormID);
@@ -182,25 +222,7 @@ void Config::ParseTranslationFiles()
 			}
 			else
 			{
-				std::string original = entry["original"];
-
-				if (types == "INFO NAM1")
-				{
-					g_INFO_NAM1_Map.emplace(original, stringValue);
-				}
-				else if (types == "INFO RNAM")
-				{
-					g_INFO_RNAM_Map.emplace(original, stringValue);
-				}
-				else if (types == "QUST NNAM")
-				{
-					g_QUST_NNAM_Map.emplace(original, stringValue);
-				}
-				else if (types == "QUST CNAM")
-				{
-					g_QUST_CNAM_Map.emplace(original, stringValue);
-				}
-
+				HandleSpecialType(types, entry, stringValue);
 			}
 		}
 

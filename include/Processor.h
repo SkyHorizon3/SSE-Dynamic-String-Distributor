@@ -11,11 +11,14 @@ public:
 	}
 
 	void RunConstTranslation();
-	void SetFULLName(RE::TESForm* Form, RE::BSFixedString newName);
-	void SetSHRTName(RE::TESForm* Form, RE::BSFixedString newName);
-	//void TEST();
 
 private:
+
+	//void CollectITXTTexts(const ConstConfigurationInformation& information);
+	void SetFULLName(RE::TESForm* Form, RE::BSFixedString newName);
+	void SetSHRTName(RE::TESForm* Form, RE::BSFixedString newName);
+	void SetTNAMName(RE::TESForm* Form, RE::BSFixedString newName);
+	//void SetITXTName(RE::TESForm* Form);
 
 	Processor() = default;
 	~Processor() = default;
