@@ -3,8 +3,12 @@
   "name": "dynamicstringreplacer",
   "version-string": "1.0.0",
   "dependencies": [
-    "commonlibsse-ng",
     "nlohmann-json",
-    "xbyak"
+    "xbyak",
+	"fmt",
+    "spdlog",
+    "directxtk",
+    "catch2",
+    "rapidcsv"
   ]
 }

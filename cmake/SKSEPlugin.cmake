@@ -61,7 +61,7 @@ if (CMAKE_GENERATOR MATCHES "Visual Studio")
 endif()
 
 # Find required packages (adjust as needed)
-find_package(CommonLibSSE CONFIG REQUIRED)
+add_subdirectory(${CMAKE_SOURCE_DIR}/extern/CommonLibSSE-NG CommonLibSSE)
 find_package(spdlog CONFIG REQUIRED)
 
 # Include directories and libraries
