@@ -14,11 +14,8 @@ public:
 
 private:
 
-	//void CollectITXTTexts(const ConstConfigurationInformation& information);
-	void SetFULLName(RE::TESForm* Form, RE::BSFixedString newName);
-	void SetSHRTName(RE::TESForm* Form, RE::BSFixedString newName);
-	void SetTNAMName(RE::TESForm* Form, RE::BSFixedString newName);
-	//void SetITXTName(RE::TESForm* Form);
+	template <typename T>
+	void SetName(RE::TESForm* Form, RE::BSFixedString newName, RE::BSFixedString T::* memberPtr);
 
 	Processor() = default;
 	~Processor() = default;

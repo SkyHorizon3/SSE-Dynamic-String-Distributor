@@ -175,9 +175,9 @@ namespace Hook
 		{
 			func(a_out, a_unk, a_unk2);
 
-			auto it = g_INFO_NAM1_Map.find(a_out->c_str());
+			auto it = g_INFO_NAM1_RNAM_Map.find(a_out->c_str());
 
-			if (it != g_INFO_NAM1_Map.end())
+			if (it != g_INFO_NAM1_RNAM_Map.end())
 			{
 				*a_out = it->second;
 			}
@@ -209,9 +209,9 @@ namespace Hook
 				std::string OrigDesString = Text.GetString();
 				//g_Logger->info("Text: {}", string.c_str());
 
-				auto it = g_QUST_CNAM_Map.find(OrigDesString.c_str());
+				auto it = g_QUST_NNAM_CNAM_Map.find(OrigDesString.c_str());
 
-				if (it != g_QUST_CNAM_Map.end())
+				if (it != g_QUST_NNAM_CNAM_Map.end())
 				{
 					RE::GFxValue newDes(it->second);
 					DescriptionText.SetMember("htmlText", newDes);
@@ -231,9 +231,9 @@ namespace Hook
 					std::string string = Text.GetString();
 					//g_Logger->info("Text: {}", string.c_str());
 
-					auto it = g_QUST_NNAM_Map.find(string.c_str());
+					auto it = g_QUST_NNAM_CNAM_Map.find(string.c_str());
 
-					if (it != g_QUST_NNAM_Map.end())
+					if (it != g_QUST_NNAM_CNAM_Map.end())
 					{
 						RE::GFxValue newDes(it->second);
 						ObjectiveText.SetMember("text", newDes);
@@ -259,15 +259,15 @@ namespace Hook
 			auto ui = RE::UI::GetSingleton();
 			auto menu = ui->GetMenu(RE::HUDMenu::MENU_NAME);
 
-			bool success = menu->uiMovie->GetVariable(&ObjectiveLineInstance, "_root.HUDMovieBaseInstance.ObjectiveLineInstance."); //.objective1.ObjectiveTextFieldInstance.TextFieldInstance.text
+			bool success = menu->uiMovie->GetVariable(&ObjectiveLineInstance, "_root.HUDMovieBaseInstance.QuestUpdateBaseInstance.ObjectiveLineInstance.ObjectiveTextFieldInstance.TextFieldInstance.ObjectiveText"); //.objective1.ObjectiveTextFieldInstance.TextFieldInstance.text
 
 			if (!success)
 			{
-				g_Logger->info("Couldn't get ObjectiveLine_mc");
+				g_Logger->info("Couldn't get ObjectiveText");
 			}
 			else
 			{
-				g_Logger->info("Got ObjectiveLine_mc");
+				g_Logger->info("Got ObjectiveText");
 			}
 
 			/*
@@ -349,7 +349,7 @@ return func(this, a_message);
 	*/
 
 	/*
-	//Not used, because it looks like shit
+	//Not used, because it looks like shit in dialogue menu
 	void DialogueMenu::ProcessMessageHook()
 	{
 
@@ -378,10 +378,13 @@ return func(this, a_message);
 	}
 	*/
 
+
+
+
+
 	//RNAM in INFO; 
 	//NNAM in HudMenu
 	//ITXT Message
-	//Overwrite Ordner
 
 	void InstallHooks()
 	{

@@ -30,15 +30,27 @@ std::vector<std::string> Config::GetLoadOrder()
 	return std::vector<std::string>();
 }
 
+//I don't like the way it looks, but it fulfils its purpose.
 void Config::EnumerateFolder() //Get all folders in DynamicStringReplacer directory
 {
-	const std::filesystem::path Directory = L"Data\\SKSE\\DynamicStringReplacer\\";
+	const std::filesystem::path Directory = L"Data\\SKSE\\Plugins\\DynamicStringDistributor\\";
+	bool foundOverwriteFolder = false;  // To check if Overwrite folder is found
 
 	for (const auto& entry : std::filesystem::recursive_directory_iterator(Directory))
 	{
 		if (entry.is_directory())
 		{
-			m_Folders.push_back(entry.path().filename().string());
+			const auto& folder = entry.path().filename().string();
+
+			// Check if it's the Overwrite folder
+			if (folder == "Overwrite")
+			{
+				foundOverwriteFolder = true;
+			}
+			else
+			{
+				m_Folders.emplace_back(folder);
+			}
 		}
 	}
 
@@ -49,7 +61,8 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringReplacer direct
 
 		if (folder.find(".esp") == std::string::npos &&
 			folder.find(".esm") == std::string::npos &&
-			folder.find(".esl") == std::string::npos)
+			folder.find(".esl") == std::string::npos &&
+			folder != "Overwrite")
 		{
 			g_Logger->error("Unexpected pluginfolder file extension in {}", folder);
 			it = m_Folders.erase(it);
@@ -82,20 +95,25 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringReplacer direct
 			return std::distance(loadOrder.begin(), itA) < std::distance(loadOrder.begin(), itB);
 		});
 
+	// If Overwrite folder was found, add it at the end
+	if (foundOverwriteFolder)
+	{
+		m_Folders.emplace_back("Overwrite");
+	}
+
 }
 
 
 void Config::EnumerateFilesInFolders(const std::string folders) //Get all files in each of the folders directory
 {
-	const std::string folderPath = "Data\\SKSE\\DynamicStringReplacer\\" + folders;
+	const std::string folderPath = "Data\\SKSE\\Plugins\\DynamicStringDistributor\\" + folders;
 	m_Files.clear();
-	m_Files.shrink_to_fit();
 
 	for (const auto& entry : std::filesystem::recursive_directory_iterator(folderPath))
 	{
 		if (entry.is_regular_file() && entry.path().extension() == L".json")
 		{
-			m_Files.push_back(entry.path().filename().string());
+			m_Files.emplace_back(entry.path().filename().string());
 
 			/*
 			for (const auto& mfile : m_Files)
@@ -107,11 +125,15 @@ void Config::EnumerateFilesInFolders(const std::string folders) //Get all files 
 
 	}
 
+	std::sort(m_Files.begin(), m_Files.end());//Alphatbet order, just to make sure.
 
-	static int folderCount = 1; //Only for Debug log
+#ifndef NDEBUG
+	static int folderCount = 1;
+#endif
+
 	for (const auto& file : m_Files)
 	{
-		m_FilesInPluginFolder.push_back(folderPath + "\\" + file);
+		m_FilesInPluginFolder.emplace_back(folderPath + "\\" + file);
 
 		DEBUG_LOG(g_Logger, "Datei{}: {}", folderCount++, (folderPath + "\\" + file));
 	}
@@ -141,22 +163,15 @@ void Config::HandleSpecialType(const std::string& types, const json& entry, cons
 {
 	std::string original = entry["original"];
 
-	if (types == "INFO NAM1")
+	if (types == "INFO NAM1" || types == "INFO RNAM")
 	{
-		g_INFO_NAM1_Map.emplace(original, stringValue);
+		g_INFO_NAM1_RNAM_Map.emplace(original, stringValue);
 	}
-	else if (types == "INFO RNAM")
+	else if (types == "QUST NNAM" || types == "QUST CNAM")
 	{
-		g_INFO_RNAM_Map.emplace(original, stringValue);
+		g_QUST_NNAM_CNAM_Map.emplace(original, stringValue);
 	}
-	else if (types == "QUST NNAM")
-	{
-		g_QUST_NNAM_Map.emplace(original, stringValue);
-	}
-	else if (types == "QUST CNAM")
-	{
-		g_QUST_CNAM_Map.emplace(original, stringValue);
-	}
+
 }
 
 void Config::ParseTranslationFiles()
@@ -202,7 +217,7 @@ void Config::ParseTranslationFiles()
 
 				if (!isConstType(subrecord))
 				{
-					g_ConfigurationInformationStruct.emplace_back(form, stringValue, type, subrecord);
+					g_ConfigurationInformationStruct.emplace_back(form, stringValue, subrecord, type);
 					//These information will be used in Hooks
 					//to get the right description to right place
 
