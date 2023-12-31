@@ -9,7 +9,22 @@ std::vector<std::string> Config::GetLoadOrder()
 	{
 		// Append the rest of the path
 		std::wstring loadOrderPath = userDir;
-		loadOrderPath += L"\\AppData\\Local\\Skyrim Special Edition\\loadorder.txt";
+
+		if (REL::Module::IsVR())
+		{
+			loadOrderPath += L"\\AppData\\Local\\Skyrim VR\\loadorder.txt";
+			DEBUG_LOG(g_Logger, "Directory: Skyrim VR", nullptr);
+		}
+		else
+		{
+			std::wstring name = std::filesystem::exists("steam_api64.dll") ? L"Skyrim Special Edition" : L"Skyrim Special Edition GOG";
+			loadOrderPath += L"\\AppData\\Local\\" + name + L"\\loadorder.txt";
+
+#ifndef NDEBUG
+			std::string second = std::filesystem::exists("steam_api64.dll") ? "Skyrim Special Edition" : "Skyrim Special Edition GOG";
+#endif
+			DEBUG_LOG(g_Logger, "Directory: {}", second);
+		}
 
 		std::vector<std::string> loadOrder;
 
