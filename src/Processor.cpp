@@ -10,7 +10,7 @@ void Processor::RunConstTranslation()
 		auto SubrecordType = Information.SubrecordType;
 		auto ReplacerText = Information.ReplacerText;
 
-		if (SubrecordType == "FULL")
+		if (SubrecordType == "FULL") //DIAL FULL isn't working. Something is very different with DIAL
 		{
 			SetName<RE::TESFullName>(Form, ReplacerText, &RE::TESFullName::fullName);
 		}
@@ -30,7 +30,8 @@ template <typename T>
 void Processor::SetName(RE::TESForm* Form, RE::BSFixedString newName, RE::BSFixedString T::* memberPtr)
 {
 	T* OrigName = skyrim_cast<T*>(Form);
-	if (OrigName) {
+	if (OrigName)
+	{
 		OrigName->*memberPtr = newName;
 	}
 }

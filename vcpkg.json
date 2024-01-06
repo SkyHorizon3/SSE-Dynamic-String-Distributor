@@ -5,10 +5,10 @@
   "dependencies": [
     "nlohmann-json",
     "xbyak",
-    "fmt",
     "spdlog",
     "directxtk",
     "catch2",
-    "rapidcsv"
+    "rapidcsv",
+    "detours"
   ]
 }

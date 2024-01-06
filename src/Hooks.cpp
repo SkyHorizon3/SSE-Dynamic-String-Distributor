@@ -2,6 +2,8 @@
 #include "../include/Hooks.h"
 #include "../include/Processor.h"
 
+#include <detours/detours.h>
+
 namespace Hook
 {
 	//HUGE Credits to Nightfallstorm for some of the hooks!!
@@ -187,6 +189,24 @@ namespace Hook
 
 	};
 
+	struct QuestObjectiveTextHook //Objective text in Journal menu. Not doing this via UI, because it's possible to add multiple NNAMs in one textfield
+	{
+		static void thunk(RE::BSString* a_out, std::uint64_t a_unk, std::uint64_t a_unk2)
+		{
+			func(a_out, a_unk, a_unk2);
+
+			auto it = g_QUST_NNAM_CNAM_Map.find(a_out->c_str());
+
+			if (it != g_QUST_NNAM_CNAM_Map.end())
+			{
+				*a_out = it->second;
+			}
+
+		}
+		static inline REL::Relocation<decltype(thunk)> func;
+
+	};
+
 	bool JournalMenu::IsViewingMiscObjectives() noexcept
 	{
 		RE::GFxValue root, boolvalue;
@@ -218,6 +238,7 @@ namespace Hook
 				}
 			}
 
+			/*
 			for (int entryIndex = 0; entryIndex <= 11; ++entryIndex)
 			{
 				std::string entryVariableName = "QuestJournalFader.Menu_mc.QuestsFader.Page_mc.ObjectiveList.Entry" + std::to_string(entryIndex) + ".textField";
@@ -240,127 +261,127 @@ namespace Hook
 					}
 				}
 			}
+			*/
+		}
+
+		return func(this, a_message);
+	}
+
+	std::string HudMenu::RemoveTrailingSpaces(std::string str)
+	{
+		//As long as the last character is a space, remove it
+		while (!str.empty() && std::isspace(str.back()))
+		{
+			str.pop_back();
+		}
+		return str;
+	}
+
+	RE::UI_MESSAGE_RESULTS HudMenu::ProcessMessageHook(RE::UIMessage& a_message)
+	{
+
+		if (a_message.type == RE::UI_MESSAGE_TYPE::kUpdate)
+		{
+
+			RE::GFxValue ObjectiveText;
+
+			for (int entryIndex = 0; entryIndex <= 2; ++entryIndex) //Not sure about how much there are. But max is probably 3
+			{
+				std::string entryVariableName = "HUDMovieBaseInstance.QuestUpdateBaseInstance.objective" + std::to_string(entryIndex) + ".ObjectiveTextFieldInstance.TextFieldInstance";
+
+				auto ui = RE::UI::GetSingleton();
+				auto menu = ui->GetMenu(RE::HUDMenu::MENU_NAME);
+
+				menu->uiMovie->GetVariable(&ObjectiveText, entryVariableName.c_str()); //NNAM (objective text) from Quests in Hudmenu
+
+				if (ObjectiveText.GetType() != RE::GFxValue::ValueType::kUndefined)
+				{
+					RE::GFxValue Text;
+					ObjectiveText.GetMember("text", &Text);
+					std::string string = Text.GetString();
+					//g_Logger->info("Text: {}", string.c_str());
+
+					std::string cleanstring = RemoveTrailingSpaces(string); //Not needed by default, but with SkyHUD there are a lot of spaces
+
+					auto it = g_QUST_NNAM_CNAM_Map.find(cleanstring.c_str());
+
+					if (it != g_QUST_NNAM_CNAM_Map.end())
+					{
+						RE::GFxValue newDes(it->second);
+						ObjectiveText.SetMember("text", newDes);
+					}
+
+				}
+			}
 
 		}
 
 		return func(this, a_message);
 	}
 
+	//RNAM in INFO; 
+	//FULL in DIAL
+	//ITXT Message
+
 	/*
-	bool HudMenu::ProcessMessageHook(RE::UIMessage* a_message)
+	//Also looks like shit. Maybe I could find the other addresses
+	struct DialoguePopulateHook
 	{
-
-		if (a_message->type == RE::UI_MESSAGE_TYPE::kUpdate)
+		static void thunk(RE::DialogueMenu* DialogueMenu, char a2)
 		{
-			RE::GFxValue ObjectiveLineInstance, ObjectiveTextFieldInstance, TextFieldInstance, textField;
-
-			//"ObjectiveLineInstance.ObjectiveTextFieldInstance.TextFieldInstance.text"
-
-			auto ui = RE::UI::GetSingleton();
-			auto menu = ui->GetMenu(RE::HUDMenu::MENU_NAME);
-
-			bool success = menu->uiMovie->GetVariable(&ObjectiveLineInstance, "_root.HUDMovieBaseInstance.QuestUpdateBaseInstance.ObjectiveLineInstance.ObjectiveTextFieldInstance.TextFieldInstance.ObjectiveText"); //.objective1.ObjectiveTextFieldInstance.TextFieldInstance.text
-
-			if (!success)
+			if (!DialogueMenu)
 			{
-				g_Logger->info("Couldn't get ObjectiveText");
-			}
-			else
-			{
-				g_Logger->info("Got ObjectiveText");
-			}
-
-			/*
-			success = ObjectiveLineInstance.GetMember("text", &textField);
-			if (!success)
-			{
-				g_Logger->info("Couldn't get text");
-			}
-			else
-			{
-				g_Logger->info("Got text");
-
-			}
-			*/
-
-			/*
-			bool success = this->root.GetMember("ObjectiveLineInstance", &ObjectiveLineInstance);
-			if (!success)
-			{
-				g_Logger->info("Couldn't get ObjectiveLineInstance");
-			}
-			else
-			{
-				g_Logger->info("Got ObjectiveLineInstance");
-
+				return func(DialogueMenu, a2);
 			}
 
 
-			success = ObjectiveLineInstance.GetMember("ObjectiveTextFieldInstance", &ObjectiveTextFieldInstance);
-			if (!success)
+			func(DialogueMenu, a2);
+
+			for (int entryIndex = 0; entryIndex <= 7; ++entryIndex)
 			{
-				g_Logger->info("Couldn't get ObjectiveTextFieldInstance"); //MovieClipsA
+				std::string entryVariableName = "DialogueMenu_mc.TopicList.Entry" + std::to_string(entryIndex) + ".textField";
+
+				RE::GFxValue DialogueText;
+				DialogueMenu->uiMovie->GetVariable(&DialogueText, entryVariableName.c_str());
+
+				if (DialogueText.GetType() != RE::GFxValue::ValueType::kUndefined)
+				{
+					RE::GFxValue Text;
+					DialogueText.GetMember("text", &Text);
+					std::string string = Text.GetString();
+
+					RE::GFxValue newDes("replaced");
+					DialogueText.SetMember("text", newDes);
+
+					g_Logger->info("Entry {}: {}", entryIndex, string);
+				}
 			}
-			else
-			{
-				g_Logger->info("Got ObjectiveTextFieldInstance");
+		};
+		static inline REL::Relocation<decltype(thunk)> func;
 
-			}
-
-
-
-			success = ObjectiveTextFieldInstance.GetMember("TextFieldInstance", &TextFieldInstance);
-			if (!success)
-			{
-				g_Logger->info("Couldn't get TextFieldInstance");
-			}
-			else
-			{
-				g_Logger->info("Got TextFieldInstance");
-
-			}
-
-
-			success = TextFieldInstance.GetMember("htmlText", &textField);
-			if (!success)
-			{
-				g_Logger->info("Couldn't get htmlText");
-			}
-			else
-			{
-				g_Logger->info("Got htmlText");
-
-			}
-
-
-			std::string string = textField.GetString();
-			g_Logger->info("Text: {}", string.c_str());
-
-
-			//RE::GFxValue newDes("Es wurde ersetzt.");
-			//TextFieldInstance.SetMember("text", newDes);
-
-
-			//ObjectiveLineInstance.ObjectiveTextFieldInstance.TextFieldInstance.text
-
-}
-return func(this, a_message);
-	}
+	};
 	*/
 
 	/*
-	//Not used, because it looks like shit in dialogue menu
-	void DialogueMenu::ProcessMessageHook()
+	//Broken DIAL text replacer. Don't know, what else I could try
+	typedef void(WINAPI* ResponseHook_pFunc)(RE::DialogueMenu* DialogueMenu, std::uint64_t a_unk);
+	ResponseHook_pFunc originalFunction01;
+
+	void thunk(RE::DialogueMenu* DialogueMenu, std::uint64_t a_unk)
 	{
 
-		func(this);
+		if (!DialogueMenu)
+		{
+			return originalFunction01(DialogueMenu, a_unk);
+		}
 
-		for (int entryIndex = 0; entryIndex <= 10; ++entryIndex)
+
+		for (int entryIndex = 0; entryIndex <= 7; ++entryIndex)
 		{
 			std::string entryVariableName = "DialogueMenu_mc.TopicList.Entry" + std::to_string(entryIndex) + ".textField";
 
 			RE::GFxValue DialogueText;
-			this->uiMovie->GetVariable(&DialogueText, entryVariableName.c_str());
+			DialogueMenu->uiMovie->GetVariable(&DialogueText, entryVariableName.c_str());
 
 			if (DialogueText.GetType() != RE::GFxValue::ValueType::kUndefined)
 			{
@@ -371,23 +392,47 @@ return func(this, a_message);
 				RE::GFxValue newDes("replaced");
 				DialogueText.SetMember("text", newDes);
 
-				g_Logger->info("Entry {}: {}", entryIndex, string.c_str());
+				//g_Logger->info("Entry {}: {}", entryIndex, string);
 			}
 		}
+
+		return originalFunction01(DialogueMenu, a_unk);
 
 	}
 	*/
 
-
-
-
-
-	//RNAM in INFO; 
-	//NNAM in HudMenu
-	//ITXT Message
-
 	void InstallHooks()
 	{
+		/*
+		const auto PopulateDialogueFunc = RELOCATION_ID(0, 51506).address();
+		const auto PopulateDialogueFunc_funcAddress = &thunk;
+
+		originalFunction01 = (ResponseHook_pFunc)PopulateDialogueFunc;
+
+		DetourTransactionBegin();
+		DetourUpdateThread(GetCurrentThread());
+		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction01), static_cast<PVOID>(&thunk));
+		const auto err = DetourTransactionCommit();
+		if (err == NO_ERROR)
+		{
+			g_Logger->info("Installed PopulateDialogueFunc hook at {0:x} with replacement from address {1:x}", PopulateDialogueFunc, reinterpret_cast<uintptr_t>(PopulateDialogueFunc_funcAddress));
+		}
+		else
+		{
+			g_Logger->error("DetourTransactionCommit failed with error code: {}", err);
+		}
+		*/
+		/*
+		//Response Hook
+		REL::Relocation<std::uintptr_t> target12{ RELOCATION_ID(0, 51506), REL::VariantOffset(0, 0x2FF, 0) }; //1408B66C0
+		stl::write_thunk_call<DialoguePopulateHook>(target12.address());
+		g_Logger->info("DialoguePopulateHook hooked at address: {:x} and offset: {:x}", target12.address(), target12.offset());
+		*/
+
+		//JournalMenu quest objective Hook
+		REL::Relocation<std::uintptr_t> target12{ RELOCATION_ID(23229, 23684), REL::VariantOffset(0x21, 0x21, 0x21) };
+		stl::write_thunk_call<QuestObjectiveTextHook>(target12.address());
+		g_Logger->info("QuestObjectiveTextHook hooked at address: {:x} and offset: {:x}", target12.address(), target12.offset());
 
 		//DialogueStream Hook
 		REL::Relocation<std::uintptr_t> target11{ RELOCATION_ID(34429, 35249), REL::VariantOffset(0x61, 0x61, 0x61) };
@@ -454,3 +499,33 @@ return func(this, a_message);
 
 	}
 }
+
+/*
+//Not used, because it looks like shit in dialogue menu
+void DialogueMenu::ProcessMessageHook()
+{
+
+	func(this);
+
+	for (int entryIndex = 0; entryIndex <= 7; ++entryIndex)
+	{
+		std::string entryVariableName = "DialogueMenu_mc.TopicList.Entry" + std::to_string(entryIndex) + ".textField";
+
+		RE::GFxValue DialogueText;
+		this->uiMovie->GetVariable(&DialogueText, entryVariableName.c_str());
+
+		if (DialogueText.GetType() != RE::GFxValue::ValueType::kUndefined)
+		{
+			RE::GFxValue Text;
+			DialogueText.GetMember("text", &Text);
+			std::string string = Text.GetString();
+
+			RE::GFxValue newDes("replaced");
+			DialogueText.SetMember("text", newDes);
+
+			g_Logger->info("Entry {}: {}", entryIndex, string);
+		}
+	}
+
+}
+*/

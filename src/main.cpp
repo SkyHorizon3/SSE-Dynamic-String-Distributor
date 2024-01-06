@@ -43,7 +43,7 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 		Processor::GetSingleton()->RunConstTranslation();
 
 		Hook::JournalMenu::InstallUIHook();
-		//Hook::HudMenu::InstallUIHook();
+		Hook::HudMenu::InstallUIHook();
 		Hook::InstallHooks();
 	}
 	break;
