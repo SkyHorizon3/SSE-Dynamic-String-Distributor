@@ -22,6 +22,12 @@ void Processor::RunConstTranslation()
 		{
 			SetName<RE::TESWordOfPower>(Form, ReplacerText, &RE::TESWordOfPower::translation);
 		}
+		/*
+		else if (SubrecordType == "ITXT")
+		{
+			Test(Form);
+		}
+		*/
 	}
 	g_ConstConfigurationInformationStruct.clear(); //Structs only used once, so no need to keep them
 }
@@ -35,3 +41,27 @@ void Processor::SetName(RE::TESForm* Form, RE::BSFixedString newName, RE::BSFixe
 		OrigName->*memberPtr = newName;
 	}
 }
+
+/*
+void Processor::Test(RE::TESForm* Form)
+{
+	RE::MessageBoxData* OrigName = skyrim_cast<RE::MessageBoxData*>(Form);
+
+	g_Logger->info("Run before");
+	if (OrigName)
+	{
+		g_Logger->info("Run after");
+		// Speichern Sie die Anzahl der ursprünglichen buttonText-Elemente
+		size_t originalSize = OrigName->buttonText.size();
+
+		// Löschen Sie alle Elemente in buttonText
+		OrigName->buttonText.clear();
+
+		// Fügen Sie die gleiche Anzahl von leeren Buttons zurück
+		for (size_t i = 0; i < originalSize; ++i)
+		{
+			OrigName->buttonText.push_back("Hallo");
+		}
+	}
+}
+*/

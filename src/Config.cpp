@@ -156,7 +156,7 @@ void Config::EnumerateFilesInFolders(const std::string folders) //Get all files 
 
 bool Config::isSpecialType(const std::string& type)
 {
-	return type == "INFO NAM1" || type == "QUST CNAM" || type == "QUST NNAM" || type == "INFO RNAM";
+	return type == "INFO NAM1" || type == "QUST CNAM" || type == "QUST NNAM" || type == "INFO RNAM" || type == "DIAL FULL";
 }
 
 bool Config::isConstType(const std::string& subrecord)
@@ -178,15 +178,18 @@ void Config::HandleSpecialType(const std::string& types, const json& entry, cons
 {
 	std::string original = entry["original"];
 
-	if (types == "INFO NAM1" || types == "INFO RNAM")
+	if (types == "INFO NAM1")
 	{
-		g_INFO_NAM1_RNAM_Map.emplace(original, stringValue);
+		g_INFO_NAM1_Map.emplace(original, stringValue);
 	}
 	else if (types == "QUST NNAM" || types == "QUST CNAM")
 	{
 		g_QUST_NNAM_CNAM_Map.emplace(original, stringValue);
 	}
-
+	else if (types == "INFO RNAM" || types == "DIAL FULL")
+	{
+		g_DIAL_FULL_RNAM_Map.emplace(original, stringValue);
+	}
 }
 
 void Config::ParseTranslationFiles()

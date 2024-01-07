@@ -42,8 +42,7 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 		Config::GetSingleton()->LoadFiles();
 		Processor::GetSingleton()->RunConstTranslation();
 
-		Hook::JournalMenu::InstallUIHook();
-		Hook::HudMenu::InstallUIHook();
+		//Hook::MessageBoxMenuClass::InstallUIHook();
 		Hook::InstallHooks();
 	}
 	break;

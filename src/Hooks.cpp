@@ -177,9 +177,9 @@ namespace Hook
 		{
 			func(a_out, a_unk, a_unk2);
 
-			auto it = g_INFO_NAM1_RNAM_Map.find(a_out->c_str());
+			auto it = g_INFO_NAM1_Map.find(a_out->c_str());
 
-			if (it != g_INFO_NAM1_RNAM_Map.end())
+			if (it != g_INFO_NAM1_Map.end())
 			{
 				*a_out = it->second;
 			}
@@ -189,7 +189,10 @@ namespace Hook
 
 	};
 
-	struct QuestObjectiveTextHook //Objective text in Journal menu. Not doing this via UI, because it's possible to add multiple NNAMs in one textfield
+	//Objective text in Journal menu. Not doing this via UI, because it's possible to add multiple NNAMs in one textfield.
+	//And objective text in HUDmenu. Not doing this via UI, because SetObjectiveDisplayed(index) in papyrus doesn't set text in the UI. So I can't get the text then...
+	//And quest description text in JournalMenu. Not doing this via UI, because I found the populate hook.
+	struct QuestObjectiveTextHook
 	{
 		static void thunk(RE::BSString* a_out, std::uint64_t a_unk, std::uint64_t a_unk2)
 		{
@@ -207,50 +210,35 @@ namespace Hook
 
 	};
 
-	bool JournalMenu::IsViewingMiscObjectives() noexcept
-	{
-		RE::GFxValue root, boolvalue;
-		this->uiMovie->GetVariable(&root, "QuestJournalFader.Menu_mc.QuestsFader.Page_mc");
-		return (root.Invoke("isViewingMiscObjectives", &boolvalue) && boolvalue.GetBool());
-	}
-
-	RE::UI_MESSAGE_RESULTS JournalMenu::ProcessMessageHook(RE::UIMessage& a_message)
+	/*
+	RE::UI_MESSAGE_RESULTS MessageBoxMenuClass::ProcessMessageHook(RE::UIMessage& a_message)
 	{
 
-		if (a_message.type == RE::UI_MESSAGE_TYPE::kUpdate)
+		if (a_message.type == RE::UI_MESSAGE_TYPE::kShow)
 		{
-			RE::GFxValue DescriptionText, ObjectiveText;
-			this->uiMovie->GetVariable(&DescriptionText, "QuestJournalFader.Menu_mc.QuestsFader.Page_mc.DescriptionText"); //CNAM Quests in Journal Menu
+			g_Logger->info("Run");
+			RE::GFxValue ObjectiveText;
 
-			if (DescriptionText.GetType() != RE::GFxValue::ValueType::kUndefined && !IsViewingMiscObjectives())
+			for (int entryIndex = 0; entryIndex <= 5; ++entryIndex)
 			{
-				RE::GFxValue Text;
-				DescriptionText.GetMember("htmlText", &Text);
-				std::string OrigDesString = Text.GetString();
-				//g_Logger->info("Text: {}", string.c_str());
+				std::string entryVariableName = "MessageMenu.Buttons.Button" + std::to_string(entryIndex) + ".ButtonText";
 
-				auto it = g_QUST_NNAM_CNAM_Map.find(OrigDesString.c_str());
+				auto ui = RE::UI::GetSingleton();
+				auto menu = ui->GetMenu(RE::MessageBoxMenu::MENU_NAME);
 
-				if (it != g_QUST_NNAM_CNAM_Map.end())
-				{
-					RE::GFxValue newDes(it->second);
-					DescriptionText.SetMember("htmlText", newDes);
-				}
-			}
-
-			/*
-			for (int entryIndex = 0; entryIndex <= 11; ++entryIndex)
-			{
-				std::string entryVariableName = "QuestJournalFader.Menu_mc.QuestsFader.Page_mc.ObjectiveList.Entry" + std::to_string(entryIndex) + ".textField";
-
-				this->uiMovie->GetVariable(&ObjectiveText, entryVariableName.c_str()); //NNAM (objective text) from Quests in Journal Menu
+				menu->uiMovie->GetVariable(&ObjectiveText, entryVariableName.c_str());
 
 				if (ObjectiveText.GetType() != RE::GFxValue::ValueType::kUndefined)
 				{
 					RE::GFxValue Text;
 					ObjectiveText.GetMember("text", &Text);
 					std::string string = Text.GetString();
-					//g_Logger->info("Text: {}", string.c_str());
+					g_Logger->info("Text: {}", string.c_str());
+
+
+					RE::GFxValue newDes("Ersetzt");
+					ObjectiveText.SetMember("text", newDes);
+
 
 					auto it = g_QUST_NNAM_CNAM_Map.find(string.c_str());
 
@@ -259,69 +247,34 @@ namespace Hook
 						RE::GFxValue newDes(it->second);
 						ObjectiveText.SetMember("text", newDes);
 					}
+
 				}
 			}
-			*/
-		}
 
-		return func(this, a_message);
-	}
-
-	std::string HudMenu::RemoveTrailingSpaces(std::string str)
-	{
-		//As long as the last character is a space, remove it
-		while (!str.empty() && std::isspace(str.back()))
-		{
-			str.pop_back();
-		}
-		return str;
-	}
-
-	RE::UI_MESSAGE_RESULTS HudMenu::ProcessMessageHook(RE::UIMessage& a_message)
-	{
-
-		if (a_message.type == RE::UI_MESSAGE_TYPE::kUpdate)
-		{
-
+			/*
 			RE::GFxValue ObjectiveText;
+			auto ui = RE::UI::GetSingleton();
+			auto menu = ui->GetMenu(RE::MessageBoxMenu::MENU_NAME);
 
-			for (int entryIndex = 0; entryIndex <= 2; ++entryIndex) //Not sure about how much there are. But max is probably 3
+			bool success = menu->uiMovie->GetVariable(&ObjectiveText, "MessageMenu.Buttons.Button0.ButtonText.text");
+
+			if (success)
 			{
-				std::string entryVariableName = "HUDMovieBaseInstance.QuestUpdateBaseInstance.objective" + std::to_string(entryIndex) + ".ObjectiveTextFieldInstance.TextFieldInstance";
-
-				auto ui = RE::UI::GetSingleton();
-				auto menu = ui->GetMenu(RE::HUDMenu::MENU_NAME);
-
-				menu->uiMovie->GetVariable(&ObjectiveText, entryVariableName.c_str()); //NNAM (objective text) from Quests in Hudmenu
-
-				if (ObjectiveText.GetType() != RE::GFxValue::ValueType::kUndefined)
-				{
-					RE::GFxValue Text;
-					ObjectiveText.GetMember("text", &Text);
-					std::string string = Text.GetString();
-					//g_Logger->info("Text: {}", string.c_str());
-
-					std::string cleanstring = RemoveTrailingSpaces(string); //Not needed by default, but with SkyHUD there are a lot of spaces
-
-					auto it = g_QUST_NNAM_CNAM_Map.find(cleanstring.c_str());
-
-					if (it != g_QUST_NNAM_CNAM_Map.end())
-					{
-						RE::GFxValue newDes(it->second);
-						ObjectiveText.SetMember("text", newDes);
-					}
-
-				}
+				g_Logger->info("Got Buttontext");
+			}
+			else
+			{
+				g_Logger->info("Did not get Buttontext");
 			}
 
 		}
 
 		return func(this, a_message);
 	}
-
+	*/
 	//RNAM in INFO; 
 	//FULL in DIAL
-	//ITXT Message
+	//ITXT in MESG
 
 	/*
 	//Also looks like shit. Maybe I could find the other addresses
@@ -401,6 +354,55 @@ namespace Hook
 	}
 	*/
 
+	/*
+	struct TestHook
+	{
+		static void thunk(RE::MessageBoxMenu* a_MessageBox)
+		{
+			if (!a_MessageBox)
+			{
+				return func(a_MessageBox);
+			}
+
+
+			func(a_MessageBox);
+
+			RE::GFxValue ObjectiveText;
+
+			for (int entryIndex = 0; entryIndex <= 5; ++entryIndex)
+			{
+				std::string entryVariableName = "MessageMenu.Buttons.Button" + std::to_string(entryIndex) + ".ButtonText";
+
+				a_MessageBox->uiMovie->GetVariable(&ObjectiveText, entryVariableName.c_str());
+
+				if (ObjectiveText.GetType() != RE::GFxValue::ValueType::kUndefined)
+				{
+					RE::GFxValue Text;
+					ObjectiveText.GetMember("text", &Text);
+					std::string string = Text.GetString();
+					g_Logger->info("Text: {}", string.c_str());
+
+
+					RE::GFxValue newDes("Ersetzt");
+					ObjectiveText.SetMember("text", newDes);
+
+
+					auto it = g_QUST_NNAM_CNAM_Map.find(string.c_str());
+
+					if (it != g_QUST_NNAM_CNAM_Map.end())
+					{
+						RE::GFxValue newDes(it->second);
+						ObjectiveText.SetMember("text", newDes);
+					}
+
+				}
+			}
+		};
+		static inline REL::Relocation<decltype(thunk)> func;
+
+	};
+	*/
+
 	void InstallHooks()
 	{
 		/*
@@ -429,12 +431,28 @@ namespace Hook
 		g_Logger->info("DialoguePopulateHook hooked at address: {:x} and offset: {:x}", target12.address(), target12.offset());
 		*/
 
-		//JournalMenu quest objective Hook
+		/*
+		REL::Relocation<std::uintptr_t> target15{ RELOCATION_ID(0, 52280), REL::VariantOffset(0x0, 0x34, 0x0) };
+		stl::write_thunk_call<TestHook>(target15.address());
+		g_Logger->info("TestHook hooked at address: {:x} and offset: {:x}", target15.address(), target15.offset());
+		*/
+
+		//JournalMenu quest description text Hook
+		REL::Relocation<std::uintptr_t> target14{ RELOCATION_ID(24778, 25259), REL::VariantOffset(0x21C, 0x221, 0x21C) };//First: 5B ->Don't know; Second: C4 ->Don't know; Third: 221 ->Quest description text
+		stl::write_thunk_call<QuestObjectiveTextHook>(target14.address());
+		g_Logger->info("QuestObjectiveTextHook hooked at address: {:x} and offset: {:x}", target14.address(), target14.offset());
+
+		//HudMenu quest objective text Hook
+		REL::Relocation<std::uintptr_t> target13{ RELOCATION_ID(50751, 51646), REL::VariantOffset(0xA6, 0xA6, 0xA6) };//First: A6 ->All NNAM sentences are passing here; (Second: F7 ->"or" (depends on language) if needed; Third: 143 ->Second sentence after "or" if available)
+		stl::write_thunk_call<QuestObjectiveTextHook>(target13.address());
+		g_Logger->info("QuestObjectiveTextHook hooked at address: {:x} and offset: {:x}", target13.address(), target13.offset());
+
+		//JournalMenu quest objective text Hook
 		REL::Relocation<std::uintptr_t> target12{ RELOCATION_ID(23229, 23684), REL::VariantOffset(0x21, 0x21, 0x21) };
 		stl::write_thunk_call<QuestObjectiveTextHook>(target12.address());
 		g_Logger->info("QuestObjectiveTextHook hooked at address: {:x} and offset: {:x}", target12.address(), target12.offset());
 
-		//DialogueStream Hook
+		//DialogueStream (subtitles) Hook
 		REL::Relocation<std::uintptr_t> target11{ RELOCATION_ID(34429, 35249), REL::VariantOffset(0x61, 0x61, 0x61) };
 		stl::write_thunk_call<DialogueStreamHook>(target11.address());
 		g_Logger->info("DialogueStreamHook hooked at address: {:x} and offset: {:x}", target11.address(), target11.offset());
@@ -500,32 +518,152 @@ namespace Hook
 	}
 }
 
+
 /*
-//Not used, because it looks like shit in dialogue menu
-void DialogueMenu::ProcessMessageHook()
-{
-
-	func(this);
-
-	for (int entryIndex = 0; entryIndex <= 7; ++entryIndex)
+//Not used
+	bool JournalMenu::IsViewingMiscObjectives() noexcept
 	{
-		std::string entryVariableName = "DialogueMenu_mc.TopicList.Entry" + std::to_string(entryIndex) + ".textField";
-
-		RE::GFxValue DialogueText;
-		this->uiMovie->GetVariable(&DialogueText, entryVariableName.c_str());
-
-		if (DialogueText.GetType() != RE::GFxValue::ValueType::kUndefined)
-		{
-			RE::GFxValue Text;
-			DialogueText.GetMember("text", &Text);
-			std::string string = Text.GetString();
-
-			RE::GFxValue newDes("replaced");
-			DialogueText.SetMember("text", newDes);
-
-			g_Logger->info("Entry {}: {}", entryIndex, string);
-		}
+		RE::GFxValue root, boolvalue;
+		this->uiMovie->GetVariable(&root, "QuestJournalFader.Menu_mc.QuestsFader.Page_mc");
+		return (root.Invoke("isViewingMiscObjectives", &boolvalue) && boolvalue.GetBool());
 	}
 
-}
-*/
+	RE::UI_MESSAGE_RESULTS JournalMenu::ProcessMessageHook(RE::UIMessage& a_message)
+	{
+
+		if (a_message.type == RE::UI_MESSAGE_TYPE::kUpdate)
+		{
+			RE::GFxValue DescriptionText, ObjectiveText;
+			this->uiMovie->GetVariable(&DescriptionText, "QuestJournalFader.Menu_mc.QuestsFader.Page_mc.DescriptionText"); //CNAM Quests in Journal Menu
+
+			if (DescriptionText.GetType() != RE::GFxValue::ValueType::kUndefined && !IsViewingMiscObjectives())
+			{
+				RE::GFxValue Text;
+				DescriptionText.GetMember("htmlText", &Text);
+				std::string OrigDesString = Text.GetString();
+				//g_Logger->info("Text: {}", string.c_str());
+
+				auto it = g_QUST_NNAM_CNAM_Map.find(OrigDesString.c_str());
+
+				if (it != g_QUST_NNAM_CNAM_Map.end())
+				{
+					RE::GFxValue newDes(it->second);
+					DescriptionText.SetMember("htmlText", newDes);
+				}
+			}
+
+
+			for (int entryIndex = 0; entryIndex <= 11; ++entryIndex)
+			{
+				std::string entryVariableName = "QuestJournalFader.Menu_mc.QuestsFader.Page_mc.ObjectiveList.Entry" + std::to_string(entryIndex) + ".textField";
+
+				this->uiMovie->GetVariable(&ObjectiveText, entryVariableName.c_str()); //NNAM (objective text) from Quests in Journal Menu
+
+				if (ObjectiveText.GetType() != RE::GFxValue::ValueType::kUndefined)
+				{
+					RE::GFxValue Text;
+					ObjectiveText.GetMember("text", &Text);
+					std::string string = Text.GetString();
+					//g_Logger->info("Text: {}", string.c_str());
+
+					auto it = g_QUST_NNAM_CNAM_Map.find(string.c_str());
+
+					if (it != g_QUST_NNAM_CNAM_Map.end())
+					{
+						RE::GFxValue newDes(it->second);
+						ObjectiveText.SetMember("text", newDes);
+					}
+				}
+			}
+
+		}
+
+		return func(this, a_message);
+	}
+	*/
+
+	/*
+	//Not used
+	std::string HudMenu::RemoveTrailingSpaces(std::string str)
+	{
+		//As long as the last character is a space, remove it
+		while (!str.empty() && std::isspace(str.back()))
+		{
+			str.pop_back();
+		}
+		return str;
+	}
+
+	RE::UI_MESSAGE_RESULTS HudMenu::ProcessMessageHook(RE::UIMessage& a_message)
+	{
+
+		if (a_message.type == RE::UI_MESSAGE_TYPE::kUpdate)
+		{
+
+			RE::GFxValue ObjectiveText;
+
+			for (int entryIndex = 0; entryIndex <= 4; ++entryIndex) //Not sure about how much there are. But max is probably 3
+			{
+				std::string entryVariableName = "HUDMovieBaseInstance.QuestUpdateBaseInstance.objective" + std::to_string(entryIndex) + ".ObjectiveTextFieldInstance.TextFieldInstance";
+
+				auto ui = RE::UI::GetSingleton();
+				auto menu = ui->GetMenu(RE::HUDMenu::MENU_NAME);
+
+				menu->uiMovie->GetVariable(&ObjectiveText, entryVariableName.c_str()); //NNAM (objective text) from Quests in Hudmenu
+
+				if (ObjectiveText.GetType() != RE::GFxValue::ValueType::kUndefined)
+				{
+					RE::GFxValue Text;
+					ObjectiveText.GetMember("text", &Text);
+					std::string string = Text.GetString();
+					//g_Logger->info("Text: {}", string.c_str());
+
+
+					std::string cleanstring = RemoveTrailingSpaces(string); //Not needed by default, but with SkyHUD there are a lot of spaces
+
+					auto it = g_QUST_NNAM_CNAM_Map.find(cleanstring.c_str());
+
+					if (it != g_QUST_NNAM_CNAM_Map.end())
+					{
+						RE::GFxValue newDes(it->second);
+						ObjectiveText.SetMember("text", newDes);
+					}
+
+				}
+			}
+
+		}
+
+		return func(this, a_message);
+	}
+	*/
+
+	/*
+	//Not used, because it looks like shit in dialogue menu
+	void DialogueMenu::ProcessMessageHook()
+	{
+
+		func(this);
+
+		for (int entryIndex = 0; entryIndex <= 7; ++entryIndex)
+		{
+			std::string entryVariableName = "DialogueMenu_mc.TopicList.Entry" + std::to_string(entryIndex) + ".textField";
+
+			RE::GFxValue DialogueText;
+			this->uiMovie->GetVariable(&DialogueText, entryVariableName.c_str());
+
+			if (DialogueText.GetType() != RE::GFxValue::ValueType::kUndefined)
+			{
+				RE::GFxValue Text;
+				DialogueText.GetMember("text", &Text);
+				std::string string = Text.GetString();
+
+				RE::GFxValue newDes("replaced");
+				DialogueText.SetMember("text", newDes);
+
+				g_Logger->info("Entry {}: {}", entryIndex, string);
+			}
+		}
+
+	}
+	*/
