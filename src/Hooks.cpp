@@ -228,7 +228,6 @@ namespace Hook
 
 			if (i < Menu->buttonText.size())
 			{
-				// Verwenden Sie den Indexoperator [] anstelle von at
 				auto it = g_INFO_NAM1_ITXT_Map.find(Menu->buttonText[i].c_str());
 
 				if (it != g_INFO_NAM1_ITXT_Map.end())
@@ -260,7 +259,6 @@ namespace Hook
 
 			if (i < Menu->buttonText.size())
 			{
-				// Verwenden Sie den Indexoperator [] anstelle von at
 				auto it = g_INFO_NAM1_ITXT_Map.find(Menu->buttonText[i].c_str());
 
 				if (it != g_INFO_NAM1_ITXT_Map.end())
@@ -444,27 +442,38 @@ namespace Hook
 		stl::write_thunk_call<ItemCardPopulateHook>(target08.address());
 		g_Logger->info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target08.address(), target08.offset());
 
+		//MessageBoxData Hook SE
+		const auto MessageBoxDataFunc = RELOCATION_ID(51422, 52271).address();
+		//const auto MessageBoxDataFuncAE_funcAddress = &MessageBoxThunkAE;
+		//const auto MessageBoxDataFuncSE_funcAddress = &MessageBoxThunkSE;
+
+		originalFunction02 = (MessageBoxDataHookAE_pFunc)MessageBoxDataFunc;
+		originalFunction03 = (MessageBoxDataHookSE_pFunc)MessageBoxDataFunc;
+
+		DetourTransactionBegin();
+		DetourUpdateThread(GetCurrentThread());
 		if (REL::Module::IsAE())
 		{
-			//MessageBoxData Hook AE
-			const auto MessageBoxDataFunc = RELOCATION_ID(0, 52271).address();
-			const auto MessageBoxDataFunc_funcAddress = &MessageBoxThunkAE;
-
-			originalFunction02 = (MessageBoxDataHookAE_pFunc)MessageBoxDataFunc;
-
-			DetourTransactionBegin();
-			DetourUpdateThread(GetCurrentThread());
 			DetourAttach(reinterpret_cast<PVOID*>(&originalFunction02), static_cast<PVOID>(&MessageBoxThunkAE));
-			const auto err = DetourTransactionCommit();
-			if (err == NO_ERROR)
-			{
-				g_Logger->info("Installed MessageBoxDataFunc hook at {0:x} with replacement from address {1:x}", MessageBoxDataFunc, reinterpret_cast<uintptr_t>(MessageBoxDataFunc_funcAddress));
-			}
-			else
-			{
-				g_Logger->error("DetourTransactionCommit failed with error code: {}", err);
-			}
+			g_Logger->info("Installed MessageBoxDataFuncAE hook!");
+		}
+		else
+		{
+			DetourAttach(reinterpret_cast<PVOID*>(&originalFunction03), static_cast<PVOID>(&MessageBoxThunkSE));
+			g_Logger->info("Installed MessageBoxDataFuncSE hook!");
+		}
+		const auto err = DetourTransactionCommit();
+		if (err == NO_ERROR)
+		{
+			g_Logger->info("No errors during DetourTransactionCommit!");
+		}
+		else
+		{
+			g_Logger->error("DetourTransactionCommit failed with error code: {}", err);
+		}
 
+		if (REL::Module::IsAE())
+		{
 			//GetDescriptionParent Hook AE
 			REL::Relocation<std::uintptr_t> codeSwap{ RELOCATION_ID(0, 14552), REL::VariantOffset(0x0, 0x8B, 0x0) }; //14019C91B xor     r8d, r8d
 			REL::safe_fill(codeSwap.address(), REL::NOP, 0x5);
@@ -497,26 +506,6 @@ namespace Hook
 			REL::Relocation<std::uintptr_t> target10{ RELOCATION_ID(14399, 0), REL::VariantOffset(0x53, 0x0, 0x53) };
 			stl::write_thunk_call<GetDescriptionHookSE>(target10.address());
 			g_Logger->info("GetDescriptionHookSE hooked at address: {:x} and offset: {:x}", target10.address(), target10.offset());
-
-			//MessageBoxData Hook SE
-			const auto MessageBoxDataFunc = RELOCATION_ID(51422, 0).address();
-			const auto MessageBoxDataFunc_funcAddress = &MessageBoxThunkSE;
-
-			originalFunction03 = (MessageBoxDataHookSE_pFunc)MessageBoxDataFunc;
-
-			DetourTransactionBegin();
-			DetourUpdateThread(GetCurrentThread());
-			DetourAttach(reinterpret_cast<PVOID*>(&originalFunction03), static_cast<PVOID>(&MessageBoxThunkSE));
-			const auto err = DetourTransactionCommit();
-			if (err == NO_ERROR)
-			{
-				g_Logger->info("Installed MessageBoxDataFunc hook at {0:x} with replacement from address {1:x}", MessageBoxDataFunc, reinterpret_cast<uintptr_t>(MessageBoxDataFunc_funcAddress));
-			}
-			else
-			{
-				g_Logger->error("DetourTransactionCommit failed with error code: {}", err);
-			}
-
 		}
 
 	}

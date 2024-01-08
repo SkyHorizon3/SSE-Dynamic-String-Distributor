@@ -180,7 +180,6 @@ void Config::HandleSpecialType(const std::string& types, const json& entry, cons
 
 	if (types == "INFO NAM1" || types == "MESG ITXT") //There shouldn't be a lot ITXT, so it doesn't matter. Creating new map would be heavier
 	{
-		g_Logger->info("Original: {}");
 		g_INFO_NAM1_ITXT_Map.emplace(original, stringValue);
 	}
 	else if (types == "QUST NNAM" || types == "QUST CNAM")
