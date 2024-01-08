@@ -38,11 +38,13 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 	break;
 	case SKSE::MessagingInterface::kDataLoaded:
 	{
-		Config::GetSingleton()->EnumerateFolder();
-		Config::GetSingleton()->LoadFiles();
-		Processor::GetSingleton()->RunConstTranslation();
+		auto Config = Config::GetSingleton();
+		Config->EnumerateFolder();
+		Config->LoadFiles();
 
-		//Hook::MessageBoxMenuClass::InstallUIHook();
+		auto eventProcessorMenu = Processor::GetSingleton();
+		eventProcessorMenu->RunConstTranslation();
+
 		Hook::InstallHooks();
 	}
 	break;

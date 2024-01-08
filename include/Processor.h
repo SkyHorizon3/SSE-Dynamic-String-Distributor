@@ -17,8 +17,6 @@ private:
 	template <typename T>
 	void SetName(RE::TESForm* Form, RE::BSFixedString newName, RE::BSFixedString T::* memberPtr);
 
-	//void Test(RE::TESForm* Form);
-
 	Processor() = default;
 	~Processor() = default;
 	Processor(const Processor&) = delete;

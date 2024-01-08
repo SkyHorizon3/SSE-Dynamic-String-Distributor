@@ -4,8 +4,11 @@
 namespace Hook
 {
 	void InstallHooks();
+}
 
-	/*
+
+/*
+//Not used
 	class MessageBoxMenuClass : public RE::MessageBoxMenu
 	{
 
@@ -24,10 +27,7 @@ namespace Hook
 
 		static inline REL::Relocation<decltype(&RE::MessageBoxMenu::ProcessMessage)> func;
 	};
-	*/
-}
-
-
+*/
 
 /*
 //Not used

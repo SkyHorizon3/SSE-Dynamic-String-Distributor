@@ -177,9 +177,9 @@ namespace Hook
 		{
 			func(a_out, a_unk, a_unk2);
 
-			auto it = g_INFO_NAM1_Map.find(a_out->c_str());
+			auto it = g_INFO_NAM1_ITXT_Map.find(a_out->c_str());
 
-			if (it != g_INFO_NAM1_Map.end())
+			if (it != g_INFO_NAM1_ITXT_Map.end())
 			{
 				*a_out = it->second;
 			}
@@ -210,71 +210,74 @@ namespace Hook
 
 	};
 
-	/*
-	RE::UI_MESSAGE_RESULTS MessageBoxMenuClass::ProcessMessageHook(RE::UIMessage& a_message)
+
+	typedef void(WINAPI* MessageBoxDataHookAE_pFunc)(RE::MessageBoxData* Menu, std::uint64_t a2, std::uint64_t a3);
+	MessageBoxDataHookAE_pFunc originalFunction02;
+	void MessageBoxThunkAE(RE::MessageBoxData* Menu, std::uint64_t a2, std::uint64_t a3)
 	{
-
-		if (a_message.type == RE::UI_MESSAGE_TYPE::kShow)
+		if (!Menu)
 		{
-			g_Logger->info("Run");
-			RE::GFxValue ObjectiveText;
-
-			for (int entryIndex = 0; entryIndex <= 5; ++entryIndex)
-			{
-				std::string entryVariableName = "MessageMenu.Buttons.Button" + std::to_string(entryIndex) + ".ButtonText";
-
-				auto ui = RE::UI::GetSingleton();
-				auto menu = ui->GetMenu(RE::MessageBoxMenu::MENU_NAME);
-
-				menu->uiMovie->GetVariable(&ObjectiveText, entryVariableName.c_str());
-
-				if (ObjectiveText.GetType() != RE::GFxValue::ValueType::kUndefined)
-				{
-					RE::GFxValue Text;
-					ObjectiveText.GetMember("text", &Text);
-					std::string string = Text.GetString();
-					g_Logger->info("Text: {}", string.c_str());
-
-
-					RE::GFxValue newDes("Ersetzt");
-					ObjectiveText.SetMember("text", newDes);
-
-
-					auto it = g_QUST_NNAM_CNAM_Map.find(string.c_str());
-
-					if (it != g_QUST_NNAM_CNAM_Map.end())
-					{
-						RE::GFxValue newDes(it->second);
-						ObjectiveText.SetMember("text", newDes);
-					}
-
-				}
-			}
-
-			/*
-			RE::GFxValue ObjectiveText;
-			auto ui = RE::UI::GetSingleton();
-			auto menu = ui->GetMenu(RE::MessageBoxMenu::MENU_NAME);
-
-			bool success = menu->uiMovie->GetVariable(&ObjectiveText, "MessageMenu.Buttons.Button0.ButtonText.text");
-
-			if (success)
-			{
-				g_Logger->info("Got Buttontext");
-			}
-			else
-			{
-				g_Logger->info("Did not get Buttontext");
-			}
-
+			return originalFunction02(Menu, a2, a3);
 		}
 
-		return func(this, a_message);
+		RE::BSTArray<RE::BSString, RE::BSTArrayHeapAllocator>::size_type originalSize = Menu->buttonText.size();
+
+		for (RE::BSTArray<RE::BSString, RE::BSTArrayHeapAllocator>::size_type i = 0; i < originalSize; ++i)
+		{
+			//g_Logger->info("Processing buttonText[{}]", i);
+
+			if (i < Menu->buttonText.size())
+			{
+				// Verwenden Sie den Indexoperator [] anstelle von at
+				auto it = g_INFO_NAM1_ITXT_Map.find(Menu->buttonText[i].c_str());
+
+				if (it != g_INFO_NAM1_ITXT_Map.end())
+				{
+					Menu->buttonText[i] = it->second;
+				}
+			}
+		}
+
+		return originalFunction02(Menu, a2, a3);
 	}
-	*/
+
+
+
+	typedef void(WINAPI* MessageBoxDataHookSE_pFunc)(RE::MessageBoxData* Menu);
+	MessageBoxDataHookSE_pFunc originalFunction03;
+	void MessageBoxThunkSE(RE::MessageBoxData* Menu)
+	{
+		if (!Menu)
+		{
+			return originalFunction03(Menu);
+		}
+
+		RE::BSTArray<RE::BSString, RE::BSTArrayHeapAllocator>::size_type originalSize = Menu->buttonText.size();
+
+		for (RE::BSTArray<RE::BSString, RE::BSTArrayHeapAllocator>::size_type i = 0; i < originalSize; ++i)
+		{
+			//g_Logger->info("Processing buttonText[{}]", i);
+
+			if (i < Menu->buttonText.size())
+			{
+				// Verwenden Sie den Indexoperator [] anstelle von at
+				auto it = g_INFO_NAM1_ITXT_Map.find(Menu->buttonText[i].c_str());
+
+				if (it != g_INFO_NAM1_ITXT_Map.end())
+				{
+					Menu->buttonText[i] = it->second;
+				}
+			}
+		}
+
+		return originalFunction03(Menu);
+	}
+
+
+
 	//RNAM in INFO; 
 	//FULL in DIAL
-	//ITXT in MESG
+
 
 	/*
 	//Also looks like shit. Maybe I could find the other addresses
@@ -359,44 +362,7 @@ namespace Hook
 	{
 		static void thunk(RE::MessageBoxMenu* a_MessageBox)
 		{
-			if (!a_MessageBox)
-			{
-				return func(a_MessageBox);
-			}
 
-
-			func(a_MessageBox);
-
-			RE::GFxValue ObjectiveText;
-
-			for (int entryIndex = 0; entryIndex <= 5; ++entryIndex)
-			{
-				std::string entryVariableName = "MessageMenu.Buttons.Button" + std::to_string(entryIndex) + ".ButtonText";
-
-				a_MessageBox->uiMovie->GetVariable(&ObjectiveText, entryVariableName.c_str());
-
-				if (ObjectiveText.GetType() != RE::GFxValue::ValueType::kUndefined)
-				{
-					RE::GFxValue Text;
-					ObjectiveText.GetMember("text", &Text);
-					std::string string = Text.GetString();
-					g_Logger->info("Text: {}", string.c_str());
-
-
-					RE::GFxValue newDes("Ersetzt");
-					ObjectiveText.SetMember("text", newDes);
-
-
-					auto it = g_QUST_NNAM_CNAM_Map.find(string.c_str());
-
-					if (it != g_QUST_NNAM_CNAM_Map.end())
-					{
-						RE::GFxValue newDes(it->second);
-						ObjectiveText.SetMember("text", newDes);
-					}
-
-				}
-			}
 		};
 		static inline REL::Relocation<decltype(thunk)> func;
 
@@ -432,7 +398,7 @@ namespace Hook
 		*/
 
 		/*
-		REL::Relocation<std::uintptr_t> target15{ RELOCATION_ID(0, 52280), REL::VariantOffset(0x0, 0x34, 0x0) };
+		REL::Relocation<std::uintptr_t> target15{ RELOCATION_ID(97508, 52271), REL::VariantOffset(0x0, 0x34, 0x0) }; //51425 = 8abae0
 		stl::write_thunk_call<TestHook>(target15.address());
 		g_Logger->info("TestHook hooked at address: {:x} and offset: {:x}", target15.address(), target15.offset());
 		*/
@@ -480,6 +446,25 @@ namespace Hook
 
 		if (REL::Module::IsAE())
 		{
+			//MessageBoxData Hook AE
+			const auto MessageBoxDataFunc = RELOCATION_ID(0, 52271).address();
+			const auto MessageBoxDataFunc_funcAddress = &MessageBoxThunkAE;
+
+			originalFunction02 = (MessageBoxDataHookAE_pFunc)MessageBoxDataFunc;
+
+			DetourTransactionBegin();
+			DetourUpdateThread(GetCurrentThread());
+			DetourAttach(reinterpret_cast<PVOID*>(&originalFunction02), static_cast<PVOID>(&MessageBoxThunkAE));
+			const auto err = DetourTransactionCommit();
+			if (err == NO_ERROR)
+			{
+				g_Logger->info("Installed MessageBoxDataFunc hook at {0:x} with replacement from address {1:x}", MessageBoxDataFunc, reinterpret_cast<uintptr_t>(MessageBoxDataFunc_funcAddress));
+			}
+			else
+			{
+				g_Logger->error("DetourTransactionCommit failed with error code: {}", err);
+			}
+
 			//GetDescriptionParent Hook AE
 			REL::Relocation<std::uintptr_t> codeSwap{ RELOCATION_ID(0, 14552), REL::VariantOffset(0x0, 0x8B, 0x0) }; //14019C91B xor     r8d, r8d
 			REL::safe_fill(codeSwap.address(), REL::NOP, 0x5);
@@ -513,11 +498,93 @@ namespace Hook
 			stl::write_thunk_call<GetDescriptionHookSE>(target10.address());
 			g_Logger->info("GetDescriptionHookSE hooked at address: {:x} and offset: {:x}", target10.address(), target10.offset());
 
+			//MessageBoxData Hook SE
+			const auto MessageBoxDataFunc = RELOCATION_ID(51422, 0).address();
+			const auto MessageBoxDataFunc_funcAddress = &MessageBoxThunkSE;
+
+			originalFunction03 = (MessageBoxDataHookSE_pFunc)MessageBoxDataFunc;
+
+			DetourTransactionBegin();
+			DetourUpdateThread(GetCurrentThread());
+			DetourAttach(reinterpret_cast<PVOID*>(&originalFunction03), static_cast<PVOID>(&MessageBoxThunkSE));
+			const auto err = DetourTransactionCommit();
+			if (err == NO_ERROR)
+			{
+				g_Logger->info("Installed MessageBoxDataFunc hook at {0:x} with replacement from address {1:x}", MessageBoxDataFunc, reinterpret_cast<uintptr_t>(MessageBoxDataFunc_funcAddress));
+			}
+			else
+			{
+				g_Logger->error("DetourTransactionCommit failed with error code: {}", err);
+			}
+
 		}
 
 	}
 }
 
+/*
+//Not used, because it looks like shit again
+RE::UI_MESSAGE_RESULTS MessageBoxMenuClass::ProcessMessageHook(RE::UIMessage& a_message)
+{
+
+	if (a_message.type == RE::UI_MESSAGE_TYPE::kShow)
+	{
+		g_Logger->info("Run");
+		RE::GFxValue ObjectiveText;
+
+		for (int entryIndex = 0; entryIndex <= 5; ++entryIndex)
+		{
+			std::string entryVariableName = "MessageMenu.Buttons.Button" + std::to_string(entryIndex) + ".ButtonText";
+
+			auto ui = RE::UI::GetSingleton();
+			auto menu = ui->GetMenu(RE::MessageBoxMenu::MENU_NAME);
+
+			menu->uiMovie->GetVariable(&ObjectiveText, entryVariableName.c_str());
+
+			if (ObjectiveText.GetType() != RE::GFxValue::ValueType::kUndefined)
+			{
+				RE::GFxValue Text;
+				ObjectiveText.GetMember("text", &Text);
+				std::string string = Text.GetString();
+				g_Logger->info("Text: {}", string.c_str());
+
+
+				RE::GFxValue newDes("Ersetzt");
+				ObjectiveText.SetMember("text", newDes);
+
+
+				auto it = g_QUST_NNAM_CNAM_Map.find(string.c_str());
+
+				if (it != g_QUST_NNAM_CNAM_Map.end())
+				{
+					RE::GFxValue newDes(it->second);
+					ObjectiveText.SetMember("text", newDes);
+				}
+
+			}
+		}
+
+		/*
+		RE::GFxValue ObjectiveText;
+		auto ui = RE::UI::GetSingleton();
+		auto menu = ui->GetMenu(RE::MessageBoxMenu::MENU_NAME);
+
+		bool success = menu->uiMovie->GetVariable(&ObjectiveText, "MessageMenu.Buttons.Button0.ButtonText.text");
+
+		if (success)
+		{
+			g_Logger->info("Got Buttontext");
+		}
+		else
+		{
+			g_Logger->info("Did not get Buttontext");
+		}
+
+	}
+
+	return func(this, a_message);
+}
+*/
 
 /*
 //Not used

@@ -156,12 +156,12 @@ void Config::EnumerateFilesInFolders(const std::string folders) //Get all files 
 
 bool Config::isSpecialType(const std::string& type)
 {
-	return type == "INFO NAM1" || type == "QUST CNAM" || type == "QUST NNAM" || type == "INFO RNAM" || type == "DIAL FULL";
+	return type == "INFO NAM1" || type == "QUST CNAM" || type == "QUST NNAM" || type == "INFO RNAM" || type == "DIAL FULL" || type == "MESG ITXT";
 }
 
 bool Config::isConstType(const std::string& subrecord)
 {
-	return subrecord == "FULL" || subrecord == "TNAM" || subrecord == "SHRT" || subrecord == "ITXT";
+	return subrecord == "FULL" || subrecord == "TNAM" || subrecord == "SHRT";
 }
 
 std::string Config::GetSubrecordType(const std::string& types) const
@@ -178,9 +178,10 @@ void Config::HandleSpecialType(const std::string& types, const json& entry, cons
 {
 	std::string original = entry["original"];
 
-	if (types == "INFO NAM1")
+	if (types == "INFO NAM1" || types == "MESG ITXT") //There shouldn't be a lot ITXT, so it doesn't matter. Creating new map would be heavier
 	{
-		g_INFO_NAM1_Map.emplace(original, stringValue);
+		g_Logger->info("Original: {}");
+		g_INFO_NAM1_ITXT_Map.emplace(original, stringValue);
 	}
 	else if (types == "QUST NNAM" || types == "QUST CNAM")
 	{

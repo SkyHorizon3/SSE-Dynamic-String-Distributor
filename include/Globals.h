@@ -13,6 +13,6 @@ struct ConfigurationInformation
 inline std::vector<ConfigurationInformation> g_ConfigurationInformationStruct;
 inline std::vector<ConfigurationInformation> g_ConstConfigurationInformationStruct; //Used for const translations
 
-inline std::unordered_map<std::string, std::string> g_INFO_NAM1_Map;
+inline std::unordered_map<std::string, std::string> g_INFO_NAM1_ITXT_Map;
 inline std::unordered_map<std::string, std::string> g_DIAL_FULL_RNAM_Map;
 inline std::unordered_map<std::string, std::string> g_QUST_NNAM_CNAM_Map;
