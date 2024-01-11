@@ -4,6 +4,7 @@
 
 #include <detours/detours.h>
 
+
 namespace Hook
 {
 	//HUGE Credits to Nightfallstorm for some of the hooks!!
@@ -95,8 +96,6 @@ namespace Hook
 	std::string SetDescription = "";
 	struct ParentDESCHookAE
 	{
-		// AE inlines GetDescription, so we have to use a new hook right after the check for the parent form
-		// so we can validate that parent form is a something with DESC
 		static void thunk(RE::BSString* a_out, RE::TESForm* a_parent, std::uint64_t a_unk)
 		{
 			//Perks, Loading Screens, Race Descriptions and any other DESC in SSEDIT
@@ -123,9 +122,7 @@ namespace Hook
 
 		struct GetParentInsideHook : Xbyak::CodeGenerator
 		{
-			// We can trust rdx will be scratched over when we jump back to the skyirm code
-			// This moves the parent form, which is currently in rdi, to rdx so our ValidateBookAE hook can use it
-			// rdx is already zeroed out, so we aren't worried about losing any data
+			// This moves the parent form, which is currently in rdi, to rdx so the other hook can use it
 			GetParentInsideHook()
 			{
 				mov(rdx, rdi);
@@ -136,9 +133,9 @@ namespace Hook
 
 	struct GetDescriptionHookAE
 	{
-		static void thunk(RE::BSString* a_out, std::uint64_t a_unk, std::uint64_t a_unk2)
+		static void thunk(RE::BSString* a_out, std::uint64_t a2, std::uint64_t a3)
 		{
-			func(a_out, a_unk, a_unk2);
+			func(a_out, a2, a3);
 
 			//g_Logger->info("Output: {}", a_out->c_str());
 
@@ -173,9 +170,9 @@ namespace Hook
 
 	struct DialogueStreamHook
 	{
-		static void thunk(RE::BSString* a_out, std::uint64_t a_unk, std::uint64_t a_unk2)
+		static void thunk(RE::BSString* a_out, std::uint64_t a2, std::uint64_t a3)
 		{
-			func(a_out, a_unk, a_unk2);
+			func(a_out, a2, a3);
 
 			auto it = g_INFO_NAM1_ITXT_Map.find(a_out->c_str());
 
@@ -194,9 +191,9 @@ namespace Hook
 	//And quest description text in JournalMenu. Not doing this via UI, because I found the populate hook.
 	struct QuestObjectiveTextHook
 	{
-		static void thunk(RE::BSString* a_out, std::uint64_t a_unk, std::uint64_t a_unk2)
+		static void thunk(RE::BSString* a_out, std::uint64_t a2, std::uint64_t a3)
 		{
-			func(a_out, a_unk, a_unk2);
+			func(a_out, a2, a3);
 
 			auto it = g_QUST_NNAM_CNAM_Map.find(a_out->c_str());
 
@@ -257,7 +254,7 @@ namespace Hook
 		{
 			//g_Logger->info("Processing buttonText[{}]", i);
 
-			if (i < Menu->buttonText.size())
+			if (i < Menu->buttonText.size()) //Just to make sure
 			{
 				auto it = g_INFO_NAM1_ITXT_Map.find(Menu->buttonText[i].c_str());
 
@@ -271,135 +268,32 @@ namespace Hook
 		return originalFunction03(Menu);
 	}
 
-
-
-	//RNAM in INFO; 
-	//FULL in DIAL
-
-
-	/*
-	//Also looks like shit. Maybe I could find the other addresses
-	struct DialoguePopulateHook
+	struct DialogueMenuTextHook
 	{
-		static void thunk(RE::DialogueMenu* DialogueMenu, char a2)
+		static void thunk(RE::BSString* a_out, std::uint64_t a2, std::uint64_t a3)
 		{
-			if (!DialogueMenu)
+			func(a_out, a2, a3);
+
+			auto it = g_DIAL_FULL_RNAM_Map.find(a_out->c_str());
+
+			if (it != g_DIAL_FULL_RNAM_Map.end())
 			{
-				return func(DialogueMenu, a2);
+				*a_out = it->second;
 			}
-
-
-			func(DialogueMenu, a2);
-
-			for (int entryIndex = 0; entryIndex <= 7; ++entryIndex)
-			{
-				std::string entryVariableName = "DialogueMenu_mc.TopicList.Entry" + std::to_string(entryIndex) + ".textField";
-
-				RE::GFxValue DialogueText;
-				DialogueMenu->uiMovie->GetVariable(&DialogueText, entryVariableName.c_str());
-
-				if (DialogueText.GetType() != RE::GFxValue::ValueType::kUndefined)
-				{
-					RE::GFxValue Text;
-					DialogueText.GetMember("text", &Text);
-					std::string string = Text.GetString();
-
-					RE::GFxValue newDes("replaced");
-					DialogueText.SetMember("text", newDes);
-
-					g_Logger->info("Entry {}: {}", entryIndex, string);
-				}
-			}
-		};
-		static inline REL::Relocation<decltype(thunk)> func;
-
-	};
-	*/
-
-	/*
-	//Broken DIAL text replacer. Don't know, what else I could try
-	typedef void(WINAPI* ResponseHook_pFunc)(RE::DialogueMenu* DialogueMenu, std::uint64_t a_unk);
-	ResponseHook_pFunc originalFunction01;
-
-	void thunk(RE::DialogueMenu* DialogueMenu, std::uint64_t a_unk)
-	{
-
-		if (!DialogueMenu)
-		{
-			return originalFunction01(DialogueMenu, a_unk);
-		}
-
-
-		for (int entryIndex = 0; entryIndex <= 7; ++entryIndex)
-		{
-			std::string entryVariableName = "DialogueMenu_mc.TopicList.Entry" + std::to_string(entryIndex) + ".textField";
-
-			RE::GFxValue DialogueText;
-			DialogueMenu->uiMovie->GetVariable(&DialogueText, entryVariableName.c_str());
-
-			if (DialogueText.GetType() != RE::GFxValue::ValueType::kUndefined)
-			{
-				RE::GFxValue Text;
-				DialogueText.GetMember("text", &Text);
-				std::string string = Text.GetString();
-
-				RE::GFxValue newDes("replaced");
-				DialogueText.SetMember("text", newDes);
-
-				//g_Logger->info("Entry {}: {}", entryIndex, string);
-			}
-		}
-
-		return originalFunction01(DialogueMenu, a_unk);
-
-	}
-	*/
-
-	/*
-	struct TestHook
-	{
-		static void thunk(RE::MessageBoxMenu* a_MessageBox)
-		{
 
 		};
 		static inline REL::Relocation<decltype(thunk)> func;
 
 	};
-	*/
+
 
 	void InstallHooks()
 	{
-		/*
-		const auto PopulateDialogueFunc = RELOCATION_ID(0, 51506).address();
-		const auto PopulateDialogueFunc_funcAddress = &thunk;
 
-		originalFunction01 = (ResponseHook_pFunc)PopulateDialogueFunc;
-
-		DetourTransactionBegin();
-		DetourUpdateThread(GetCurrentThread());
-		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction01), static_cast<PVOID>(&thunk));
-		const auto err = DetourTransactionCommit();
-		if (err == NO_ERROR)
-		{
-			g_Logger->info("Installed PopulateDialogueFunc hook at {0:x} with replacement from address {1:x}", PopulateDialogueFunc, reinterpret_cast<uintptr_t>(PopulateDialogueFunc_funcAddress));
-		}
-		else
-		{
-			g_Logger->error("DetourTransactionCommit failed with error code: {}", err);
-		}
-		*/
-		/*
-		//Response Hook
-		REL::Relocation<std::uintptr_t> target12{ RELOCATION_ID(0, 51506), REL::VariantOffset(0, 0x2FF, 0) }; //1408B66C0
-		stl::write_thunk_call<DialoguePopulateHook>(target12.address());
-		g_Logger->info("DialoguePopulateHook hooked at address: {:x} and offset: {:x}", target12.address(), target12.offset());
-		*/
-
-		/*
-		REL::Relocation<std::uintptr_t> target15{ RELOCATION_ID(97508, 52271), REL::VariantOffset(0x0, 0x34, 0x0) }; //51425 = 8abae0
-		stl::write_thunk_call<TestHook>(target15.address());
-		g_Logger->info("TestHook hooked at address: {:x} and offset: {:x}", target15.address(), target15.offset());
-		*/
+		//DialogueMenu text hook
+		REL::Relocation<std::uintptr_t> target16{ RELOCATION_ID(34434, 35254), REL::VariantOffset(0xCC, 0x226, 0xCC) };
+		stl::write_thunk_call<DialogueMenuTextHook>(target16.address());
+		g_Logger->info("DialogueMenuTextHook hooked at address: {:x} and offset: {:x}", target16.address(), target16.offset());
 
 		//JournalMenu quest description text Hook
 		REL::Relocation<std::uintptr_t> target14{ RELOCATION_ID(24778, 25259), REL::VariantOffset(0x21C, 0x221, 0x21C) };//First: 5B ->Don't know; Second: C4 ->Don't know; Third: 221 ->Quest description text
@@ -443,7 +337,8 @@ namespace Hook
 		g_Logger->info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target08.address(), target08.offset());
 
 		//MessageBoxData Hook SE
-		const auto MessageBoxDataFunc = RELOCATION_ID(51422, 52271).address();
+		const auto MessageBoxDataFunc = RELOCATION_ID(51422, 52271).address(); //addresses are inlined. SE address is different from AE
+
 		//const auto MessageBoxDataFuncAE_funcAddress = &MessageBoxThunkAE;
 		//const auto MessageBoxDataFuncSE_funcAddress = &MessageBoxThunkSE;
 
@@ -498,6 +393,11 @@ namespace Hook
 			REL::Relocation<std::uintptr_t> target09{ RELOCATION_ID(0, 51458), REL::VariantOffset(0x0, 0x87, 0x0) };
 			stl::write_thunk_call<ItemCardPopulateHook>(target09.address());
 			g_Logger->info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target09.address(), target09.offset());
+
+			//DialogueMenu text hook AE
+			REL::Relocation<std::uintptr_t> target15{ RELOCATION_ID(0, 35254), REL::VariantOffset(0x0, 0x115, 0x0) };
+			stl::write_thunk_call<DialogueMenuTextHook>(target15.address());
+			g_Logger->info("DialogueMenuTextHook hooked at address: {:x} and offset: {:x}", target15.address(), target15.offset());
 		}
 
 		if (REL::Module::IsSE() || REL::Module::IsVR())
@@ -510,216 +410,3 @@ namespace Hook
 
 	}
 }
-
-/*
-//Not used, because it looks like shit again
-RE::UI_MESSAGE_RESULTS MessageBoxMenuClass::ProcessMessageHook(RE::UIMessage& a_message)
-{
-
-	if (a_message.type == RE::UI_MESSAGE_TYPE::kShow)
-	{
-		g_Logger->info("Run");
-		RE::GFxValue ObjectiveText;
-
-		for (int entryIndex = 0; entryIndex <= 5; ++entryIndex)
-		{
-			std::string entryVariableName = "MessageMenu.Buttons.Button" + std::to_string(entryIndex) + ".ButtonText";
-
-			auto ui = RE::UI::GetSingleton();
-			auto menu = ui->GetMenu(RE::MessageBoxMenu::MENU_NAME);
-
-			menu->uiMovie->GetVariable(&ObjectiveText, entryVariableName.c_str());
-
-			if (ObjectiveText.GetType() != RE::GFxValue::ValueType::kUndefined)
-			{
-				RE::GFxValue Text;
-				ObjectiveText.GetMember("text", &Text);
-				std::string string = Text.GetString();
-				g_Logger->info("Text: {}", string.c_str());
-
-
-				RE::GFxValue newDes("Ersetzt");
-				ObjectiveText.SetMember("text", newDes);
-
-
-				auto it = g_QUST_NNAM_CNAM_Map.find(string.c_str());
-
-				if (it != g_QUST_NNAM_CNAM_Map.end())
-				{
-					RE::GFxValue newDes(it->second);
-					ObjectiveText.SetMember("text", newDes);
-				}
-
-			}
-		}
-
-		/*
-		RE::GFxValue ObjectiveText;
-		auto ui = RE::UI::GetSingleton();
-		auto menu = ui->GetMenu(RE::MessageBoxMenu::MENU_NAME);
-
-		bool success = menu->uiMovie->GetVariable(&ObjectiveText, "MessageMenu.Buttons.Button0.ButtonText.text");
-
-		if (success)
-		{
-			g_Logger->info("Got Buttontext");
-		}
-		else
-		{
-			g_Logger->info("Did not get Buttontext");
-		}
-
-	}
-
-	return func(this, a_message);
-}
-*/
-
-/*
-//Not used
-	bool JournalMenu::IsViewingMiscObjectives() noexcept
-	{
-		RE::GFxValue root, boolvalue;
-		this->uiMovie->GetVariable(&root, "QuestJournalFader.Menu_mc.QuestsFader.Page_mc");
-		return (root.Invoke("isViewingMiscObjectives", &boolvalue) && boolvalue.GetBool());
-	}
-
-	RE::UI_MESSAGE_RESULTS JournalMenu::ProcessMessageHook(RE::UIMessage& a_message)
-	{
-
-		if (a_message.type == RE::UI_MESSAGE_TYPE::kUpdate)
-		{
-			RE::GFxValue DescriptionText, ObjectiveText;
-			this->uiMovie->GetVariable(&DescriptionText, "QuestJournalFader.Menu_mc.QuestsFader.Page_mc.DescriptionText"); //CNAM Quests in Journal Menu
-
-			if (DescriptionText.GetType() != RE::GFxValue::ValueType::kUndefined && !IsViewingMiscObjectives())
-			{
-				RE::GFxValue Text;
-				DescriptionText.GetMember("htmlText", &Text);
-				std::string OrigDesString = Text.GetString();
-				//g_Logger->info("Text: {}", string.c_str());
-
-				auto it = g_QUST_NNAM_CNAM_Map.find(OrigDesString.c_str());
-
-				if (it != g_QUST_NNAM_CNAM_Map.end())
-				{
-					RE::GFxValue newDes(it->second);
-					DescriptionText.SetMember("htmlText", newDes);
-				}
-			}
-
-
-			for (int entryIndex = 0; entryIndex <= 11; ++entryIndex)
-			{
-				std::string entryVariableName = "QuestJournalFader.Menu_mc.QuestsFader.Page_mc.ObjectiveList.Entry" + std::to_string(entryIndex) + ".textField";
-
-				this->uiMovie->GetVariable(&ObjectiveText, entryVariableName.c_str()); //NNAM (objective text) from Quests in Journal Menu
-
-				if (ObjectiveText.GetType() != RE::GFxValue::ValueType::kUndefined)
-				{
-					RE::GFxValue Text;
-					ObjectiveText.GetMember("text", &Text);
-					std::string string = Text.GetString();
-					//g_Logger->info("Text: {}", string.c_str());
-
-					auto it = g_QUST_NNAM_CNAM_Map.find(string.c_str());
-
-					if (it != g_QUST_NNAM_CNAM_Map.end())
-					{
-						RE::GFxValue newDes(it->second);
-						ObjectiveText.SetMember("text", newDes);
-					}
-				}
-			}
-
-		}
-
-		return func(this, a_message);
-	}
-	*/
-
-	/*
-	//Not used
-	std::string HudMenu::RemoveTrailingSpaces(std::string str)
-	{
-		//As long as the last character is a space, remove it
-		while (!str.empty() && std::isspace(str.back()))
-		{
-			str.pop_back();
-		}
-		return str;
-	}
-
-	RE::UI_MESSAGE_RESULTS HudMenu::ProcessMessageHook(RE::UIMessage& a_message)
-	{
-
-		if (a_message.type == RE::UI_MESSAGE_TYPE::kUpdate)
-		{
-
-			RE::GFxValue ObjectiveText;
-
-			for (int entryIndex = 0; entryIndex <= 4; ++entryIndex) //Not sure about how much there are. But max is probably 3
-			{
-				std::string entryVariableName = "HUDMovieBaseInstance.QuestUpdateBaseInstance.objective" + std::to_string(entryIndex) + ".ObjectiveTextFieldInstance.TextFieldInstance";
-
-				auto ui = RE::UI::GetSingleton();
-				auto menu = ui->GetMenu(RE::HUDMenu::MENU_NAME);
-
-				menu->uiMovie->GetVariable(&ObjectiveText, entryVariableName.c_str()); //NNAM (objective text) from Quests in Hudmenu
-
-				if (ObjectiveText.GetType() != RE::GFxValue::ValueType::kUndefined)
-				{
-					RE::GFxValue Text;
-					ObjectiveText.GetMember("text", &Text);
-					std::string string = Text.GetString();
-					//g_Logger->info("Text: {}", string.c_str());
-
-
-					std::string cleanstring = RemoveTrailingSpaces(string); //Not needed by default, but with SkyHUD there are a lot of spaces
-
-					auto it = g_QUST_NNAM_CNAM_Map.find(cleanstring.c_str());
-
-					if (it != g_QUST_NNAM_CNAM_Map.end())
-					{
-						RE::GFxValue newDes(it->second);
-						ObjectiveText.SetMember("text", newDes);
-					}
-
-				}
-			}
-
-		}
-
-		return func(this, a_message);
-	}
-	*/
-
-	/*
-	//Not used, because it looks like shit in dialogue menu
-	void DialogueMenu::ProcessMessageHook()
-	{
-
-		func(this);
-
-		for (int entryIndex = 0; entryIndex <= 7; ++entryIndex)
-		{
-			std::string entryVariableName = "DialogueMenu_mc.TopicList.Entry" + std::to_string(entryIndex) + ".textField";
-
-			RE::GFxValue DialogueText;
-			this->uiMovie->GetVariable(&DialogueText, entryVariableName.c_str());
-
-			if (DialogueText.GetType() != RE::GFxValue::ValueType::kUndefined)
-			{
-				RE::GFxValue Text;
-				DialogueText.GetMember("text", &Text);
-				std::string string = Text.GetString();
-
-				RE::GFxValue newDes("replaced");
-				DialogueText.SetMember("text", newDes);
-
-				g_Logger->info("Entry {}: {}", entryIndex, string);
-			}
-		}
-
-	}
-	*/

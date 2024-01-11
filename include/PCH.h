@@ -2,19 +2,10 @@
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"
 
-#include <unordered_set>
 #include <unordered_map>
-#include <chrono>
-#include <memory>
-#include <Windows.h>
-#include <filesystem>
-#include <string>
-#include <fstream>
-#include <regex>
 #include <ShlObj.h>
 
 #include <spdlog/sinks/basic_file_sink.h>
-//#include <SimpleIni.h>
 #include <xbyak/xbyak.h>
 #include <nlohmann/json.hpp>
 

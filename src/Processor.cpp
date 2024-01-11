@@ -10,7 +10,7 @@ void Processor::RunConstTranslation()
 		auto SubrecordType = Information.SubrecordType;
 		auto ReplacerText = Information.ReplacerText;
 
-		if (SubrecordType == "FULL") //DIAL FULL isn't working. Something is very different with DIAL
+		if (SubrecordType == "FULL") //DIAL FULL isn't working like this. Something is very different with DIAL
 		{
 			SetName<RE::TESFullName>(Form, ReplacerText, &RE::TESFullName::fullName);
 		}

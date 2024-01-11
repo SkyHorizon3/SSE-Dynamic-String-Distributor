@@ -196,72 +196,76 @@ void Config::ParseTranslationFiles()
 {
 	for (const auto& files : m_FilesInPluginFolder)
 	{
-
 		DEBUG_LOG(g_Logger, "Parsing file  {}", files);
 
-		std::ifstream file(files);
-		if (!file.is_open())
+		try
 		{
-			g_Logger->error("Couldn't open file {}", files);
-			continue;
+			std::ifstream file(files);
+			if (!file.is_open())
+			{
+				g_Logger->error("Couldn't open file {}", files);
+				continue;
+			}
+
+			json jsonData;
+			file >> jsonData;
+
+			//Read data out of json file
+			for (const auto& entry : jsonData)
+			{
+				try
+				{
+					std::string types = entry["type"];
+					std::string stringValue = entry["string"];
+
+					if (!isSpecialType(types))
+					{
+						std::string editorId = entry["editor_id"];
+
+						// extract first four letters to get the record type
+						std::string type = types.substr(0, 4);
+
+						// All the other letters are the subrecord type
+						std::string subrecord = GetSubrecordType(types);
+
+						RE::TESForm* form = RE::TESForm::LookupByEditorID(editorId);
+						if (!form)
+						{
+							g_Logger->error("Couldn't find Editor ID {} out of file {}", editorId, files);
+							continue;
+						}
+
+						if (!isConstType(subrecord))
+						{
+							g_ConfigurationInformationStruct.emplace_back(form, stringValue, subrecord, type);
+							//These information will be used in Hooks
+							//to get the right description to right place
+
+						}
+						else
+						{
+							g_ConstConfigurationInformationStruct.emplace_back(form, stringValue, subrecord);
+							//These information will be used in Processor
+						}
+					}
+					else
+					{
+						HandleSpecialType(types, entry, stringValue);
+					}
+				}
+				catch (const std::exception& e)
+				{
+					g_Logger->error("Exception while processing entry in file {}: {}", files, e.what());
+				}
+			}
 		}
-
-		json jsonData;
-		file >> jsonData;
-
-		//Read data out of json file
-		for (const auto& entry : jsonData)
+		catch (const std::exception& e)
 		{
-			std::string types = entry["type"];
-			std::string stringValue = entry["string"];
-
-			if (!isSpecialType(types))
-			{
-				std::string editorId = entry["editor_id"];
-
-				// extract first four letters to get the record type
-				std::string type = types.substr(0, 4);
-
-				// All the other letters are the subrecord type
-				std::string subrecord = GetSubrecordType(types);
-
-				RE::TESForm* form = RE::TESForm::LookupByEditorID(editorId);
-				if (!form)
-				{
-					g_Logger->error("Couldn't find Editor ID {} out of file {}", editorId, files);
-					continue;
-				}
-
-
-				if (!isConstType(subrecord))
-				{
-					g_ConfigurationInformationStruct.emplace_back(form, stringValue, subrecord, type);
-					//These information will be used in Hooks
-					//to get the right description to right place
-
-				}
-				else
-				{
-					g_ConstConfigurationInformationStruct.emplace_back(form, stringValue, subrecord);
-					//These information will be used in Processor
-				}
-
-				/*
-				DEBUG_LOG(g_Logger, "Form ID: {0:08X}", g_ConfigurationInformationStruct.FormID);
-				DEBUG_LOG(g_Logger, "String: {}", g_ConfigurationInformationStruct.ReplacerText.c_str());
-				DEBUG_LOG(g_Logger, "RecordType: {}", g_ConfigurationInformationStruct.RecordType.c_str());
-				DEBUG_LOG(g_Logger, "SubrecordType: {}", g_ConfigurationInformationStruct.SubrecordType.c_str());
-				*/
-			}
-			else
-			{
-				HandleSpecialType(types, entry, stringValue);
-			}
+			g_Logger->error("Exception while parsing JSON file {}: {}", files, e.what());
 		}
-
-
 	}
 }
+
 
 void Config::LoadFiles()
 {
