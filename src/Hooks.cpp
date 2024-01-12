@@ -100,7 +100,9 @@ namespace Hook
 		{
 			//Perks, Loading Screens, Race Descriptions and any other DESC in SSEDIT
 
-			func(a_out, nullptr, 0); // Invoke original (BSString::Set(a_out, 0, 0)
+			UNREFERENCED_PARAMETER(a_unk);
+
+			func(a_out, nullptr, 0); // Invoke original
 
 			for (const auto& Information : g_ConfigurationInformationStruct)
 			{
