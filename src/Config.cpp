@@ -34,7 +34,7 @@ std::vector<std::string> Config::GetLoadOrder()
 			std::string line;
 			while (std::getline(file, line))
 			{
-				loadOrder.push_back(line);
+				loadOrder.emplace_back(line);
 			}
 			file.close();
 		}
@@ -123,6 +123,7 @@ void Config::EnumerateFilesInFolders(const std::string folders) //Get all files 
 {
 	const std::string folderPath = "Data\\SKSE\\Plugins\\DynamicStringDistributor\\" + folders;
 	m_Files.clear();
+	m_Files.shrink_to_fit(); //I'm not sure if that does anything useful, but it doesn't really matter :D
 
 	for (const auto& entry : std::filesystem::recursive_directory_iterator(folderPath))
 	{

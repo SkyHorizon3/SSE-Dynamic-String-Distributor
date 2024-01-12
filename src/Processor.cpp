@@ -6,9 +6,9 @@ void Processor::RunConstTranslation()
 {
 	for (const auto& Information : g_ConstConfigurationInformationStruct)
 	{
-		auto Form = Information.Form;
-		auto SubrecordType = Information.SubrecordType;
-		auto ReplacerText = Information.ReplacerText;
+		auto& Form = Information.Form;
+		auto& SubrecordType = Information.SubrecordType;
+		auto& ReplacerText = Information.ReplacerText;
 
 		if (SubrecordType == "FULL") //DIAL FULL isn't working like this. Something is very different with DIAL
 		{
@@ -24,6 +24,7 @@ void Processor::RunConstTranslation()
 		}
 	}
 	g_ConstConfigurationInformationStruct.clear(); //Structs only used once, so no need to keep them for fun
+	g_ConstConfigurationInformationStruct.shrink_to_fit();
 }
 
 template <typename T>
