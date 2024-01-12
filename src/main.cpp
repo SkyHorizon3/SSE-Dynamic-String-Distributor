@@ -42,8 +42,7 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 		Config->EnumerateFolder();
 		Config->LoadFiles();
 
-		auto eventProcessorMenu = Processor::GetSingleton();
-		eventProcessorMenu->RunConstTranslation();
+		Processor::GetSingleton()->RunConstTranslation();
 
 		Hook::InstallHooks();
 	}

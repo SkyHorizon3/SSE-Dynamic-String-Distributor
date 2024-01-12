@@ -178,19 +178,20 @@ void Config::HandleSpecialType(const std::string& types, const json& entry, cons
 {
 	std::string original = entry["original"];
 
-	if (types == "INFO NAM1" || types == "MESG ITXT") //There shouldn't be a lot ITXT, so it doesn't matter. Creating new map would be heavier
+	if (types == "INFO NAM1" || types == "MESG ITXT")
 	{
-		g_INFO_NAM1_ITXT_Map.emplace(original, stringValue);
+		g_INFO_NAM1_ITXT_Map.insert_or_assign(original, stringValue); //update if key already exists. This simulates the esp load order
 	}
 	else if (types == "QUST NNAM" || types == "QUST CNAM")
 	{
-		g_QUST_NNAM_CNAM_Map.emplace(original, stringValue);
+		g_QUST_NNAM_CNAM_Map.insert_or_assign(original, stringValue);
 	}
 	else if (types == "INFO RNAM" || types == "DIAL FULL")
 	{
-		g_DIAL_FULL_RNAM_Map.emplace(original, stringValue);
+		g_DIAL_FULL_RNAM_Map.insert_or_assign(original, stringValue);
 	}
 }
+
 
 void Config::ParseTranslationFiles()
 {

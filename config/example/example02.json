@@ -1,0 +1,18 @@
+[
+	{
+	
+		"editor_id": "WeaponRackOnlyDaggerMESSAGE",
+		"type": "MESG ITXT",
+		"original": "OK",
+		"string": "Ersetzt"
+	
+	},
+	{
+	
+		"editor_id": "WeaponRackOnlyDaggerMESSAGE",
+		"type": "MESG ITXT",
+		"original": "Nein",
+		"string": "Auch ersetzt"
+	
+	}
+]
