@@ -15,7 +15,7 @@ public:
 private:
 
 	template <typename T>
-	void SetConstStrings(RE::TESForm* Form, RE::BSFixedString newName, RE::BSFixedString T::* memberPtr);
+	void SetConstStrings(RE::TESForm* Form, RE::BSFixedString NewString, RE::BSFixedString T::* memberPtr);
 
 	Processor() = default;
 	~Processor() = default;
