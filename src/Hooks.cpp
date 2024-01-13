@@ -91,7 +91,7 @@ namespace Hook
 	};
 
 
-	// Track if a book is valid between the two AE hooks
+	// Track if an object is valid between the two AE hooks
 	static bool IsDESC = false;
 	std::string SetDescription = "";
 	struct ParentDESCHookAE
@@ -339,7 +339,7 @@ namespace Hook
 		g_Logger->info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target08.address(), target08.offset());
 
 		//MessageBoxData Hook SE
-		const auto MessageBoxDataFunc = RELOCATION_ID(51422, 52271).address(); //addresses are inlined. SE address is different from AE
+		const auto MessageBoxDataFunc = RELOCATION_ID(51422, 52271).address();
 
 		//const auto MessageBoxDataFuncAE_funcAddress = &MessageBoxThunkAE;
 		//const auto MessageBoxDataFuncSE_funcAddress = &MessageBoxThunkSE;

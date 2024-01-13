@@ -12,15 +12,15 @@ void Processor::RunConstTranslation()
 
 		if (SubrecordType == "FULL") //DIAL FULL isn't working like this. Something is very different with DIAL
 		{
-			SetName<RE::TESFullName>(Form, ReplacerText, &RE::TESFullName::fullName);
+			SetConstStrings<RE::TESFullName>(Form, ReplacerText, &RE::TESFullName::fullName);
 		}
 		else if (SubrecordType == "SHRT")
 		{
-			SetName<RE::TESNPC>(Form, ReplacerText, &RE::TESNPC::shortName);
+			SetConstStrings<RE::TESNPC>(Form, ReplacerText, &RE::TESNPC::shortName);
 		}
 		else if (SubrecordType == "TNAM")
 		{
-			SetName<RE::TESWordOfPower>(Form, ReplacerText, &RE::TESWordOfPower::translation);
+			SetConstStrings<RE::TESWordOfPower>(Form, ReplacerText, &RE::TESWordOfPower::translation);
 		}
 	}
 	g_ConstConfigurationInformationStruct.clear(); //Structs only used once, so no need to keep them for fun
@@ -28,11 +28,11 @@ void Processor::RunConstTranslation()
 }
 
 template <typename T>
-void Processor::SetName(RE::TESForm* Form, RE::BSFixedString newName, RE::BSFixedString T::* memberPtr)
+void Processor::SetConstStrings(RE::TESForm* Form, RE::BSFixedString NewString, RE::BSFixedString T::* memberPtr)
 {
-	T* OrigName = skyrim_cast<T*>(Form);
-	if (OrigName)
+	T* OrigString = skyrim_cast<T*>(Form);
+	if (OrigString)
 	{
-		OrigName->*memberPtr = newName;
+		OrigString->*memberPtr = NewString;
 	}
 }
