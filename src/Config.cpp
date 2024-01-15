@@ -46,7 +46,7 @@ std::vector<std::string> Config::GetLoadOrder()
 }
 
 //I don't like the way it looks, but it fulfils its purpose.
-void Config::EnumerateFolder() //Get all folders in DynamicStringReplacer directory
+void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor directory
 {
 	const std::filesystem::path Directory = L"Data\\SKSE\\Plugins\\DynamicStringDistributor\\";
 	bool foundOverwriteFolder = false;  // To check if Overwrite folder is found
@@ -85,7 +85,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringReplacer direct
 		else
 		{
 			RE::TESDataHandler* handler = RE::TESDataHandler::GetSingleton();
-			auto IsInDataFolder = handler->LookupModByName(folder);
+			auto IsInDataFolder = handler->LookupModByName(folder); //LookupLoadedMod doesn't work. So maybe implement system, that also parses plugin.txt and then delete the ones, that are not in this list?
 
 			if (!IsInDataFolder)
 			{

@@ -209,45 +209,31 @@ namespace Hook
 
 	};
 
-
-	typedef void(WINAPI* MessageBoxDataHookAE_pFunc)(RE::MessageBoxData* Menu, std::uint64_t a2, std::uint64_t a3);
-	MessageBoxDataHookAE_pFunc originalFunction02;
-	void MessageBoxThunkAE(RE::MessageBoxData* Menu, std::uint64_t a2, std::uint64_t a3)
+	struct DialogueMenuTextHook
 	{
-		if (!Menu)
+		static void thunk(RE::BSString* a_out, std::uint64_t a2, std::uint64_t a3)
 		{
-			return originalFunction02(Menu, a2, a3);
-		}
+			func(a_out, a2, a3);
 
-		RE::BSTArray<RE::BSString, RE::BSTArrayHeapAllocator>::size_type originalSize = Menu->buttonText.size();
+			auto it = g_DIAL_FULL_RNAM_Map.find(a_out->c_str());
 
-		for (RE::BSTArray<RE::BSString, RE::BSTArrayHeapAllocator>::size_type i = 0; i < originalSize; ++i)
-		{
-			//g_Logger->info("Processing buttonText[{}]", i);
-
-			if (i < Menu->buttonText.size())
+			if (it != g_DIAL_FULL_RNAM_Map.end())
 			{
-				auto it = g_INFO_NAM1_ITXT_Map.find(Menu->buttonText[i].c_str());
-
-				if (it != g_INFO_NAM1_ITXT_Map.end())
-				{
-					Menu->buttonText[i] = it->second;
-				}
+				*a_out = it->second;
 			}
-		}
 
-		return originalFunction02(Menu, a2, a3);
-	}
+		};
+		static inline REL::Relocation<decltype(thunk)> func;
 
+	};
 
-
-	typedef void(WINAPI* MessageBoxDataHookSE_pFunc)(RE::MessageBoxData* Menu);
-	MessageBoxDataHookSE_pFunc originalFunction03;
-	void MessageBoxThunkSE(RE::MessageBoxData* Menu)
+	typedef void(WINAPI* MessageBoxDataHook_pFunc)(RE::MessageBoxData* Menu);
+	MessageBoxDataHook_pFunc originalFunction01;
+	void MessageBoxThunk(RE::MessageBoxData* Menu)
 	{
 		if (!Menu)
 		{
-			return originalFunction03(Menu);
+			return originalFunction01(Menu);
 		}
 
 		RE::BSTArray<RE::BSString, RE::BSTArrayHeapAllocator>::size_type originalSize = Menu->buttonText.size();
@@ -267,26 +253,8 @@ namespace Hook
 			}
 		}
 
-		return originalFunction03(Menu);
+		return originalFunction01(Menu);
 	}
-
-	struct DialogueMenuTextHook
-	{
-		static void thunk(RE::BSString* a_out, std::uint64_t a2, std::uint64_t a3)
-		{
-			func(a_out, a2, a3);
-
-			auto it = g_DIAL_FULL_RNAM_Map.find(a_out->c_str());
-
-			if (it != g_DIAL_FULL_RNAM_Map.end())
-			{
-				*a_out = it->second;
-			}
-
-		};
-		static inline REL::Relocation<decltype(thunk)> func;
-
-	};
 
 
 	void InstallHooks()
@@ -340,29 +308,18 @@ namespace Hook
 
 		//MessageBoxData Hook SE
 		const auto MessageBoxDataFunc = RELOCATION_ID(51422, 52271).address();
+		const auto MessageBoxDataFunc_funcAddress = &MessageBoxThunk;
 
-		//const auto MessageBoxDataFuncAE_funcAddress = &MessageBoxThunkAE;
-		//const auto MessageBoxDataFuncSE_funcAddress = &MessageBoxThunkSE;
-
-		originalFunction02 = (MessageBoxDataHookAE_pFunc)MessageBoxDataFunc;
-		originalFunction03 = (MessageBoxDataHookSE_pFunc)MessageBoxDataFunc;
+		originalFunction01 = (MessageBoxDataHook_pFunc)MessageBoxDataFunc;
 
 		DetourTransactionBegin();
 		DetourUpdateThread(GetCurrentThread());
-		if (REL::Module::IsAE())
-		{
-			DetourAttach(reinterpret_cast<PVOID*>(&originalFunction02), static_cast<PVOID>(&MessageBoxThunkAE));
-			g_Logger->info("Installed MessageBoxDataFuncAE hook!");
-		}
-		else
-		{
-			DetourAttach(reinterpret_cast<PVOID*>(&originalFunction03), static_cast<PVOID>(&MessageBoxThunkSE));
-			g_Logger->info("Installed MessageBoxDataFuncSE hook!");
-		}
+		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction01), static_cast<PVOID>(&MessageBoxThunk));
+
 		const auto err = DetourTransactionCommit();
 		if (err == NO_ERROR)
 		{
-			g_Logger->info("No errors during DetourTransactionCommit!");
+			g_Logger->info("Installed MessageBoxDataFunc hook at {0:x} with replacement from address {1:x}", MessageBoxDataFunc, reinterpret_cast<uintptr_t>(MessageBoxDataFunc_funcAddress));
 		}
 		else
 		{
