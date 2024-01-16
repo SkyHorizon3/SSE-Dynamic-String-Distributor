@@ -48,7 +48,7 @@ std::vector<std::string> Config::GetLoadOrder()
 		}
 
 		std::vector<std::string> AllPlugins;
-		for (const auto& entry : std::filesystem::recursive_directory_iterator("Data"))
+		for (const auto& entry : std::filesystem::directory_iterator("Data"))
 		{
 			if (entry.is_regular_file() &&
 				(entry.path().extension() == L".esp" || entry.path().extension() == L".esm" || entry.path().extension() == L".esl"))
