@@ -12,13 +12,14 @@ std::vector<std::string> Config::GetLoadOrder()
 
 		if (REL::Module::IsVR())
 		{
-			loadOrderPath += L"\\AppData\\Local\\Skyrim VR\\loadorder.txt";
+			loadOrderPath += L"\\AppData\\Local\\Skyrim VR\\plugins.txt";
+
 			DEBUG_LOG(g_Logger, "Directory: Skyrim VR", nullptr);
 		}
 		else
 		{
 			std::wstring name = std::filesystem::exists("steam_api64.dll") ? L"Skyrim Special Edition" : L"Skyrim Special Edition GOG";
-			loadOrderPath += L"\\AppData\\Local\\" + name + L"\\loadorder.txt";
+			loadOrderPath += L"\\AppData\\Local\\" + name + L"\\plugins.txt";
 
 #ifndef NDEBUG
 			std::string second = std::filesystem::exists("steam_api64.dll") ? "Skyrim Special Edition" : "Skyrim Special Edition GOG";
@@ -27,17 +28,44 @@ std::vector<std::string> Config::GetLoadOrder()
 		}
 
 		std::vector<std::string> loadOrder;
-
 		std::ifstream file(loadOrderPath);
 		if (file.is_open())
 		{
 			std::string line;
 			while (std::getline(file, line))
 			{
-				loadOrder.emplace_back(line);
+				if (line[0] == '*') //Check if line starts with *
+				{
+					loadOrder.emplace_back(line.substr(1)); //Add lines without the *
+				}
 			}
 			file.close();
+
 		}
+		else
+		{
+			g_Logger->info("The plugins.txt file could not be opened.");
+		}
+
+		std::vector<std::string> AllPlugins;
+		for (const auto& entry : std::filesystem::recursive_directory_iterator("Data"))
+		{
+			if (entry.is_regular_file() &&
+				(entry.path().extension() == L".esp" || entry.path().extension() == L".esm" || entry.path().extension() == L".esl"))
+			{
+				AllPlugins.emplace_back(entry.path().filename().string());
+			}
+		}
+
+		loadOrder.insert(loadOrder.begin(), m_BaseGamePlugins.begin(), m_BaseGamePlugins.end()); // Add stuff of m_BaseGamePlugins at the beginning of loadOrder
+		loadOrder.erase(
+			std::remove_if(loadOrder.begin(), loadOrder.end(), [&](const std::string& plugin) { //Remove files that are not found in the Data folder
+				return std::find(AllPlugins.begin(), AllPlugins.end(), plugin) == AllPlugins.end();
+				}),
+			loadOrder.end()
+		);
+
+		//Most of this is actually a big workaround since I can't find a better way through CLib.
 
 		return loadOrder;
 	}
@@ -69,6 +97,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 		}
 	}
 
+	std::vector<std::string> loadOrder = GetLoadOrder();
 
 	for (auto it = m_Folders.begin(); it != m_Folders.end();)
 	{
@@ -84,10 +113,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 		}
 		else
 		{
-			RE::TESDataHandler* handler = RE::TESDataHandler::GetSingleton();
-			auto IsInDataFolder = handler->LookupModByName(folder); //LookupLoadedMod doesn't work. So maybe implement system, that also parses plugin.txt and then delete the ones, that are not in this list?
-
-			if (!IsInDataFolder)
+			if (std::find(loadOrder.begin(), loadOrder.end(), folder) == loadOrder.end())
 			{
 				g_Logger->info("Plugin {} not found, skipping all files in the folder", folder);
 				it = m_Folders.erase(it);
@@ -99,8 +125,15 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 		}
 	}
 
+#ifndef NDEBUG
+	static int position = 1;
+	for (const auto& Plugin : loadOrder)
+	{
+		g_Logger->info("Plugin{}: {}", position++, Plugin);
+	}
+#endif
+
 	// Sort folders based on load order of plugins
-	std::vector<std::string> loadOrder = GetLoadOrder();
 	std::sort(m_Folders.begin(), m_Folders.end(), [&loadOrder](const std::string& a, const std::string& b)
 		{
 			auto itA = std::find(loadOrder.begin(), loadOrder.end(), a);
