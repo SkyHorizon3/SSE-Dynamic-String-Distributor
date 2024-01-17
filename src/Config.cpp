@@ -1,6 +1,8 @@
 #include "../include/Globals.h"
 #include "../include/Config.h"
 
+//I don't like the way it looks, but it fulfils its purpose...
+
 // Case-insensitive comparison for strings
 bool Config::caseInsensitiveStringCompare(const std::string& a, const std::string& b)
 {
@@ -56,23 +58,32 @@ std::vector<std::string> Config::GetLoadOrder()
 			g_Logger->info("The plugins.txt file could not be opened.");
 		}
 
+		m_BaseGamePlugins.erase( //Just in case a BaseGamePlugin is inside the plugins.txt
+			std::remove_if(m_BaseGamePlugins.begin(), m_BaseGamePlugins.end(), [&](const std::string& BaseGamePlugin)
+				{
+					return std::find_if(loadOrder.begin(), loadOrder.end(), [&](const std::string& Plugin)
+						{
+							return caseInsensitiveStringCompare(BaseGamePlugin, Plugin); //Lambda inside lambda, lovely
+						}) != loadOrder.end();
+				}),
+			m_BaseGamePlugins.end()
+		);
+
 		std::vector<std::string> AllPlugins;
 		for (const auto& entry : std::filesystem::directory_iterator("Data"))
 		{
-			if (entry.is_regular_file() &&
-				(entry.path().extension() == L".esp" || entry.path().extension() == L".esm" || entry.path().extension() == L".esl"))
+			if (entry.is_regular_file() && (entry.path().extension() == L".esp" || entry.path().extension() == L".esm" || entry.path().extension() == L".esl"))
 			{
 				AllPlugins.emplace_back(entry.path().filename().string());
 			}
 		}
 
-
 		m_BaseGamePlugins.erase(
-			std::remove_if(m_BaseGamePlugins.begin(), m_BaseGamePlugins.end(), [&](const std::string& plugin)
+			std::remove_if(m_BaseGamePlugins.begin(), m_BaseGamePlugins.end(), [&](const std::string& BaseGamePlugin) //Remove plugins not found in data folder from the BaseGamePlugin list.
 				{
-					return std::find_if(AllPlugins.begin(), AllPlugins.end(), [&](const std::string& folderPlugin)
+					return std::find_if(AllPlugins.begin(), AllPlugins.end(), [&](const std::string& Plugin)
 						{
-							return caseInsensitiveStringCompare(plugin, folderPlugin);
+							return caseInsensitiveStringCompare(BaseGamePlugin, Plugin);
 						}) == AllPlugins.end();
 				}),
 			m_BaseGamePlugins.end()
@@ -81,7 +92,7 @@ std::vector<std::string> Config::GetLoadOrder()
 		loadOrder.insert(loadOrder.begin(), m_BaseGamePlugins.begin(), m_BaseGamePlugins.end());
 
 
-		//Most of this is actually a big workaround since I can't find a better way through CLib.
+		//Most of this is actually a big and cruel workaround since I can't find a better way through CLib to get all loaded plugins. It seems random, what's counted as loaded in TESDataHandler
 
 		return loadOrder;
 	}
@@ -89,7 +100,6 @@ std::vector<std::string> Config::GetLoadOrder()
 	return std::vector<std::string>();
 }
 
-//I don't like the way it looks, but it fulfils its purpose.
 void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor directory
 {
 	const std::filesystem::path Directory = L"Data\\SKSE\\Plugins\\DynamicStringDistributor\\";
@@ -267,7 +277,7 @@ void Config::ParseTranslationFiles()
 {
 	for (const auto& files : m_FilesInPluginFolder)
 	{
-		DEBUG_LOG(g_Logger, "Parsing file  {}", files);
+		DEBUG_LOG(g_Logger, "Parsing file {}", files);
 
 		try
 		{
@@ -340,6 +350,8 @@ void Config::ParseTranslationFiles()
 
 void Config::LoadFiles()
 {
+	auto startTime = std::chrono::high_resolution_clock::now();
+
 	for (const auto& folders : m_Folders)
 	{
 
@@ -349,4 +361,7 @@ void Config::LoadFiles()
 
 	ParseTranslationFiles();
 
+	auto endTime = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+	g_Logger->info("Retrieving and parsing the translation files took {} milliseconds.", duration.count()); {}
 }

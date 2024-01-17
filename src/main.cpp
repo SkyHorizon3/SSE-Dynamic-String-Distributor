@@ -34,13 +34,12 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 			g_Logger->error("po3_Tweaks not found, mod won't work!");
 		}
 
+		Config::GetSingleton()->EnumerateFolder();
 	}
 	break;
 	case SKSE::MessagingInterface::kDataLoaded:
 	{
-		auto Config = Config::GetSingleton();
-		Config->EnumerateFolder();
-		Config->LoadFiles();
+		Config::GetSingleton()->LoadFiles();
 
 		Processor::GetSingleton()->RunConstTranslation();
 
