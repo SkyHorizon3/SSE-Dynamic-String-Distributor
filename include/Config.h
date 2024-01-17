@@ -39,11 +39,11 @@ private:
 
 	std::vector<std::string> m_BaseGamePlugins = {
 		"Skyrim.esm",
-		"SkyrimVR.esm", //For Skyrim VR
 		"Update.esm",
 		"Dawnguard.esm",
 		"HearthFires.esm",
 		"Dragonborn.esm",
+ 		"SkyrimVR.esm", //For Skyrim VR
 		"ccasvsse001-almsivi.esm",
 		"ccbgssse001-fish.esm",
 		"ccbgssse002-exoticarrows.esl",
