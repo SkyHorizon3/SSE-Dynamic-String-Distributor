@@ -117,8 +117,8 @@ private:
 		"cceejsse005-cave.esm",
 		"cckrtsse001_altar.esl",
 		"cccbhsse001-gaunt.esl",
-		"ccafdsse001-dwesanctuary.esm"
-		//"_ResourcePack.esl"
+		"ccafdsse001-dwesanctuary.esm",
+		"_ResourcePack.esl"
 	};
 
 
