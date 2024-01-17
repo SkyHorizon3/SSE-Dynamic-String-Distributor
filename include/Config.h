@@ -15,6 +15,7 @@ public:
 	void LoadFiles();
 
 private:
+	bool caseInsensitiveStringCompare(const std::string& a, const std::string& b);
 	std::vector<std::string> GetLoadOrder();
 	void EnumerateFilesInFolders(std::string folders);
 	bool isSpecialType(const std::string& type);

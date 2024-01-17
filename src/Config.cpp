@@ -1,6 +1,15 @@
 #include "../include/Globals.h"
 #include "../include/Config.h"
 
+// Case-insensitive comparison for strings
+bool Config::caseInsensitiveStringCompare(const std::string& a, const std::string& b)
+{
+	return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), [](char a, char b)
+		{
+			return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
+		});
+}
+
 std::vector<std::string> Config::GetLoadOrder()
 {
 	// Get user directory path
@@ -57,13 +66,20 @@ std::vector<std::string> Config::GetLoadOrder()
 			}
 		}
 
-		loadOrder.insert(loadOrder.begin(), m_BaseGamePlugins.begin(), m_BaseGamePlugins.end()); // Add stuff of m_BaseGamePlugins at the beginning of loadOrder
-		loadOrder.erase(
-			std::remove_if(loadOrder.begin(), loadOrder.end(), [&](const std::string& plugin) { //Remove files that are not found in the Data folder
-				return std::find(AllPlugins.begin(), AllPlugins.end(), plugin) == AllPlugins.end();
+
+		m_BaseGamePlugins.erase(
+			std::remove_if(m_BaseGamePlugins.begin(), m_BaseGamePlugins.end(), [&](const std::string& plugin)
+				{
+					return std::find_if(AllPlugins.begin(), AllPlugins.end(), [&](const std::string& folderPlugin)
+						{
+							return caseInsensitiveStringCompare(plugin, folderPlugin);
+						}) == AllPlugins.end();
 				}),
-			loadOrder.end()
+			m_BaseGamePlugins.end()
 		);
+
+		loadOrder.insert(loadOrder.begin(), m_BaseGamePlugins.begin(), m_BaseGamePlugins.end());
+
 
 		//Most of this is actually a big workaround since I can't find a better way through CLib.
 
@@ -113,7 +129,10 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 		}
 		else
 		{
-			if (std::find(loadOrder.begin(), loadOrder.end(), folder) == loadOrder.end())
+			if (std::find_if(loadOrder.begin(), loadOrder.end(), [&](const std::string& loadedPlugin) //Please tell me if there is an easier way of doing this. My eyes and brain are hurting xD
+				{
+					return caseInsensitiveStringCompare(folder, loadedPlugin);
+				}) == loadOrder.end())
 			{
 				g_Logger->info("Plugin {} not found, skipping all files in the folder", folder);
 				it = m_Folders.erase(it);
@@ -134,20 +153,37 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 #endif
 
 	// Sort folders based on load order of plugins
-	std::sort(m_Folders.begin(), m_Folders.end(), [&loadOrder](const std::string& a, const std::string& b)
+	std::sort(m_Folders.begin(), m_Folders.end(), [this, &loadOrder](const std::string& a, const std::string& b)
 		{
-			auto itA = std::find(loadOrder.begin(), loadOrder.end(), a);
-			auto itB = std::find(loadOrder.begin(), loadOrder.end(), b);
+			auto itA = std::find_if(loadOrder.begin(), loadOrder.end(), [&](const std::string& loadedPlugin)
+				{
+					return caseInsensitiveStringCompare(a, loadedPlugin);
+				});
+
+			auto itB = std::find_if(loadOrder.begin(), loadOrder.end(), [&](const std::string& loadedPlugin)
+				{
+					return caseInsensitiveStringCompare(b, loadedPlugin);
+				});
+
 			if (itA == loadOrder.end()) return false;
 			if (itB == loadOrder.end()) return true;
 			return std::distance(loadOrder.begin(), itA) < std::distance(loadOrder.begin(), itB);
 		});
+
 
 	// If Overwrite folder was found, add it at the end
 	if (foundOverwriteFolder)
 	{
 		m_Folders.emplace_back("Overwrite");
 	}
+
+#ifndef NDEBUG
+	static int position2 = 1;
+	for (const auto& Plugin : m_Folders)
+	{
+		g_Logger->info("Folder{}: {}", position2++, Plugin);
+	}
+#endif
 
 }
 
