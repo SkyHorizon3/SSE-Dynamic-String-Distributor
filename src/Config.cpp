@@ -350,8 +350,6 @@ void Config::ParseTranslationFiles()
 
 void Config::LoadFiles()
 {
-	auto startTime = std::chrono::high_resolution_clock::now();
-
 	for (const auto& folders : m_Folders)
 	{
 
@@ -361,7 +359,4 @@ void Config::LoadFiles()
 
 	ParseTranslationFiles();
 
-	auto endTime = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-	g_Logger->info("Retrieving and parsing the translation files took {} milliseconds.", duration.count()); {}
 }

@@ -20,30 +20,28 @@ namespace Hook
 			}
 
 			func(itemCard, a_item, a3);
-			handleEffectsItems(itemCard, *a_item);
+			handleEffectsItems(*a_item);
 			handleDescriptionItems(itemCard, *a_item);
 		};
 
-		static void handleSpellTomes(RE::ItemCard* itemCard, RE::TESObjectBOOK* book, const ConfigurationInformation& information)
+		static void handleSpellTomes(RE::TESObjectBOOK* book, const ConfigurationInformation& information)
 		{
 			auto spell = book->GetSpell();
 			if (spell && spell->GetAVEffect()->formID == information.Form->formID)
 			{
-				auto descriptionValue = RE::GFxValue(information.ReplacerText);
-				itemCard->obj.SetMember("effects", descriptionValue);
+				spell->GetAVEffect()->magicItemDescription = information.ReplacerText;
 			}
 		}
 
-		static void handleMagicItem(RE::ItemCard* itemCard, RE::MagicItem* magicItem, const ConfigurationInformation& information)
+		static void handleMagicItem(RE::MagicItem* magicItem, const ConfigurationInformation& information)
 		{
 			if (magicItem && magicItem->GetAVEffect()->formID == information.Form->formID)
 			{
-				auto descriptionValue = RE::GFxValue(information.ReplacerText);
-				itemCard->obj.SetMember("effects", descriptionValue);
+				magicItem->GetAVEffect()->magicItemDescription = information.ReplacerText;
 			}
 		}
 
-		static void handleEffectsItems(RE::ItemCard* itemCard, RE::TESBoundObject* a_item)
+		static void handleEffectsItems(RE::TESBoundObject* a_item)
 		{
 			for (const auto& information : g_ConfigurationInformationStruct)
 			{
@@ -52,12 +50,12 @@ namespace Hook
 					if (a_item->IsBook())
 					{
 						auto book = a_item->As<RE::TESObjectBOOK>();
-						handleSpellTomes(itemCard, book, information);
+						handleSpellTomes(book, information);
 					}
 					else
 					{
 						auto magicItem = a_item->As<RE::MagicItem>();
-						handleMagicItem(itemCard, magicItem, information);
+						handleMagicItem(magicItem, information);
 					}
 				}
 			}

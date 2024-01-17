@@ -35,4 +35,19 @@ void Processor::SetConstStrings(RE::TESForm* Form, RE::BSFixedString NewString, 
 	{
 		OrigString->*memberPtr = NewString;
 	}
+	else
+	{
+		g_Logger->info("Issue during ConstTranslation with FormID: {0:08X}.", Form->formID);
+	}
 }
+
+
+//REFR FULL
+//WRLD FULL
+//LSCR DESC
+//FLOR RNAM
+
+
+//To test:
+//HAZD FULL
+//SLGM FULL, eventuell DESC -> FULL seems to work, DESC to test

@@ -39,11 +39,18 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 	break;
 	case SKSE::MessagingInterface::kDataLoaded:
 	{
+		auto startTime = std::chrono::high_resolution_clock::now();
+
 		Config::GetSingleton()->LoadFiles();
 
 		Processor::GetSingleton()->RunConstTranslation();
 
 		Hook::InstallHooks();
+
+		auto endTime = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+		g_Logger->info("The retrieval and parsing of jsons, the execution of ConstTranslation and the installation of hooks took {} milliseconds.", duration.count());
+
 	}
 	break;
 
