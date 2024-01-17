@@ -220,7 +220,7 @@ void Config::EnumerateFilesInFolders(const std::string folders) //Get all files 
 	{
 		m_FilesInPluginFolder.emplace_back(folderPath + "\\" + file);
 
-		DEBUG_LOG(g_Logger, "Datei{}: {}", folderCount++, (folderPath + "\\" + file));
+		DEBUG_LOG(g_Logger, "File{}: {}", folderCount++, (folderPath + "\\" + file));
 	}
 }
 
