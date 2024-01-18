@@ -80,6 +80,9 @@ namespace Hook
 						itemCard->obj.SetMember("description", descriptionValue);
 
 						// Set ItemCardDescription to empty. This stops the GetDescription hook from replacing also CNAM not only DESC in the UI
+
+					//Check if description is empty, if not, keep it...
+
 					}
 				}
 			}
@@ -105,7 +108,7 @@ namespace Hook
 			for (const auto& Information : g_ConfigurationInformationStruct)
 			{
 
-				if (a_parent && a_parent->formID == Information.Form->formID && Information.SubrecordType == "DESC")
+				if (a_parent && a_parent->formID == Information.Form->formID)
 				{
 					IsDESC = true;
 					SetDescription = Information.ReplacerText;
@@ -130,7 +133,6 @@ namespace Hook
 		};
 	};
 
-
 	struct GetDescriptionHookAE
 	{
 		static void thunk(RE::BSString* a_out, std::uint64_t a2, std::uint64_t a3)
@@ -144,6 +146,7 @@ namespace Hook
 				*a_out = SetDescription;
 			}
 			IsDESC = false;
+
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
@@ -157,7 +160,7 @@ namespace Hook
 
 			for (const auto& Information : g_ConfigurationInformationStruct)
 			{
-				if (a_parent && a_parent->formID == Information.Form->formID && Information.SubrecordType == "DESC")
+				if (a_parent && a_parent->formID == Information.Form->formID)
 				{
 					*a_out = Information.ReplacerText;
 				}
@@ -255,6 +258,23 @@ namespace Hook
 	}
 
 
+	typedef void(WINAPI* LoadScreen_pFunc)(RE::TESLoadScreen* loadscreen, float* a2);
+	LoadScreen_pFunc originalFunction02;
+	void LoadScreenFunc(RE::TESLoadScreen* loadscreen, float* a2)
+	{
+
+		for (const auto& Information : g_ConfigurationInformationStruct)
+		{
+			if (loadscreen && loadscreen->formID == Information.Form->formID)
+			{
+				loadscreen->loadingText = Information.ReplacerText;
+			}
+		}
+
+		return originalFunction02(loadscreen, a2);
+	}
+
+
 	void InstallHooks()
 	{
 
@@ -308,16 +328,22 @@ namespace Hook
 		const auto MessageBoxDataFunc = RELOCATION_ID(51422, 52271).address();
 		const auto MessageBoxDataFunc_funcAddress = &MessageBoxThunk;
 
+		const auto LoadScreenOffsetFunc = RELOCATION_ID(21368, 21833).address();
+		const auto LoadScreenOffsetFunc_funcAddress = &LoadScreenFunc;
+
 		originalFunction01 = (MessageBoxDataHook_pFunc)MessageBoxDataFunc;
+		originalFunction02 = (LoadScreen_pFunc)LoadScreenOffsetFunc;
 
 		DetourTransactionBegin();
 		DetourUpdateThread(GetCurrentThread());
 		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction01), static_cast<PVOID>(&MessageBoxThunk));
+		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction02), static_cast<PVOID>(&LoadScreenFunc));
 
 		const auto err = DetourTransactionCommit();
 		if (err == NO_ERROR)
 		{
 			g_Logger->info("Installed MessageBoxDataFunc hook at {0:x} with replacement from address {1:x}", MessageBoxDataFunc, reinterpret_cast<uintptr_t>(MessageBoxDataFunc_funcAddress));
+			g_Logger->info("Installed LoadScreenFunc hook at {0:x} with replacement from address {1:x}", LoadScreenOffsetFunc, reinterpret_cast<uintptr_t>(LoadScreenOffsetFunc_funcAddress));
 		}
 		else
 		{
