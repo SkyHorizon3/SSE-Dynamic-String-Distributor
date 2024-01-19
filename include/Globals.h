@@ -16,3 +16,4 @@ inline std::vector<ConfigurationInformation> g_ConstConfigurationInformationStru
 inline std::unordered_map<std::string, std::string> g_INFO_NAM1_ITXT_Map;
 inline std::unordered_map<std::string, std::string> g_DIAL_FULL_RNAM_Map;
 inline std::unordered_map<std::string, std::string> g_QUST_NNAM_CNAM_Map;
+inline std::unordered_map<std::string, std::string> g_FLOR_RNAM_RDMP_Map;

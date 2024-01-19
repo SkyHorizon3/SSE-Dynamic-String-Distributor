@@ -74,14 +74,13 @@ namespace Hook
 					}
 					else if (Information.SubrecordType == "DESC")
 					{
-						// If somebody only translates DESC and the book has CNAM in the esp, than the CNAM description will be lost
-						// Nothing we can do. Thats very unlikely to happen. If so, just put the CNAM description into a json.
+						// If someone only translates DESC and has the CNAM book in esp, then the CNAM description is lost
+						// There is nothing I can do. It is very unlikely that this will happen. If it does, just write the CNAM description to a json file.
+						// The problem is that DESC from the GetDescription hook also replaces CNAM before I can get the original string (CNAM) in the UI.
+						// If you also put CNAM in a json, GetDescription will put DESC in CNAM, but with the ItemCardHook we will put the description after.
+
 						auto descriptionValue = RE::GFxValue("");
 						itemCard->obj.SetMember("description", descriptionValue);
-
-						// Set ItemCardDescription to empty. This stops the GetDescription hook from replacing also CNAM not only DESC in the UI
-
-					//Check if description is empty, if not, keep it...
 
 					}
 				}
@@ -108,7 +107,7 @@ namespace Hook
 			for (const auto& Information : g_ConfigurationInformationStruct)
 			{
 
-				if (a_parent && a_parent->formID == Information.Form->formID)
+				if (a_parent && a_parent->formID == Information.Form->formID && Information.SubrecordType == "DESC") //So it doesn't set CNAM as DESC if both are in a json
 				{
 					IsDESC = true;
 					SetDescription = Information.ReplacerText;
@@ -160,7 +159,7 @@ namespace Hook
 
 			for (const auto& Information : g_ConfigurationInformationStruct)
 			{
-				if (a_parent && a_parent->formID == Information.Form->formID)
+				if (a_parent && a_parent->formID == Information.Form->formID && Information.SubrecordType == "DESC")
 				{
 					*a_out = Information.ReplacerText;
 				}
@@ -230,7 +229,7 @@ namespace Hook
 
 	typedef void(WINAPI* MessageBoxDataHook_pFunc)(RE::MessageBoxData* Menu);
 	MessageBoxDataHook_pFunc originalFunction01;
-	void MessageBoxThunk(RE::MessageBoxData* Menu)
+	void MessageBoxFunc(RE::MessageBoxData* Menu)
 	{
 		if (!Menu)
 		{
@@ -274,9 +273,106 @@ namespace Hook
 		return originalFunction02(loadscreen, a2);
 	}
 
+	//Credits to po3 https://github.com/powerof3/SimpleActivateSKSE released under MIT
+	//Still compatible
+	struct RNAM_RDMP_TextHook
+	{
+		static void thunk(RE::UIMessageQueue* queue_this, const RE::BSFixedString& menuName, RE::UI_MESSAGE_TYPE type, RE::IUIMessageData* data)
+		{
+			const auto messagedata = data ? static_cast<RE::HUDData*>(data) : nullptr;
+			const auto crosshairRef = messagedata ? messagedata->crossHairRef.get() : RE::TESObjectREFRPtr();
+
+			if (messagedata)
+			{
+
+				g_Logger->info("String: {}", messagedata->text.c_str());
+
+
+
+
+
+				/*
+				case RE::FormType::Flora:
+				case RE::FormType::Tree: //FLOR RNAM
+				{
+					std::istringstream iss(messagedata->text.c_str());
+					std::string line1, line2;
+
+					if (std::getline(iss, line1) && std::getline(iss, line2))
+					{
+
+						auto it = g_FLOR_RNAM_RDMP_Map.find(line1);
+
+						if (it != g_FLOR_RNAM_RDMP_Map.end())
+						{
+							line1 = it->second;
+
+							messagedata->text = line1 + "\n" + line2;
+						}
+
+					}
+
+				}
+				break;
+				case RE::FormType::Door: //REGN RDMP
+				{
+					std::istringstream iss(messagedata->text.c_str());
+					std::string line1, line2;
+
+					g_Logger->info("String: {}", messagedata->text.c_str());
+
+					if (std::getline(iss, line1) && std::getline(iss, line2))
+					{
+						auto it = g_FLOR_RNAM_RDMP_Map.find(line2);
+
+						if (it != g_FLOR_RNAM_RDMP_Map.end())
+						{
+							line2 = it->second;
+
+							messagedata->text = line1 + "\n" + line2;
+						}
+					}
+					else
+					{
+						std::getline(iss, line1);
+
+						size_t pos = line1.find(' ');
+
+						if (pos != std::string::npos)
+						{
+							// Extract text after first space
+							std::string textbeforeSpace = line1.substr(0, pos);
+							line1 = line1.substr(pos + 1);
+
+							auto it = g_FLOR_RNAM_RDMP_Map.find(line1);
+
+							if (it != g_FLOR_RNAM_RDMP_Map.end())
+							{
+								messagedata->text = textbeforeSpace + it->second;
+							}
+						}
+					}
+				}
+				break;
+				*/
+
+
+
+			}
+
+
+			func(queue_this, menuName, type, data);
+		};
+		static inline REL::Relocation<decltype(thunk)> func;
+
+	};
 
 	void InstallHooks()
 	{
+		//RNAM_RDMP_TextHook
+		REL::Relocation<std::uintptr_t> target17{ RELOCATION_ID(39535, 40621), REL::VariantOffset(0x289, 0x280, 0x289) };
+		stl::write_thunk_call<RNAM_RDMP_TextHook>(target17.address());
+		g_Logger->info("RNAM_RDMP_TextHook hooked at address: {:x} and offset: {:x}", target17.address(), target17.offset());
 
 		//DialogueMenu text hook
 		REL::Relocation<std::uintptr_t> target16{ RELOCATION_ID(34434, 35254), REL::VariantOffset(0xCC, 0x226, 0xCC) };
@@ -326,9 +422,9 @@ namespace Hook
 
 		//MessageBoxData Hook SE
 		const auto MessageBoxDataFunc = RELOCATION_ID(51422, 52271).address();
-		const auto MessageBoxDataFunc_funcAddress = &MessageBoxThunk;
+		const auto MessageBoxDataFunc_funcAddress = &MessageBoxFunc;
 
-		const auto LoadScreenOffsetFunc = RELOCATION_ID(21368, 21833).address();
+		const auto LoadScreenOffsetFunc = RELOCATION_ID(21368, 21833).address(); //Not tested on SE
 		const auto LoadScreenOffsetFunc_funcAddress = &LoadScreenFunc;
 
 		originalFunction01 = (MessageBoxDataHook_pFunc)MessageBoxDataFunc;
@@ -336,7 +432,7 @@ namespace Hook
 
 		DetourTransactionBegin();
 		DetourUpdateThread(GetCurrentThread());
-		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction01), static_cast<PVOID>(&MessageBoxThunk));
+		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction01), static_cast<PVOID>(&MessageBoxFunc));
 		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction02), static_cast<PVOID>(&LoadScreenFunc));
 
 		const auto err = DetourTransactionCommit();

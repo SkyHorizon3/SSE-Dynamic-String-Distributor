@@ -234,9 +234,9 @@ void Config::EnumerateFilesInFolders(const std::string folders) //Get all files 
 	}
 }
 
-bool Config::isSpecialType(const std::string& type)
+bool Config::isSpecialType(const std::string& type) //Half of Skyrim is special, lovely
 {
-	return type == "INFO NAM1" || type == "QUST CNAM" || type == "QUST NNAM" || type == "INFO RNAM" || type == "DIAL FULL" || type == "MESG ITXT";
+	return type == "INFO NAM1" || type == "QUST CNAM" || type == "QUST NNAM" || type == "INFO RNAM" || type == "DIAL FULL" || type == "MESG ITXT" || type == "FLOR RNAM" || type == "REGN RDMP" || type == "REFR FULL";
 }
 
 bool Config::isConstType(const std::string& subrecord)
@@ -269,6 +269,10 @@ void Config::HandleSpecialType(const std::string& types, const json& entry, cons
 	else if (types == "INFO RNAM" || types == "DIAL FULL")
 	{
 		g_DIAL_FULL_RNAM_Map.insert_or_assign(original, stringValue);
+	}
+	else if (types == "REGN RDMP" || types == "FLOR RNAM")
+	{
+		g_FLOR_RNAM_RDMP_Map.insert_or_assign(original, stringValue);
 	}
 }
 

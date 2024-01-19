@@ -10,7 +10,7 @@ void Processor::RunConstTranslation()
 		auto& SubrecordType = Information.SubrecordType;
 		auto& ReplacerText = Information.ReplacerText;
 
-		if (SubrecordType == "FULL") //DIAL FULL isn't working like this. Something is very different with DIAL
+		if (SubrecordType == "FULL") //DIAL FULL, REFR FULL aren't working like this.
 		{
 			SetConstStrings<RE::TESFullName>(Form, ReplacerText, &RE::TESFullName::fullName);
 		}
@@ -39,15 +39,11 @@ void Processor::SetConstStrings(RE::TESForm* Form, RE::BSFixedString NewString, 
 	{
 		g_Logger->info("Issue during ConstTranslation with FormID: {0:08X}.", Form->formID);
 	}
+
 }
 
-
-//REFR FULL
-//WRLD FULL
-//LSCR DESC
-//FLOR RNAM
-
+//REFR FULL-> HudMenu text can be easily hooked. No ideas about how to get marker text at the moment
 
 //To test:
 //HAZD FULL
-//SLGM FULL, eventuell DESC -> FULL seems to work, DESC to test
+//SLGM FULL
