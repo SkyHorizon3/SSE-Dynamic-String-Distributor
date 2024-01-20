@@ -282,16 +282,10 @@ namespace Hook
 			const auto messagedata = data ? static_cast<RE::HUDData*>(data) : nullptr;
 			const auto crosshairRef = messagedata ? messagedata->crossHairRef.get() : RE::TESObjectREFRPtr();
 
-			if (messagedata)
+			if (messagedata && crosshairRef)
 			{
-
-				g_Logger->info("String: {}", messagedata->text.c_str());
-
-
-
-
-
-				/*
+				switch (crosshairRef->GetBaseObject()->GetFormType())
+				{
 				case RE::FormType::Flora:
 				case RE::FormType::Tree: //FLOR RNAM
 				{
@@ -319,7 +313,7 @@ namespace Hook
 					std::istringstream iss(messagedata->text.c_str());
 					std::string line1, line2;
 
-					g_Logger->info("String: {}", messagedata->text.c_str());
+					//g_Logger->info("String: {}", messagedata->text.c_str());
 
 					if (std::getline(iss, line1) && std::getline(iss, line2))
 					{
@@ -332,40 +326,79 @@ namespace Hook
 							messagedata->text = line1 + "\n" + line2;
 						}
 					}
-					else
-					{
-						std::getline(iss, line1);
-
-						size_t pos = line1.find(' ');
-
-						if (pos != std::string::npos)
-						{
-							// Extract text after first space
-							std::string textbeforeSpace = line1.substr(0, pos);
-							line1 = line1.substr(pos + 1);
-
-							auto it = g_FLOR_RNAM_RDMP_Map.find(line1);
-
-							if (it != g_FLOR_RNAM_RDMP_Map.end())
-							{
-								messagedata->text = textbeforeSpace + it->second;
-							}
-						}
-					}
 				}
 				break;
-				*/
 
+				default:
+				{
+					break;
+				}
 
+				}
 
 			}
-
 
 			func(queue_this, menuName, type, data);
 		};
 		static inline REL::Relocation<decltype(thunk)> func;
 
 	};
+
+	bool HudMenu::containsOnlySpace(const std::string& str)
+	{
+		return std::all_of(str.begin(), str.end(), [](unsigned char c) { return std::isspace(c); });
+	}
+
+	RE::UI_MESSAGE_RESULTS HudMenu::ProcessMessageHook(RE::UIMessage& a_message) //REGN RDMP if you're leaving a cave or something like that
+	{
+
+		if (a_message.type == RE::UI_MESSAGE_TYPE::kUpdate)
+		{
+
+			RE::GFxValue ObjectiveText;
+
+			auto ui = RE::UI::GetSingleton();
+			auto menu = ui->GetMenu(RE::HUDMenu::MENU_NAME);
+
+			menu->uiMovie->GetVariable(&ObjectiveText, "HUDMovieBaseInstance.RolloverText");
+
+			if (ObjectiveText.GetType() != RE::GFxValue::ValueType::kUndefined)
+			{
+				RE::GFxValue Text;
+				ObjectiveText.GetMember("text", &Text);
+				std::string OrigString = Text.GetString();
+
+				if (!OrigString.empty() && !containsOnlySpace(OrigString))
+				{
+					//Look if it's only one line
+					size_t newlinePos = OrigString.find('\n');
+					if (newlinePos == std::string::npos)
+					{
+						// Extract text before and after the first space
+						size_t spacePos = OrigString.find(' ');
+						if (spacePos != std::string::npos)
+						{
+							std::string before = OrigString.substr(0, spacePos);
+							std::string after = OrigString.substr(spacePos + 1);
+
+
+							auto it = g_FLOR_RNAM_RDMP_Map.find(after);
+							if (it != g_FLOR_RNAM_RDMP_Map.end())
+							{
+								std::string NewString = before + " " + it->second;
+								RE::GFxValue newDes(NewString);
+								ObjectiveText.SetMember("text", newDes);
+
+								//g_Logger->info("NewString: {}", NewString);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return func(this, a_message);
+	}
 
 	void InstallHooks()
 	{
