@@ -10,7 +10,7 @@ namespace Hook
 	//HUGE Credits to Nightfallstorm for some of the hooks!!
 	//https://github.com/Nightfallstorm/DescriptionFramework released under GPL-3.0
 	//https://github.com/Nightfallstorm/Recipes released under GPL-3.0
-	struct ItemCardPopulateHook
+	struct ItemCardPopulateHook //BOOK CNAM, MGEF DNAM
 	{
 		static void thunk(RE::ItemCard* itemCard, RE::TESBoundObject** a_item, char a3)
 		{
@@ -74,7 +74,7 @@ namespace Hook
 					}
 					else if (Information.SubrecordType == "DESC")
 					{
-						// If someone only translates DESC and has the CNAM book in esp, then the CNAM description is lost
+						// If someone only translates DESC and the book has CNAM in the esp, then the CNAM description is lost
 						// There is nothing I can do. It is very unlikely that this will happen. If it does, just write the CNAM description to a json file.
 						// The problem is that DESC from the GetDescription hook also replaces CNAM before I can get the original string (CNAM) in the UI.
 						// If you also put CNAM in a json, GetDescription will put DESC in CNAM, but with the ItemCardHook we will put the description after.
@@ -132,7 +132,7 @@ namespace Hook
 		};
 	};
 
-	struct GetDescriptionHookAE
+	struct GetDescriptionHookAE //Nearly any DESC
 	{
 		static void thunk(RE::BSString* a_out, std::uint64_t a2, std::uint64_t a3)
 		{
@@ -170,7 +170,7 @@ namespace Hook
 
 	};
 
-	struct DialogueStreamHook
+	struct DialogueStreamHook //INFO NAM1
 	{
 		static void thunk(RE::BSString* a_out, std::uint64_t a2, std::uint64_t a3)
 		{
@@ -191,7 +191,7 @@ namespace Hook
 	//Objective text in Journal menu. Not doing this via UI, because it's possible to add multiple NNAMs in one textfield.
 	//And objective text in HUDmenu. Not doing this via UI, because SetObjectiveDisplayed(index) in papyrus doesn't set text in the UI. So I can't get the text then...
 	//And quest description text in JournalMenu. Not doing this via UI, because I found the populate hook.
-	struct QuestObjectiveTextHook
+	struct QuestObjectiveTextHook //QUST NNAM, QUST CNAM
 	{
 		static void thunk(RE::BSString* a_out, std::uint64_t a2, std::uint64_t a3)
 		{
@@ -209,7 +209,7 @@ namespace Hook
 
 	};
 
-	struct DialogueMenuTextHook
+	struct DialogueMenuTextHook //DIAL FULL, INFO RNAM
 	{
 		static void thunk(RE::BSString* a_out, std::uint64_t a2, std::uint64_t a3)
 		{
@@ -229,7 +229,7 @@ namespace Hook
 
 	typedef void(WINAPI* MessageBoxDataHook_pFunc)(RE::MessageBoxData* Menu);
 	MessageBoxDataHook_pFunc originalFunction01;
-	void MessageBoxFunc(RE::MessageBoxData* Menu)
+	void MessageBoxFunc(RE::MessageBoxData* Menu) //MESG ITXT
 	{
 		if (!Menu)
 		{
@@ -259,7 +259,7 @@ namespace Hook
 
 	typedef void(WINAPI* LoadScreen_pFunc)(RE::TESLoadScreen* loadscreen, float* a2);
 	LoadScreen_pFunc originalFunction02;
-	void LoadScreenFunc(RE::TESLoadScreen* loadscreen, float* a2)
+	void LoadScreenFunc(RE::TESLoadScreen* loadscreen, float* a2) //LSCR DESC
 	{
 
 		for (const auto& Information : g_ConfigurationInformationStruct)
@@ -271,6 +271,29 @@ namespace Hook
 		}
 
 		return originalFunction02(loadscreen, a2);
+	}
+
+	typedef void(WINAPI* MapMarker_pFunc)(RE::TESObjectREFR* marker);
+	MapMarker_pFunc originalFunction03;
+	void MapMarkerFunc(RE::TESObjectREFR* marker) //REFR FULL in Hudmenu and map
+	{
+		if (auto mapMarker = marker->extraList.GetByType<RE::ExtraMapMarker>())
+		{
+			if (auto data = mapMarker->mapData)
+			{
+				try
+				{
+					data->locationName.fullName = g_FLOR_RNAM_RDMP_Map.at(data->locationName.fullName.c_str());
+				}
+				catch (const std::out_of_range&)
+				{
+					//Thats very unsafe, but I can't figure out the problem
+				}
+
+			}
+		}
+
+		return originalFunction03(marker);
 	}
 
 	//Credits to po3 https://github.com/powerof3/SimpleActivateSKSE released under MIT
@@ -308,7 +331,7 @@ namespace Hook
 
 				}
 				break;
-				case RE::FormType::Door: //REGN RDMP
+				case RE::FormType::Door: //REGN RDMP for doors
 				{
 					std::istringstream iss(messagedata->text.c_str());
 					std::string line1, line2;
@@ -391,6 +414,7 @@ namespace Hook
 
 								//g_Logger->info("NewString: {}", NewString);
 							}
+
 						}
 					}
 				}
@@ -455,24 +479,26 @@ namespace Hook
 
 		//MessageBoxData Hook SE
 		const auto MessageBoxDataFunc = RELOCATION_ID(51422, 52271).address();
-		const auto MessageBoxDataFunc_funcAddress = &MessageBoxFunc;
-
 		const auto LoadScreenOffsetFunc = RELOCATION_ID(21368, 21833).address(); //Not tested on SE
-		const auto LoadScreenOffsetFunc_funcAddress = &LoadScreenFunc;
+		const auto MapMarkerOffsetFunc = RELOCATION_ID(19814, 20219).address(); //Not tested on SE
 
 		originalFunction01 = (MessageBoxDataHook_pFunc)MessageBoxDataFunc;
 		originalFunction02 = (LoadScreen_pFunc)LoadScreenOffsetFunc;
+		originalFunction03 = (MapMarker_pFunc)MapMarkerOffsetFunc;
 
 		DetourTransactionBegin();
 		DetourUpdateThread(GetCurrentThread());
 		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction01), static_cast<PVOID>(&MessageBoxFunc));
 		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction02), static_cast<PVOID>(&LoadScreenFunc));
+		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction03), static_cast<PVOID>(&MapMarkerFunc));
 
 		const auto err = DetourTransactionCommit();
 		if (err == NO_ERROR)
 		{
-			g_Logger->info("Installed MessageBoxDataFunc hook at {0:x} with replacement from address {1:x}", MessageBoxDataFunc, reinterpret_cast<uintptr_t>(MessageBoxDataFunc_funcAddress));
-			g_Logger->info("Installed LoadScreenFunc hook at {0:x} with replacement from address {1:x}", LoadScreenOffsetFunc, reinterpret_cast<uintptr_t>(LoadScreenOffsetFunc_funcAddress));
+			g_Logger->info("Installed MessageBoxDataFunc hook at {0:x}", MessageBoxDataFunc);
+			g_Logger->info("Installed LoadScreenFunc hook at {0:x}", LoadScreenOffsetFunc);
+			g_Logger->info("Installed MapMarkerFunc hook at {0:x}", MapMarkerOffsetFunc);
+
 		}
 		else
 		{

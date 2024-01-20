@@ -55,7 +55,7 @@ std::vector<std::string> Config::GetLoadOrder()
 		}
 		else
 		{
-			g_Logger->info("The plugins.txt file could not be opened.");
+			g_Logger->error("The plugins.txt file could not be opened.");
 		}
 
 		m_BaseGamePlugins.erase( //Just in case a BaseGamePlugin is inside the plugins.txt
@@ -270,7 +270,7 @@ void Config::HandleSpecialType(const std::string& types, const json& entry, cons
 	{
 		g_DIAL_FULL_RNAM_Map.insert_or_assign(original, stringValue);
 	}
-	else if (types == "REGN RDMP" || types == "FLOR RNAM")
+	else if (types == "REGN RDMP" || types == "FLOR RNAM" || types == "REFR FULL") //For REFR FULL we could also use the other way, but most of REFR don't have a EditorID
 	{
 		g_FLOR_RNAM_RDMP_Map.insert_or_assign(original, stringValue);
 	}
