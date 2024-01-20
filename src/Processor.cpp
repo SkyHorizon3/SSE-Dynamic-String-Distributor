@@ -42,8 +42,6 @@ void Processor::SetConstStrings(RE::TESForm* Form, RE::BSFixedString NewString, 
 
 }
 
-//REFR FULL-> HudMenu text can be easily hooked. No ideas about how to get marker text at the moment
-
 //To test:
 //HAZD FULL
 //SLGM FULL
