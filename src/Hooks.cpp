@@ -35,9 +35,28 @@ namespace Hook
 
 		static void handleMagicItem(RE::MagicItem* magicItem, const ConfigurationInformation& information)
 		{
+			//auto size = magicItem->effects.size();
+
+
 			if (magicItem && magicItem->GetAVEffect()->formID == information.Form->formID)
 			{
 				magicItem->GetAVEffect()->magicItemDescription = information.ReplacerText;
+			}
+		}
+
+		static void handleArmor(RE::TESObjectARMO* Item, const ConfigurationInformation& information)
+		{
+			if (Item && Item->formEnchanting && Item->formEnchanting->GetAVEffect()->formID == information.Form->formID)
+			{
+				Item->formEnchanting->GetAVEffect()->magicItemDescription = information.ReplacerText;
+			}
+		}
+
+		static void handleWeapon(RE::TESObjectWEAP* Item, const ConfigurationInformation& information)
+		{
+			if (Item && Item->formEnchanting && Item->formEnchanting->GetAVEffect()->formID == information.Form->formID)
+			{
+				Item->formEnchanting->GetAVEffect()->magicItemDescription = information.ReplacerText;
 			}
 		}
 
@@ -51,6 +70,16 @@ namespace Hook
 					{
 						auto book = a_item->As<RE::TESObjectBOOK>();
 						handleSpellTomes(book, information);
+					}
+					else if (a_item->IsArmor())
+					{
+						auto armor = a_item->As<RE::TESObjectARMO>();
+						handleArmor(armor, information);
+					}
+					else if (a_item->IsWeapon())
+					{
+						auto weapon = a_item->As<RE::TESObjectWEAP>();
+						handleWeapon(weapon, information);
 					}
 					else
 					{

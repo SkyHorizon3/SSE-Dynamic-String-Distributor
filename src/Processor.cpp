@@ -41,7 +41,3 @@ void Processor::SetConstStrings(RE::TESForm* Form, RE::BSFixedString NewString, 
 	}
 
 }
-
-//To test:
-//HAZD FULL
-//SLGM FULL
