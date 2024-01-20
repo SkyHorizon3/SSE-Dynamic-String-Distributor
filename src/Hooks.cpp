@@ -26,37 +26,71 @@ namespace Hook
 
 		static void handleSpellTomes(RE::TESObjectBOOK* book, const ConfigurationInformation& information)
 		{
-			auto spell = book->GetSpell();
-			if (spell && spell->GetAVEffect()->formID == information.Form->formID)
+			if (book && book->GetSpell()->effects.size())
 			{
-				spell->GetAVEffect()->magicItemDescription = information.ReplacerText;
+				auto OrigSize = book->GetSpell()->effects.size();
+
+				for (RE::BSTArrayBase::size_type i = 0; i < OrigSize; ++i)
+				{
+					if (book->GetSpell()->effects[i]->baseEffect->formID == information.Form->formID)
+					{
+						book->GetSpell()->effects[i]->baseEffect->magicItemDescription = information.ReplacerText;
+					}
+				}
+
 			}
 		}
 
 		static void handleMagicItem(RE::MagicItem* magicItem, const ConfigurationInformation& information)
 		{
-			//auto size = magicItem->effects.size();
-
-
-			if (magicItem && magicItem->GetAVEffect()->formID == information.Form->formID)
+			if (magicItem && magicItem->effects.size())
 			{
-				magicItem->GetAVEffect()->magicItemDescription = information.ReplacerText;
+				auto OrigSize = magicItem->effects.size();
+
+				for (RE::BSTArrayBase::size_type i = 0; i < OrigSize; ++i)
+				{
+
+					if (magicItem->effects[i]->baseEffect->formID == information.Form->formID)
+					{
+						magicItem->effects[i]->baseEffect->magicItemDescription = information.ReplacerText;
+					}
+
+				}
+
 			}
 		}
 
 		static void handleArmor(RE::TESObjectARMO* Item, const ConfigurationInformation& information)
 		{
-			if (Item && Item->formEnchanting && Item->formEnchanting->GetAVEffect()->formID == information.Form->formID)
+			if (Item && Item->formEnchanting->effects.size())
 			{
-				Item->formEnchanting->GetAVEffect()->magicItemDescription = information.ReplacerText;
+				auto OrigSize = Item->formEnchanting->effects.size();
+
+				for (RE::BSTArrayBase::size_type i = 0; i < OrigSize; ++i)
+				{
+					if (Item->formEnchanting->effects[i]->baseEffect->formID == information.Form->formID)
+					{
+						Item->formEnchanting->effects[i]->baseEffect->magicItemDescription = information.ReplacerText;
+					}
+				}
+
 			}
 		}
 
 		static void handleWeapon(RE::TESObjectWEAP* Item, const ConfigurationInformation& information)
 		{
-			if (Item && Item->formEnchanting && Item->formEnchanting->GetAVEffect()->formID == information.Form->formID)
+			if (Item && Item->formEnchanting->effects.size())
 			{
-				Item->formEnchanting->GetAVEffect()->magicItemDescription = information.ReplacerText;
+				auto OrigSize = Item->formEnchanting->effects.size();
+
+				for (RE::BSTArrayBase::size_type i = 0; i < OrigSize; ++i)
+				{
+					if (Item->formEnchanting->effects[i]->baseEffect->formID == information.Form->formID)
+					{
+						Item->formEnchanting->effects[i]->baseEffect->magicItemDescription = information.ReplacerText;
+					}
+				}
+
 			}
 		}
 
