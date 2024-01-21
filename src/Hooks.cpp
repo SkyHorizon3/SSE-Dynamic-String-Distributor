@@ -314,6 +314,41 @@ namespace Hook
 
 	};
 
+
+	struct MapMarkerDataHook //REFR FULL
+	{
+		static void thunk(RE::TESObjectREFR* marker)
+		{
+			if (!marker)
+			{
+				return func(marker);
+			}
+
+			func(marker);
+
+			if (!marker->IsDisabled())
+			{
+				if (auto mapMarker = marker->extraList.GetByType<RE::ExtraMapMarker>())
+				{
+					if (mapMarker && mapMarker->mapData)
+					{
+						auto it = g_FLOR_RNAM_RDMP_Map.find(mapMarker->mapData->locationName.fullName.c_str());
+
+						if (it != g_FLOR_RNAM_RDMP_Map.end())
+						{
+							mapMarker->mapData->locationName.fullName = it->second;
+						}
+
+					}
+				}
+			}
+
+		};
+		static inline REL::Relocation<decltype(thunk)> func;
+
+	};
+
+
 	typedef void(WINAPI* MessageBoxDataHook_pFunc)(RE::MessageBoxData* Menu);
 	MessageBoxDataHook_pFunc originalFunction01;
 	void MessageBoxFunc(RE::MessageBoxData* Menu) //MESG ITXT
@@ -351,29 +386,6 @@ namespace Hook
 		}
 
 		return originalFunction02(loadscreen, a2);
-	}
-
-	typedef void(WINAPI* MapMarker_pFunc)(RE::TESObjectREFR* marker);
-	MapMarker_pFunc originalFunction03;
-	void MapMarkerFunc(RE::TESObjectREFR* marker) //REFR FULL in Hudmenu and map
-	{
-		if (auto mapMarker = marker->extraList.GetByType<RE::ExtraMapMarker>())
-		{
-			if (auto data = mapMarker->mapData)
-			{
-				try
-				{
-					data->locationName.fullName = g_FLOR_RNAM_RDMP_Map.at(data->locationName.fullName.c_str());
-				}
-				catch (const std::out_of_range&)
-				{
-					//Thats very unsafe, but I can't figure out the problem
-				}
-
-			}
-		}
-
-		return originalFunction03(marker);
 	}
 
 	//Credits to po3 https://github.com/powerof3/SimpleActivateSKSE released under MIT
@@ -506,6 +518,11 @@ namespace Hook
 
 	void InstallHooks()
 	{
+		//REFR FULL Text Hook
+		REL::Relocation<std::uintptr_t> target19{ RELOCATION_ID(0, 19216), REL::VariantOffset(0x0, 0xE4, 0x0) }; //Theres also 40750, 0x176. But that's leading to random crashes
+		stl::write_thunk_call<MapMarkerDataHook>(target19.address());
+		g_Logger->info("MapMarkerDataHook hooked at address: {:x} and offset: {:x}", target19.address(), target19.offset());
+
 		//SpellItem Text Hook
 		REL::Relocation<std::uintptr_t> target18{ RELOCATION_ID(14163, 14271), REL::VariantOffset(0x1C, 0x1A, 0x1C) };
 		stl::write_thunk_call<SpellItemTextHook>(target18.address());
@@ -565,24 +582,20 @@ namespace Hook
 		//MessageBoxData Hook SE
 		const auto MessageBoxDataFunc = RELOCATION_ID(51422, 52271).address();
 		const auto LoadScreenOffsetFunc = RELOCATION_ID(21368, 21833).address();
-		const auto MapMarkerOffsetFunc = RELOCATION_ID(19814, 20219).address();
 
 		originalFunction01 = (MessageBoxDataHook_pFunc)MessageBoxDataFunc;
 		originalFunction02 = (LoadScreen_pFunc)LoadScreenOffsetFunc;
-		originalFunction03 = (MapMarker_pFunc)MapMarkerOffsetFunc;
 
 		DetourTransactionBegin();
 		DetourUpdateThread(GetCurrentThread());
 		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction01), static_cast<PVOID>(&MessageBoxFunc));
 		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction02), static_cast<PVOID>(&LoadScreenFunc));
-		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction03), static_cast<PVOID>(&MapMarkerFunc));
 
 		const auto err = DetourTransactionCommit();
 		if (err == NO_ERROR)
 		{
 			g_Logger->info("Installed MessageBoxDataFunc hook at {0:x}", MessageBoxDataFunc);
 			g_Logger->info("Installed LoadScreenFunc hook at {0:x}", LoadScreenOffsetFunc);
-			g_Logger->info("Installed MapMarkerFunc hook at {0:x}", MapMarkerOffsetFunc);
 
 		}
 		else
