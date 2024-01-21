@@ -519,7 +519,7 @@ namespace Hook
 	void InstallHooks()
 	{
 		//REFR FULL Text Hook
-		REL::Relocation<std::uintptr_t> target19{ RELOCATION_ID(0, 19216), REL::VariantOffset(0x0, 0xE4, 0x0) }; //Theres also 40750, 0x176. But that's leading to random crashes
+		REL::Relocation<std::uintptr_t> target19{ RELOCATION_ID(18755, 19216), REL::VariantOffset(0xA6, 0xE4, 0xA6) }; //Theres also 40750, 0x176 on AE. But that's leading to random crashes
 		stl::write_thunk_call<MapMarkerDataHook>(target19.address());
 		g_Logger->info("MapMarkerDataHook hooked at address: {:x} and offset: {:x}", target19.address(), target19.offset());
 
