@@ -150,6 +150,11 @@ namespace Hook
 	{
 		static void thunk(RE::TESBoundObject* form)
 		{
+			if (!form)
+			{
+				return func(form);
+			}
+
 			func(form);
 
 			for (const auto& Information : g_ConfigurationInformationStruct)
@@ -376,6 +381,10 @@ namespace Hook
 	LoadScreen_pFunc originalFunction02;
 	void LoadScreenFunc(RE::TESLoadScreen* loadscreen, float* a2) //LSCR DESC
 	{
+		if (!loadscreen && !loadscreen->loadingText.size())
+		{
+			return originalFunction02(loadscreen, a2);
+		}
 
 		for (const auto& Information : g_ConfigurationInformationStruct)
 		{
