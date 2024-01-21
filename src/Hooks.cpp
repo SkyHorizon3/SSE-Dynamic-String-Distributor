@@ -30,16 +30,13 @@ namespace Hook
 			auto spell = book->GetSpell();
 			if (spell && spell->effects.size())
 			{
-				auto OrigSize = spell->effects.size();
-
-				for (RE::BSTArrayBase::size_type i = 0; i < OrigSize; ++i)
+				for (auto& effect : spell->effects)
 				{
-					if (spell->effects[i]->baseEffect->formID == information.Form->formID)
+					if (effect->baseEffect->formID == information.Form->formID)
 					{
-						spell->effects[i]->baseEffect->magicItemDescription = information.ReplacerText;
+						effect->baseEffect->magicItemDescription = information.ReplacerText;
 					}
 				}
-
 			}
 		}
 
@@ -47,16 +44,12 @@ namespace Hook
 		{
 			if (magicItem && magicItem->effects.size())
 			{
-				auto OrigSize = magicItem->effects.size();
-
-				for (RE::BSTArrayBase::size_type i = 0; i < OrigSize; ++i)
+				for (auto& effect : magicItem->effects)
 				{
-
-					if (magicItem->effects[i]->baseEffect->formID == information.Form->formID)
+					if (effect->baseEffect->formID == information.Form->formID)
 					{
-						magicItem->effects[i]->baseEffect->magicItemDescription = information.ReplacerText;
+						effect->baseEffect->magicItemDescription = information.ReplacerText;
 					}
-
 				}
 
 			}
@@ -67,13 +60,11 @@ namespace Hook
 			auto Enchanting = Item->formEnchanting;
 			if (Enchanting && Enchanting->effects.size())
 			{
-				auto OrigSize = Enchanting->effects.size();
-
-				for (RE::BSTArrayBase::size_type i = 0; i < OrigSize; ++i)
+				for (auto& effect : Enchanting->effects)
 				{
-					if (Enchanting->effects[i]->baseEffect->formID == information.Form->formID)
+					if (effect->baseEffect->formID == information.Form->formID)
 					{
-						Enchanting->effects[i]->baseEffect->magicItemDescription = information.ReplacerText;
+						effect->baseEffect->magicItemDescription = information.ReplacerText;
 					}
 				}
 
@@ -85,13 +76,11 @@ namespace Hook
 			auto Enchanting = Item->formEnchanting;
 			if (Enchanting && Enchanting->effects.size())
 			{
-				auto OrigSize = Enchanting->effects.size();
-
-				for (RE::BSTArrayBase::size_type i = 0; i < OrigSize; ++i)
+				for (auto& effect : Enchanting->effects)
 				{
-					if (Enchanting->effects[i]->baseEffect->formID == information.Form->formID)
+					if (effect->baseEffect->formID == information.Form->formID)
 					{
-						Enchanting->effects[i]->baseEffect->magicItemDescription = information.ReplacerText;
+						effect->baseEffect->magicItemDescription = information.ReplacerText;
 					}
 				}
 
@@ -173,16 +162,12 @@ namespace Hook
 
 						if (spell && spell->effects.size())
 						{
-							auto OrigSize = spell->effects.size();
-
-							for (RE::BSTArrayBase::size_type i = 0; i < OrigSize; ++i)
+							for (auto& effect : spell->effects)
 							{
-
-								if (spell->effects[i]->baseEffect->formID == Information.Form->formID)
+								if (effect->baseEffect->formID == Information.Form->formID)
 								{
-									spell->effects[i]->baseEffect->magicItemDescription = Information.ReplacerText;
+									effect->baseEffect->magicItemDescription = Information.ReplacerText;
 								}
-
 							}
 						}
 					}
@@ -333,25 +318,18 @@ namespace Hook
 	MessageBoxDataHook_pFunc originalFunction01;
 	void MessageBoxFunc(RE::MessageBoxData* Menu) //MESG ITXT
 	{
-		if (!Menu)
+		if (!Menu && !Menu->buttonText.size())
 		{
 			return originalFunction01(Menu);
 		}
 
-		RE::BSTArray<RE::BSString, RE::BSTArrayHeapAllocator>::size_type originalSize = Menu->buttonText.size();
-
-		for (RE::BSTArray<RE::BSString, RE::BSTArrayHeapAllocator>::size_type i = 0; i < originalSize; ++i)
+		for (auto& effect : Menu->buttonText)
 		{
-			//g_Logger->info("Processing buttonText[{}]", i);
+			auto it = g_INFO_NAM1_ITXT_Map.find(effect.c_str());
 
-			if (i < Menu->buttonText.size()) //Just to make sure
+			if (it != g_INFO_NAM1_ITXT_Map.end())
 			{
-				auto it = g_INFO_NAM1_ITXT_Map.find(Menu->buttonText[i].c_str());
-
-				if (it != g_INFO_NAM1_ITXT_Map.end())
-				{
-					Menu->buttonText[i] = it->second;
-				}
+				effect = it->second;
 			}
 		}
 
