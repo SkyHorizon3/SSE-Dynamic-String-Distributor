@@ -24,9 +24,6 @@ namespace Hook
 			handleDescriptionItems(itemCard, *a_item);
 		};
 
-		//Spells missing
-		//Test entering caves
-
 		static void handleSpellTomes(RE::TESObjectBOOK* book, const ConfigurationInformation& information)
 		{
 
@@ -160,6 +157,41 @@ namespace Hook
 
 	};
 
+	struct SpellItemTextHook //MGEF DNAM for SpellItems
+	{
+		static void thunk(RE::TESBoundObject* form)
+		{
+			func(form);
+
+			for (const auto& Information : g_ConfigurationInformationStruct)
+			{
+				if (Information.RecordType == "MGEF" && Information.SubrecordType == "DNAM")
+				{
+					if (form->Is(RE::FormType::Spell))
+					{
+						auto spell = form->As<RE::SpellItem>();
+
+						if (spell && spell->effects.size())
+						{
+							auto OrigSize = spell->effects.size();
+
+							for (RE::BSTArrayBase::size_type i = 0; i < OrigSize; ++i)
+							{
+
+								if (spell->effects[i]->baseEffect->formID == Information.Form->formID)
+								{
+									spell->effects[i]->baseEffect->magicItemDescription = Information.ReplacerText;
+								}
+
+							}
+						}
+					}
+				}
+			}
+		};
+		static inline REL::Relocation<decltype(thunk)> func;
+
+	};
 
 	// Track if an object is valid between the two AE hooks
 	static bool IsDESC = false;
@@ -496,6 +528,11 @@ namespace Hook
 
 	void InstallHooks()
 	{
+		//SpellItem Text Hook
+		REL::Relocation<std::uintptr_t> target18{ RELOCATION_ID(14163, 14271), REL::VariantOffset(0x1C, 0x1A, 0x1C) };
+		stl::write_thunk_call<SpellItemTextHook>(target18.address());
+		g_Logger->info("SpellItemTextHook hooked at address: {:x} and offset: {:x}", target18.address(), target18.offset());
+
 		//RNAM_RDMP_TextHook
 		REL::Relocation<std::uintptr_t> target17{ RELOCATION_ID(39535, 40621), REL::VariantOffset(0x289, 0x280, 0x289) };
 		stl::write_thunk_call<RNAM_RDMP_TextHook>(target17.address());
@@ -549,8 +586,8 @@ namespace Hook
 
 		//MessageBoxData Hook SE
 		const auto MessageBoxDataFunc = RELOCATION_ID(51422, 52271).address();
-		const auto LoadScreenOffsetFunc = RELOCATION_ID(21368, 21833).address(); //Not tested on SE
-		const auto MapMarkerOffsetFunc = RELOCATION_ID(19814, 20219).address(); //Not tested on SE
+		const auto LoadScreenOffsetFunc = RELOCATION_ID(21368, 21833).address();
+		const auto MapMarkerOffsetFunc = RELOCATION_ID(19814, 20219).address();
 
 		originalFunction01 = (MessageBoxDataHook_pFunc)MessageBoxDataFunc;
 		originalFunction02 = (LoadScreen_pFunc)LoadScreenOffsetFunc;
