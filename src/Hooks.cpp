@@ -24,17 +24,22 @@ namespace Hook
 			handleDescriptionItems(itemCard, *a_item);
 		};
 
+		//Spells missing
+		//Test entering caves
+
 		static void handleSpellTomes(RE::TESObjectBOOK* book, const ConfigurationInformation& information)
 		{
-			if (book && book->GetSpell()->effects.size())
+
+			auto spell = book->GetSpell();
+			if (spell && spell->effects.size())
 			{
-				auto OrigSize = book->GetSpell()->effects.size();
+				auto OrigSize = spell->effects.size();
 
 				for (RE::BSTArrayBase::size_type i = 0; i < OrigSize; ++i)
 				{
-					if (book->GetSpell()->effects[i]->baseEffect->formID == information.Form->formID)
+					if (spell->effects[i]->baseEffect->formID == information.Form->formID)
 					{
-						book->GetSpell()->effects[i]->baseEffect->magicItemDescription = information.ReplacerText;
+						spell->effects[i]->baseEffect->magicItemDescription = information.ReplacerText;
 					}
 				}
 
@@ -62,15 +67,16 @@ namespace Hook
 
 		static void handleArmor(RE::TESObjectARMO* Item, const ConfigurationInformation& information)
 		{
-			if (Item && Item->formEnchanting->effects.size())
+			auto Enchanting = Item->formEnchanting;
+			if (Enchanting && Enchanting->effects.size())
 			{
-				auto OrigSize = Item->formEnchanting->effects.size();
+				auto OrigSize = Enchanting->effects.size();
 
 				for (RE::BSTArrayBase::size_type i = 0; i < OrigSize; ++i)
 				{
-					if (Item->formEnchanting->effects[i]->baseEffect->formID == information.Form->formID)
+					if (Enchanting->effects[i]->baseEffect->formID == information.Form->formID)
 					{
-						Item->formEnchanting->effects[i]->baseEffect->magicItemDescription = information.ReplacerText;
+						Enchanting->effects[i]->baseEffect->magicItemDescription = information.ReplacerText;
 					}
 				}
 
@@ -79,15 +85,16 @@ namespace Hook
 
 		static void handleWeapon(RE::TESObjectWEAP* Item, const ConfigurationInformation& information)
 		{
-			if (Item && Item->formEnchanting->effects.size())
+			auto Enchanting = Item->formEnchanting;
+			if (Enchanting && Enchanting->effects.size())
 			{
-				auto OrigSize = Item->formEnchanting->effects.size();
+				auto OrigSize = Enchanting->effects.size();
 
 				for (RE::BSTArrayBase::size_type i = 0; i < OrigSize; ++i)
 				{
-					if (Item->formEnchanting->effects[i]->baseEffect->formID == information.Form->formID)
+					if (Enchanting->effects[i]->baseEffect->formID == information.Form->formID)
 					{
-						Item->formEnchanting->effects[i]->baseEffect->magicItemDescription = information.ReplacerText;
+						Enchanting->effects[i]->baseEffect->magicItemDescription = information.ReplacerText;
 					}
 				}
 
