@@ -105,7 +105,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 	const std::filesystem::path Directory = L"Data\\SKSE\\Plugins\\DynamicStringDistributor\\";
 	bool foundOverwriteFolder = false;  // To check if Overwrite folder is found
 
-	for (const auto& entry : std::filesystem::recursive_directory_iterator(Directory))
+	for (const auto& entry : std::filesystem::directory_iterator(Directory))
 	{
 		if (entry.is_directory())
 		{
