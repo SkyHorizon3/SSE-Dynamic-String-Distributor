@@ -93,20 +93,37 @@ namespace Hook
 			{
 				if (information.RecordType == "MGEF" && information.SubrecordType == "DNAM")
 				{
-					if (a_item->IsBook())
+
+					if (!a_item->IsMagicItem())
 					{
-						auto book = a_item->As<RE::TESObjectBOOK>();
-						handleSpellTomes(book, information);
-					}
-					else if (a_item->IsArmor())
-					{
-						auto armor = a_item->As<RE::TESObjectARMO>();
-						handleArmor(armor, information);
-					}
-					else if (a_item->IsWeapon())
-					{
-						auto weapon = a_item->As<RE::TESObjectWEAP>();
-						handleWeapon(weapon, information);
+						switch (a_item->GetFormType())
+						{
+						case RE::FormType::Book:
+						{
+							auto book = a_item->As<RE::TESObjectBOOK>();
+							handleSpellTomes(book, information);
+						}
+						break;
+						case RE::FormType::Armor:
+						{
+							auto armor = a_item->As<RE::TESObjectARMO>();
+							handleArmor(armor, information);
+						}
+						break;
+						case RE::FormType::Weapon:
+						{
+							auto weapon = a_item->As<RE::TESObjectWEAP>();
+							handleWeapon(weapon, information);
+						}
+						break;
+
+						default:
+						{
+							break;
+						}
+
+						}
+
 					}
 					else
 					{
