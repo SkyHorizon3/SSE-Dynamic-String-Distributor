@@ -31,6 +31,91 @@ private:
 	Config& operator=(const Config&) = delete;
 	Config& operator=(Config&&) = delete;
 
+
+	enum class RecordTypes
+	{
+		//Strings
+		kACTI_FULL,
+		kACTI_RNAM,
+		kALCH_FULL,
+		kAMMO_FULL,
+		kAPPA_FULL,
+		kARMO_FULL,
+		kAVIF_FULL, //Actor Value information
+		kBOOK_FULL,
+		kBPTD_BPTN, //BodyPartData, not visible
+		kCELL_FULL,
+		kCLAS_FULL, //not visible
+		kCLFM_FULL, //color, not all of them are visible
+		kCONT_FULL,
+		kDIAL_FULL,
+		kDOOR_FULL,
+		kENCH_FULL,
+		kEXPL_FULL,
+		kEYES_FULL, //Not sure, probably not visible
+		kFACT_FNAM, //Female title
+		kFACT_FULL, //not visible
+		kFACT_MNAM, //Male title
+		kFLOR_FULL,
+		kFLOR_RNAM,
+		kFURN_FULL,
+		kGMST_DATA, //Game settings, sometimes visible
+		kHAZD_FULL,
+		kHDPT_FULL, //head part data, not visible
+		kINFO_RNAM,
+		kINGR_FULL,
+		kKEYM_FULL,
+		kLCTN_FULL,
+		kLIGH_FULL,
+		kLSCR_DESC,
+		kMESG_FULL,
+		kMESG_ITXT, //button text of messageboxes
+		kMGEF_DNAM,
+		kMGEF_FULL,
+		kMISC_FULL,
+		kNPC__FULL,
+		kNPC__SHRT,
+		kPERK_EPF2,
+		kPERK_EPFD,
+		kPERK_FULL,
+		kPROJ_FULL,
+		kQUST_FULL,
+		kQUST_NNAM,
+		kRACE_FULL,
+		kREFR_FULL,
+		kSCRL_FULL,
+		kSHOU_FULL,
+		kSLGM_FULL,
+		kSNCT_FULL, //some are visible?
+		kSPEL_FULL,
+		kTACT_FULL,
+		kTREE_FULL,
+		kWATR_FULL,
+		kWEAP_FULL,
+		kWOOP_FULL,
+		kWOOP_TNAM,
+		kWRLD_FULL,
+
+		//DLStrings
+		kAMMO_DESC,
+		kARMO_DESC,
+		kAVIF_DESC,
+		kBOOK_CNAM,
+		kBOOK_DESC,
+		kCOLL_DESC, //not visible
+		kMESG_DESC,
+		kPERK_DESC,
+		kQUST_CNAM,
+		kRACE_DESC,
+		kSCRL_DESC,
+		kSHOU_DESC,
+		kSPEL_DESC,
+		kWEAP_DESC,
+
+		//ILStrings
+		kINFO_NAM1,
+	};
+
 private:
 	std::vector<std::string> m_Folders;
 	std::vector<std::string> m_Files;
@@ -43,7 +128,7 @@ private:
 		"Dawnguard.esm",
 		"HearthFires.esm",
 		"Dragonborn.esm",
- 		"SkyrimVR.esm", //For Skyrim VR
+		"SkyrimVR.esm", //For Skyrim VR
 		"ccasvsse001-almsivi.esm",
 		"ccbgssse001-fish.esm",
 		"ccbgssse002-exoticarrows.esl",
