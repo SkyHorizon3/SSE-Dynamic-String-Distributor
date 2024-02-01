@@ -31,12 +31,12 @@ private:
 	Config& operator=(const Config&) = delete;
 	Config& operator=(Config&&) = delete;
 
-
+	/*
 	enum class RecordTypes
 	{
 		//Strings
 		kACTI_FULL,
-		kACTI_RNAM,
+		kACTI_RNAM, //Look
 		kALCH_FULL,
 		kAMMO_FULL,
 		kAPPA_FULL,
@@ -53,13 +53,13 @@ private:
 		kENCH_FULL,
 		kEXPL_FULL,
 		kEYES_FULL, //Not sure, probably not visible
-		kFACT_FNAM, //Female title
+		kFACT_FNAM, //Female title - Look
 		kFACT_FULL, //not visible
-		kFACT_MNAM, //Male title
+		kFACT_MNAM, //Male title - Look
 		kFLOR_FULL,
 		kFLOR_RNAM,
 		kFURN_FULL,
-		kGMST_DATA, //Game settings, sometimes visible
+		kGMST_DATA, //Game settings, sometimes visible - Look
 		kHAZD_FULL,
 		kHDPT_FULL, //head part data, not visible
 		kINFO_RNAM,
@@ -75,7 +75,7 @@ private:
 		kMISC_FULL,
 		kNPC__FULL,
 		kNPC__SHRT,
-		kPERK_EPF2,
+		kPERK_EPF2, //Look
 		kPERK_EPFD,
 		kPERK_FULL,
 		kPROJ_FULL,
@@ -115,6 +115,7 @@ private:
 		//ILStrings
 		kINFO_NAM1,
 	};
+	*/
 
 private:
 	std::vector<std::string> m_Folders;

@@ -145,17 +145,6 @@ namespace Hook
 						auto descriptionValue = RE::GFxValue(Information.ReplacerText);
 						itemCard->obj.SetMember("description", descriptionValue);
 					}
-					else if (Information.SubrecordType == "DESC")
-					{
-						// If someone only translates DESC and the book has CNAM in the esp, then the CNAM description is lost
-						// There is nothing I can do. It is very unlikely that this will happen. If it does, just write the CNAM description to a json file.
-						// The problem is that DESC from the GetDescription hook also replaces CNAM before I can get the original string (CNAM) in the UI.
-						// If you also put CNAM in a json, GetDescription will put DESC in CNAM, but with the ItemCardHook we will put the description after.
-
-						auto descriptionValue = RE::GFxValue("");
-						itemCard->obj.SetMember("description", descriptionValue);
-
-					}
 				}
 			}
 		}
@@ -249,7 +238,8 @@ namespace Hook
 
 			//g_Logger->info("Output: {}", a_out->c_str());
 
-			if (IsDESC)
+
+			if (IsDESC && !a_out->empty()) //Don't replace anything thats empty. This stops the hook from also replacing BOOK CNAM with BOOK DESC if there is no CNAM.
 			{
 				*a_out = SetDescription;
 			}
@@ -268,7 +258,7 @@ namespace Hook
 
 			for (const auto& Information : g_ConfigurationInformationStruct)
 			{
-				if (a_parent && a_parent->formID == Information.Form->formID && Information.SubrecordType == "DESC")
+				if (a_parent && a_parent->formID == Information.Form->formID && Information.SubrecordType == "DESC" && !a_out->empty())
 				{
 					*a_out = Information.ReplacerText;
 				}
