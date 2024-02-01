@@ -234,16 +234,6 @@ void Config::EnumerateFilesInFolders(const std::string folders) //Get all files 
 	}
 }
 
-bool Config::isSpecialType(const std::string& type) //Half of Skyrim is special, lovely
-{
-	return type == "INFO NAM1" || type == "QUST CNAM" || type == "QUST NNAM" || type == "INFO RNAM" || type == "DIAL FULL" || type == "MESG ITXT" || type == "FLOR RNAM" || type == "REGN RDMP" || type == "REFR FULL";
-}
-
-bool Config::isConstType(const std::string& subrecord)
-{
-	return subrecord == "FULL" || subrecord == "TNAM" || subrecord == "SHRT";
-}
-
 std::string Config::GetSubrecordType(const std::string& types) const
 {
 	size_t spacePos = types.find(' ');
@@ -254,28 +244,92 @@ std::string Config::GetSubrecordType(const std::string& types) const
 	return "";
 }
 
-void Config::HandleSpecialType(const std::string& types, const json& entry, const std::string& stringValue)
+Config::RecordTypes Config::GetRecordType(const std::string& type)
 {
-	std::string original = entry["original"];
+	static const std::unordered_map<std::string, RecordTypes> typeMap = {
+		{"ACTI FULL", RecordTypes::kConst_Translation},
+		//{"ACTI RNAM", RecordTypes::kACTI_RNAM},
+		{"ALCH FULL", RecordTypes::kConst_Translation},
+		{"AMMO FULL", RecordTypes::kConst_Translation},
+		{"APPA FULL", RecordTypes::kConst_Translation},
+		{"ARMO FULL", RecordTypes::kConst_Translation},
+		{"AVIF FULL", RecordTypes::kConst_Translation},
+		{"BOOK FULL", RecordTypes::kConst_Translation},
+		{"BPTD BPTN", RecordTypes::kNotVisible},
+		{"CELL FULL", RecordTypes::kConst_Translation},
+		{"CLAS FULL", RecordTypes::kNotVisible},
+		{"CLFM FULL", RecordTypes::kConst_Translation},
+		{"CONT FULL", RecordTypes::kConst_Translation},
+		{"DIAL FULL", RecordTypes::kDIAL_FULL},
+		{"DOOR FULL", RecordTypes::kConst_Translation},
+		{"ENCH FULL", RecordTypes::kConst_Translation},
+		{"EXPL FULL", RecordTypes::kConst_Translation},
+		{"EYES FULL", RecordTypes::kConst_Translation},
+		//{"FACT FNAM", RecordTypes::QUET_NNAM},
+		{"FACT FULL", RecordTypes::kNotVisible},
+		//{"FACT MNAM", RecordTypes::QUET_NNAM},
+		{"FLOR FULL", RecordTypes::kConst_Translation},
+		{"FLOR RNAM", RecordTypes::kFLOR_RNAM},
+		{"FURN FULL", RecordTypes::kConst_Translation},
+		//{"GMST DATA", RecordTypes::QUET_NNAM},
+		{"HAZD FULL", RecordTypes::kConst_Translation},
+		{"HDPT FULL", RecordTypes::kNotVisible},
+		{"INFO RNAM", RecordTypes::kINFO_RNAM},
+		{"INGR FULL", RecordTypes::kConst_Translation},
+		{"KEYM FULL", RecordTypes::kConst_Translation},
+		{"LCTN FULL", RecordTypes::kConst_Translation},
+		{"LIGH FULL", RecordTypes::kConst_Translation},
+		{"LSCR DESC", RecordTypes::kNormal_Translation},
+		{"MESG FULL", RecordTypes::kConst_Translation},
+		{"MESG ITXT", RecordTypes::kMESG_ITXT},
+		{"MGEF DNAM", RecordTypes::kNormal_Translation},
+		{"MGEF FULL", RecordTypes::kConst_Translation},
+		{"MISC FULL", RecordTypes::kConst_Translation},
+		{"NPC_ FULL", RecordTypes::kConst_Translation},
+		{"NPC_ SHRT", RecordTypes::kConst_Translation},
+		//{"PERK EPF2", RecordTypes::QUET_NNAM},
+		//{"PERK EPFD", RecordTypes::QUET_NNAM},
+		{"PERK FULL", RecordTypes::kConst_Translation},
+		{"PROJ FULL", RecordTypes::kConst_Translation},
+		{"QUST FULL", RecordTypes::kConst_Translation},
+		{"QUST NNAM", RecordTypes::kQUST_NNAM},
+		{"RACE FULL", RecordTypes::kConst_Translation},
+		{"REFR FULL", RecordTypes::kREFR_FULL},
+		{"REGN RDMP", RecordTypes::kREGN_RDMP},
+		{"SCRL FULL", RecordTypes::kConst_Translation},
+		{"SHOU FULL", RecordTypes::kConst_Translation},
+		{"SLGM FULL", RecordTypes::kConst_Translation},
+		{"SNCT FULL", RecordTypes::kConst_Translation},
+		{"SPEL FULL", RecordTypes::kConst_Translation},
+		{"TACT FULL", RecordTypes::kConst_Translation},
+		{"TREE FULL", RecordTypes::kConst_Translation},
+		{"WATR FULL", RecordTypes::kConst_Translation},
+		{"WEAP FULL", RecordTypes::kConst_Translation},
+		{"WOOP FULL", RecordTypes::kConst_Translation},
+		{"WOOP TNAM", RecordTypes::kConst_Translation},
+		{"WRLD FULL", RecordTypes::kConst_Translation},
 
-	if (types == "INFO NAM1" || types == "MESG ITXT")
-	{
-		g_INFO_NAM1_ITXT_Map.insert_or_assign(original, stringValue); //update if key already exists. This simulates the esp load order
-	}
-	else if (types == "QUST NNAM" || types == "QUST CNAM")
-	{
-		g_QUST_NNAM_CNAM_Map.insert_or_assign(original, stringValue);
-	}
-	else if (types == "INFO RNAM" || types == "DIAL FULL")
-	{
-		g_DIAL_FULL_RNAM_Map.insert_or_assign(original, stringValue);
-	}
-	else if (types == "REGN RDMP" || types == "FLOR RNAM" || types == "REFR FULL") //For REFR FULL we could also use the other way, but most of REFR don't have a EditorID
-	{
-		g_FLOR_RNAM_RDMP_Map.insert_or_assign(original, stringValue);
-	}
+		{"AMMO DESC", RecordTypes::kNormal_Translation}, //DLStrings
+		{"ARMO DESC", RecordTypes::kNormal_Translation},
+		{"AVIF DESC", RecordTypes::kNormal_Translation},
+		{"BOOK CNAM", RecordTypes::kNormal_Translation},
+		{"BOOK DESC", RecordTypes::kNormal_Translation},
+		{"COLL DESC", RecordTypes::kNotVisible},
+		{"MESG DESC", RecordTypes::kNormal_Translation},
+		{"PERK DESC", RecordTypes::kNormal_Translation},
+		{"QUST CNAM", RecordTypes::kQUST_CNAM},
+		{"RACE DESC", RecordTypes::kNormal_Translation},
+		{"SCRL DESC", RecordTypes::kNormal_Translation},
+		{"SHOU DESC", RecordTypes::kNormal_Translation},
+		{"SPEL DESC", RecordTypes::kNormal_Translation},
+		{"WEAP DESC", RecordTypes::kNormal_Translation},
+
+		{"INFO NAM1", RecordTypes::kINFO_NAM1},//ILStrings
+	};
+
+	auto it = typeMap.find(type);
+	return (it != typeMap.end()) ? it->second : RecordTypes::kUnknown;
 }
-
 
 void Config::ParseTranslationFiles()
 {
@@ -303,12 +357,42 @@ void Config::ParseTranslationFiles()
 					std::string types = entry["type"];
 					std::string stringValue = entry["string"];
 
-					if (!isSpecialType(types))
+					RecordTypes RecordType = GetRecordType(types);
+
+					switch (RecordType)
+					{
+					case RecordTypes::kACTI_RNAM:
+					case RecordTypes::kREFR_FULL: //For REFR FULL we could also use the other way, but most of REFR don't have a EditorID
+					case RecordTypes::kREGN_RDMP:
+					{
+						std::string original = entry["original"];
+						g_FLOR_RNAM_RDMP_Map.insert_or_assign(original, stringValue); //update if key already exists. This simulates the esp load order
+					}
+					break;
+					case RecordTypes::kDIAL_FULL:
+					case RecordTypes::kINFO_RNAM:
+					{
+						std::string original = entry["original"];
+						g_DIAL_FULL_RNAM_Map.insert_or_assign(original, stringValue);
+					}
+					break;
+					case RecordTypes::kQUST_CNAM:
+					case RecordTypes::kQUST_NNAM:
+					{
+						std::string original = entry["original"];
+						g_QUST_NNAM_CNAM_Map.insert_or_assign(original, stringValue);
+					}
+					break;
+					case RecordTypes::kINFO_NAM1:
+					case RecordTypes::kMESG_ITXT:
+					{
+						std::string original = entry["original"];
+						g_INFO_NAM1_ITXT_Map.insert_or_assign(original, stringValue);
+					}
+					break;
+					case RecordTypes::kConst_Translation:
 					{
 						std::string editorId = entry["editor_id"];
-
-						// extract first four letters to get the record type
-						std::string type = types.substr(0, 4);
 
 						// All the other letters are the subrecord type
 						std::string subrecord = GetSubrecordType(types);
@@ -320,22 +404,42 @@ void Config::ParseTranslationFiles()
 							continue;
 						}
 
-						if (!isConstType(subrecord))
-						{
-							g_ConfigurationInformationStruct.emplace_back(form, stringValue, subrecord, type);
-							//These information will be used in Hooks
-							//to get the right description to right place
-
-						}
-						else
-						{
-							g_ConstConfigurationInformationStruct.emplace_back(form, stringValue, subrecord);
-							//These information will be used in Processor
-						}
+						g_ConstConfigurationInformationStruct.emplace_back(form, stringValue, subrecord);
 					}
-					else
+					break;
+					case RecordTypes::kNormal_Translation:
 					{
-						HandleSpecialType(types, entry, stringValue);
+						std::string editorId = entry["editor_id"];
+
+						// extract first four letters to get the record type
+						std::string type = types.substr(0, 4);
+
+						std::string subrecord = GetSubrecordType(types);
+
+						RE::TESForm* form = RE::TESForm::LookupByEditorID(editorId);
+						if (!form)
+						{
+							g_Logger->error("Couldn't find Editor ID {} out of file {}", editorId, files);
+							continue;
+						}
+
+						g_ConfigurationInformationStruct.emplace_back(form, stringValue, subrecord, type);
+					}
+					break;
+					case RecordTypes::kNotVisible:
+					{
+						g_Logger->info("File {} contains not visible type: {}", files, types);
+					}
+					break;
+					case RecordTypes::kUnknown:
+					{
+						g_Logger->info("File {} contains unkown type: {}", files, types);
+					}
+					break;
+
+
+
+					default: break;
 					}
 				}
 				catch (const std::exception& e)

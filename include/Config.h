@@ -14,14 +14,33 @@ public:
 	void EnumerateFolder();
 	void LoadFiles();
 
+	enum class RecordTypes
+	{
+		kNormal_Translation,
+		kConst_Translation,
+
+		kINFO_NAM1, //Special stuff
+		kMESG_ITXT,
+		kQUST_NNAM,
+		kQUST_CNAM,
+		kINFO_RNAM,
+		kDIAL_FULL,
+		kREGN_RDMP,
+		kFLOR_RNAM,
+		kACTI_RNAM,
+		kREFR_FULL,
+
+		kNotVisible,
+		kUnknown
+
+	};
+
 private:
 	bool caseInsensitiveStringCompare(const std::string& a, const std::string& b);
 	std::vector<std::string> GetLoadOrder();
 	void EnumerateFilesInFolders(std::string folders);
-	bool isSpecialType(const std::string& type);
-	bool isConstType(const std::string& type);
 	std::string GetSubrecordType(const std::string& types) const;
-	void HandleSpecialType(const std::string& types, const json& entry, const std::string& stringValue);
+	RecordTypes GetRecordType(const std::string& type);
 	void ParseTranslationFiles();
 
 	Config() = default;
@@ -30,92 +49,6 @@ private:
 	Config(Config&&) = delete;
 	Config& operator=(const Config&) = delete;
 	Config& operator=(Config&&) = delete;
-
-	/*
-	enum class RecordTypes
-	{
-		//Strings
-		kACTI_FULL,
-		kACTI_RNAM, //Look
-		kALCH_FULL,
-		kAMMO_FULL,
-		kAPPA_FULL,
-		kARMO_FULL,
-		kAVIF_FULL, //Actor Value information
-		kBOOK_FULL,
-		kBPTD_BPTN, //BodyPartData, not visible
-		kCELL_FULL,
-		kCLAS_FULL, //not visible
-		kCLFM_FULL, //color, not all of them are visible
-		kCONT_FULL,
-		kDIAL_FULL,
-		kDOOR_FULL,
-		kENCH_FULL,
-		kEXPL_FULL,
-		kEYES_FULL, //Not sure, probably not visible
-		kFACT_FNAM, //Female title - Look
-		kFACT_FULL, //not visible
-		kFACT_MNAM, //Male title - Look
-		kFLOR_FULL,
-		kFLOR_RNAM,
-		kFURN_FULL,
-		kGMST_DATA, //Game settings, sometimes visible - Look
-		kHAZD_FULL,
-		kHDPT_FULL, //head part data, not visible
-		kINFO_RNAM,
-		kINGR_FULL,
-		kKEYM_FULL,
-		kLCTN_FULL,
-		kLIGH_FULL,
-		kLSCR_DESC,
-		kMESG_FULL,
-		kMESG_ITXT, //button text of messageboxes
-		kMGEF_DNAM,
-		kMGEF_FULL,
-		kMISC_FULL,
-		kNPC__FULL,
-		kNPC__SHRT,
-		kPERK_EPF2, //Look
-		kPERK_EPFD,
-		kPERK_FULL,
-		kPROJ_FULL,
-		kQUST_FULL,
-		kQUST_NNAM,
-		kRACE_FULL,
-		kREFR_FULL,
-		kSCRL_FULL,
-		kSHOU_FULL,
-		kSLGM_FULL,
-		kSNCT_FULL, //some are visible?
-		kSPEL_FULL,
-		kTACT_FULL,
-		kTREE_FULL,
-		kWATR_FULL,
-		kWEAP_FULL,
-		kWOOP_FULL,
-		kWOOP_TNAM,
-		kWRLD_FULL,
-
-		//DLStrings
-		kAMMO_DESC,
-		kARMO_DESC,
-		kAVIF_DESC,
-		kBOOK_CNAM,
-		kBOOK_DESC,
-		kCOLL_DESC, //not visible
-		kMESG_DESC,
-		kPERK_DESC,
-		kQUST_CNAM,
-		kRACE_DESC,
-		kSCRL_DESC,
-		kSHOU_DESC,
-		kSPEL_DESC,
-		kWEAP_DESC,
-
-		//ILStrings
-		kINFO_NAM1,
-	};
-	*/
 
 private:
 	std::vector<std::string> m_Folders;
