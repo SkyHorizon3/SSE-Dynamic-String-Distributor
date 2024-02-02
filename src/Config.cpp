@@ -271,7 +271,7 @@ Config::RecordTypes Config::GetRecordType(const std::string& type)
 		{"FLOR FULL", RecordTypes::kConst_Translation},
 		{"FLOR RNAM", RecordTypes::kFLOR_RNAM},
 		{"FURN FULL", RecordTypes::kConst_Translation},
-		//{"GMST DATA", RecordTypes::QUET_NNAM},
+		{"GMST DATA", RecordTypes::kConst_Translation},
 		{"HAZD FULL", RecordTypes::kConst_Translation},
 		{"HDPT FULL", RecordTypes::kNotVisible},
 		{"INFO RNAM", RecordTypes::kINFO_RNAM},
@@ -354,8 +354,8 @@ void Config::ParseTranslationFiles()
 			{
 				try
 				{
-					std::string types = entry["type"];
-					std::string stringValue = entry["string"];
+					const std::string& types = entry["type"];
+					const std::string& stringValue = entry["string"];
 
 					RecordTypes RecordType = GetRecordType(types);
 
@@ -365,56 +365,50 @@ void Config::ParseTranslationFiles()
 					case RecordTypes::kREFR_FULL: //For REFR FULL we could also use the other way, but most of REFR don't have a EditorID
 					case RecordTypes::kREGN_RDMP:
 					{
-						std::string original = entry["original"];
+						const std::string& original = entry["original"];
 						g_FLOR_RNAM_RDMP_Map.insert_or_assign(original, stringValue); //update if key already exists. This simulates the esp load order
 					}
 					break;
 					case RecordTypes::kDIAL_FULL:
 					case RecordTypes::kINFO_RNAM:
 					{
-						std::string original = entry["original"];
+						const std::string& original = entry["original"];
 						g_DIAL_FULL_RNAM_Map.insert_or_assign(original, stringValue);
 					}
 					break;
 					case RecordTypes::kQUST_CNAM:
 					case RecordTypes::kQUST_NNAM:
 					{
-						std::string original = entry["original"];
+						const std::string& original = entry["original"];
 						g_QUST_NNAM_CNAM_Map.insert_or_assign(original, stringValue);
 					}
 					break;
 					case RecordTypes::kINFO_NAM1:
 					case RecordTypes::kMESG_ITXT:
 					{
-						std::string original = entry["original"];
+						const std::string& original = entry["original"];
 						g_INFO_NAM1_ITXT_Map.insert_or_assign(original, stringValue);
 					}
 					break;
 					case RecordTypes::kConst_Translation:
 					{
-						std::string editorId = entry["editor_id"];
+						const std::string& editorId = entry["editor_id"];
 
-						// All the other letters are the subrecord type
-						std::string subrecord = GetSubrecordType(types);
+						const std::string& subrecord = GetSubrecordType(types);
 
 						RE::TESForm* form = RE::TESForm::LookupByEditorID(editorId);
-						if (!form)
+						if (!form && subrecord != "DATA")
 						{
 							g_Logger->error("Couldn't find Editor ID {} out of file {}", editorId, files);
 							continue;
 						}
 
-						g_ConstConfigurationInformationStruct.emplace_back(form, stringValue, subrecord);
+						g_ConstConfigurationInformationStruct.emplace_back(form, stringValue, subrecord, editorId);
 					}
 					break;
 					case RecordTypes::kNormal_Translation:
 					{
-						std::string editorId = entry["editor_id"];
-
-						// extract first four letters to get the record type
-						std::string type = types.substr(0, 4);
-
-						std::string subrecord = GetSubrecordType(types);
+						const std::string& editorId = entry["editor_id"];
 
 						RE::TESForm* form = RE::TESForm::LookupByEditorID(editorId);
 						if (!form)
@@ -423,7 +417,7 @@ void Config::ParseTranslationFiles()
 							continue;
 						}
 
-						g_ConfigurationInformationStruct.emplace_back(form, stringValue, subrecord, type);
+						g_ConfigurationInformationStruct.emplace_back(form, stringValue, GetSubrecordType(types), types.substr(0, 4));
 					}
 					break;
 					case RecordTypes::kNotVisible:

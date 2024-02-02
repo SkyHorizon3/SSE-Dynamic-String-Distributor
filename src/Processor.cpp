@@ -1,6 +1,6 @@
 #include "../include/Processor.h"
 #include "../include/Config.h"
-
+#include "../include/Utils.h"
 
 void Processor::RunConstTranslation()
 {
@@ -22,6 +22,12 @@ void Processor::RunConstTranslation()
 		{
 			SetConstStrings<RE::TESWordOfPower>(Form, ReplacerText, &RE::TESWordOfPower::translation);
 		}
+		else if (SubrecordType == "DATA")
+		{
+			auto& EditorID = Information.RecordType; //It's the editorID for const translation in RecordType
+
+			SetGameSettingsStrings(EditorID, ReplacerText);
+		}
 	}
 	g_ConstConfigurationInformationStruct.clear(); //Structs only used once, so no need to keep them for fun
 	g_ConstConfigurationInformationStruct.shrink_to_fit();
@@ -40,4 +46,9 @@ void Processor::SetConstStrings(RE::TESForm* Form, RE::BSFixedString NewString, 
 		g_Logger->info("Issue during ConstTranslation with FormID: {0:08X}.", Form->formID);
 	}
 
+}
+
+void Processor::SetGameSettingsStrings(const std::string& EditorID, const std::string& NewString)
+{
+	Utils::RunConsoleCommand("setgs " + EditorID + " " + "\"" + NewString + "\"");
 }
