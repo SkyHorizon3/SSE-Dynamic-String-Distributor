@@ -425,16 +425,7 @@ namespace Hook
 
 					if (std::getline(iss, line1) && std::getline(iss, line2))
 					{
-
-						auto it = g_FLOR_RNAM_RDMP_Map.find(line1);
-
-						if (it != g_FLOR_RNAM_RDMP_Map.end())
-						{
-							line1 = it->second;
-
-							messagedata->text = line1 + "\n" + line2;
-						}
-
+						HandleFormTypeHelper(messagedata, line1, line2);
 					}
 
 				}
@@ -448,15 +439,21 @@ namespace Hook
 
 					if (std::getline(iss, line1) && std::getline(iss, line2))
 					{
-						auto it = g_FLOR_RNAM_RDMP_Map.find(line2);
-
-						if (it != g_FLOR_RNAM_RDMP_Map.end())
-						{
-							line2 = it->second;
-
-							messagedata->text = line1 + "\n" + line2;
-						}
+						HandleFormTypeHelper(messagedata, line1, line2, true);
 					}
+				}
+				break;
+				case RE::FormType::Activator: // ACTI RNAM
+				{
+
+					std::istringstream iss(messagedata->text.c_str());
+					std::string line1, line2;
+
+					if (std::getline(iss, line1) && std::getline(iss, line2))
+					{
+						HandleFormTypeHelper(messagedata, line1, line2);
+					}
+
 				}
 				break;
 
@@ -471,7 +468,24 @@ namespace Hook
 
 			func(queue_this, menuName, type, data);
 		};
+
+		static void HandleFormTypeHelper(RE::HUDData* messagedata, std::string& line1, std::string& line2, bool isDoor = false)
+		{
+			auto it = g_FLOR_RNAM_RDMP_Map.find(isDoor ? line2 : line1);
+
+			if (it != g_FLOR_RNAM_RDMP_Map.end())
+			{
+				if (isDoor)
+					line2 = it->second;
+				else
+					line1 = it->second;
+
+				messagedata->text = line1 + "\n" + line2;
+			}
+		}
+
 		static inline REL::Relocation<decltype(thunk)> func;
+
 
 	};
 
@@ -482,8 +496,9 @@ namespace Hook
 
 	RE::UI_MESSAGE_RESULTS HudMenu::ProcessMessageHook(RE::UIMessage& a_message) //REGN RDMP if you're leaving a cave or something like that
 	{
+		const auto player = RE::PlayerCharacter::GetSingleton();
 
-		if (a_message.type == RE::UI_MESSAGE_TYPE::kUpdate)
+		if (a_message.type == RE::UI_MESSAGE_TYPE::kUpdate && player && player->GetParentCell() && player->GetParentCell()->IsInteriorCell())
 		{
 
 			RE::GFxValue ObjectiveText;

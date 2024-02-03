@@ -248,7 +248,7 @@ Config::RecordTypes Config::GetRecordType(const std::string& type)
 {
 	static const std::unordered_map<std::string, RecordTypes> typeMap = {
 		{"ACTI FULL", RecordTypes::kConst_Translation},
-		//{"ACTI RNAM", RecordTypes::kACTI_RNAM},
+		{"ACTI RNAM", RecordTypes::kACTI_RNAM},
 		{"ALCH FULL", RecordTypes::kConst_Translation},
 		{"AMMO FULL", RecordTypes::kConst_Translation},
 		{"APPA FULL", RecordTypes::kConst_Translation},
@@ -265,9 +265,9 @@ Config::RecordTypes Config::GetRecordType(const std::string& type)
 		{"ENCH FULL", RecordTypes::kConst_Translation},
 		{"EXPL FULL", RecordTypes::kConst_Translation},
 		{"EYES FULL", RecordTypes::kConst_Translation},
-		//{"FACT FNAM", RecordTypes::QUET_NNAM},
+		{"FACT FNAM", RecordTypes::kNotVisible}, //Seems like this is not visible, but I'm not sure
 		{"FACT FULL", RecordTypes::kNotVisible},
-		//{"FACT MNAM", RecordTypes::QUET_NNAM},
+		{"FACT MNAM", RecordTypes::kNotVisible},
 		{"FLOR FULL", RecordTypes::kConst_Translation},
 		{"FLOR RNAM", RecordTypes::kFLOR_RNAM},
 		{"FURN FULL", RecordTypes::kConst_Translation},
@@ -287,7 +287,7 @@ Config::RecordTypes Config::GetRecordType(const std::string& type)
 		{"MISC FULL", RecordTypes::kConst_Translation},
 		{"NPC_ FULL", RecordTypes::kConst_Translation},
 		{"NPC_ SHRT", RecordTypes::kConst_Translation},
-		//{"PERK EPF2", RecordTypes::QUET_NNAM},
+		//{"PERK EPF2", RecordTypes::QUET_NNAM}, BGSEntryPoint.h
 		//{"PERK EPFD", RecordTypes::QUET_NNAM},
 		{"PERK FULL", RecordTypes::kConst_Translation},
 		{"PROJ FULL", RecordTypes::kConst_Translation},
