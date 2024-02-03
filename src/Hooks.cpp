@@ -415,14 +415,9 @@ namespace Hook
 
 			if (messagedata && crosshairRef)
 			{
-				switch (crosshairRef->GetBaseObject()->GetFormType())
+				switch (crosshairRef->GetFormType())
 				{
-				case RE::FormType::Flora:
-				case RE::FormType::Tree: // FLOR RNAM
-				case RE::FormType::Door: // REGN RDMP for doors
-				case RE::FormType::Activator: // ACTI RNAM
-				case RE::FormType::Weapon:
-				case RE::FormType::Book:
+				case RE::FormType::Reference:
 				{
 					std::istringstream iss(messagedata->text.c_str());
 					std::string line1, line2;
