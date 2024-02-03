@@ -50,5 +50,5 @@ void Processor::SetConstStrings(RE::TESForm* Form, RE::BSFixedString NewString, 
 
 void Processor::SetGameSettingsStrings(const std::string& EditorID, const std::string& NewString)
 {
-	Utils::RunConsoleCommand("setgs " + EditorID + " " + "\"" + NewString + "\"");
+	Utils::RunConsoleCommand("setgs " + EditorID + " \"" + NewString + "\"");
 }
