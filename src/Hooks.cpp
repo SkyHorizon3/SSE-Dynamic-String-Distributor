@@ -417,7 +417,7 @@ namespace Hook
 			{
 				switch (crosshairRef->GetFormType())
 				{
-				case RE::FormType::Reference:
+				case RE::FormType::Reference: //ACTI RNAM, FLOR RNAM, REGN RDMP for doors
 				{
 					std::istringstream iss(messagedata->text.c_str());
 					std::string line1, line2;
