@@ -418,34 +418,12 @@ namespace Hook
 				switch (crosshairRef->GetBaseObject()->GetFormType())
 				{
 				case RE::FormType::Flora:
-				case RE::FormType::Tree: //FLOR RNAM
-				{
-					std::istringstream iss(messagedata->text.c_str());
-					std::string line1, line2;
-
-					if (std::getline(iss, line1) && std::getline(iss, line2))
-					{
-						HandleFormTypeHelper(messagedata, line1, line2);
-					}
-
-				}
-				break;
-				case RE::FormType::Door: //REGN RDMP for doors
-				{
-					std::istringstream iss(messagedata->text.c_str());
-					std::string line1, line2;
-
-					//g_Logger->info("String: {}", messagedata->text.c_str());
-
-					if (std::getline(iss, line1) && std::getline(iss, line2))
-					{
-						HandleFormTypeHelper(messagedata, line1, line2, true);
-					}
-				}
-				break;
+				case RE::FormType::Tree: // FLOR RNAM
+				case RE::FormType::Door: // REGN RDMP for doors
 				case RE::FormType::Activator: // ACTI RNAM
+				case RE::FormType::Weapon:
+				case RE::FormType::Book:
 				{
-
 					std::istringstream iss(messagedata->text.c_str());
 					std::string line1, line2;
 
@@ -453,41 +431,38 @@ namespace Hook
 					{
 						HandleFormTypeHelper(messagedata, line1, line2);
 					}
-
 				}
 				break;
 
 				default:
-				{
 					break;
 				}
-
-				}
-
 			}
 
 			func(queue_this, menuName, type, data);
 		};
 
-		static void HandleFormTypeHelper(RE::HUDData* messagedata, std::string& line1, std::string& line2, bool isDoor = false)
+		static void HandleFormTypeHelper(RE::HUDData* messagedata, std::string& line1, std::string& line2)
 		{
-			auto it = g_FLOR_RNAM_RDMP_Map.find(isDoor ? line2 : line1);
+			auto it1 = g_FLOR_RNAM_RDMP_Map.find(line1);
+			auto it2 = g_FLOR_RNAM_RDMP_Map.find(line2);
 
-			if (it != g_FLOR_RNAM_RDMP_Map.end())
+			if (it1 != g_FLOR_RNAM_RDMP_Map.end())
 			{
-				if (isDoor)
-					line2 = it->second;
-				else
-					line1 = it->second;
-
-				messagedata->text = line1 + "\n" + line2;
+				line1 = it1->second;
 			}
+
+			if (it2 != g_FLOR_RNAM_RDMP_Map.end())
+			{
+				line2 = it2->second;
+			}
+
+			messagedata->text = line1 + "\n" + line2;
 		}
 
 		static inline REL::Relocation<decltype(thunk)> func;
-
-
 	};
+
 
 	bool HudMenu::containsOnlySpace(const std::string& str)
 	{

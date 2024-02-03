@@ -362,6 +362,7 @@ void Config::ParseTranslationFiles()
 					switch (RecordType)
 					{
 					case RecordTypes::kACTI_RNAM:
+					case RecordTypes::kFLOR_RNAM:
 					case RecordTypes::kREFR_FULL: //For REFR FULL we could also use the other way, but most of REFR don't have a EditorID
 					case RecordTypes::kREGN_RDMP:
 					{
