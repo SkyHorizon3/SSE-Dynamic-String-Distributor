@@ -1,4 +1,3 @@
-#include "../include/Globals.h"
 #include "../include/Processor.h"
 #include "../include/Config.h"
 #include "../include/Utils.h"

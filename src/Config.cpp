@@ -1,4 +1,3 @@
-#include "../include/Globals.h"
 #include "../include/Config.h"
 
 //I don't like the way it looks, but it fulfils its purpose...
@@ -331,7 +330,7 @@ Config::RecordTypes Config::GetRecordType(const std::string& type)
 	return (it != typeMap.end()) ? it->second : RecordTypes::kUnknown;
 }
 
-ConstSubrecordType Config::GetConstSubredordType(const std::string& type)
+ConstSubrecordType Config::GetConstSubrecordType(const std::string& type)
 {
 	static const std::unordered_map<std::string, ConstSubrecordType> typeMap = {
 		{"FULL", ConstSubrecordType::kFULL},
@@ -413,7 +412,7 @@ void Config::ParseTranslationFiles()
 							continue;
 						}
 
-						ConstSubrecordType ConstSubrecordType = GetConstSubredordType(subrecord);
+						ConstSubrecordType ConstSubrecordType = GetConstSubrecordType(subrecord);
 
 						g_ConstConfigurationInformationStruct.emplace_back(form, stringValue, ConstSubrecordType, editorId);
 					}

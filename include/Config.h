@@ -42,7 +42,7 @@ private:
 	void EnumerateFilesInFolders(std::string folders);
 	std::string GetSubrecordType(const std::string& types) const;
 	RecordTypes GetRecordType(const std::string& type);
-	ConstSubrecordType GetConstSubredordType(const std::string& type);
+	ConstSubrecordType GetConstSubrecordType(const std::string& type);
 	void ParseTranslationFiles();
 
 	Config() = default;
