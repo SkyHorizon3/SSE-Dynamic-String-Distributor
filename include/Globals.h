@@ -10,8 +10,26 @@ struct ConfigurationInformation
 	std::string RecordType = "";
 };
 
+enum class ConstSubrecordType
+{
+	kFULL,
+	kSHRT,
+	kTNAM,
+	kDATA,
+
+	kUnknown
+};
+
+struct ConstConfigurationInformation
+{
+	RE::TESForm* Form;
+	std::string ReplacerText = "";
+	ConstSubrecordType SubrecordType;
+	std::string EditorID = "";
+};
+
 inline std::vector<ConfigurationInformation> g_ConfigurationInformationStruct;
-inline std::vector<ConfigurationInformation> g_ConstConfigurationInformationStruct; //Used for const translations
+inline std::vector<ConstConfigurationInformation> g_ConstConfigurationInformationStruct; //Used for const translations
 
 inline std::unordered_map<std::string, std::string> g_INFO_NAM1_ITXT_Map;
 inline std::unordered_map<std::string, std::string> g_DIAL_FULL_RNAM_Map;

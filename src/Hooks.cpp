@@ -138,13 +138,11 @@ namespace Hook
 		{
 			for (const auto& Information : g_ConfigurationInformationStruct)
 			{
-				if (a_item->formID == Information.Form->formID)
+				// Replace the ItemCardDescription of books
+				if (a_item->formID == Information.Form->formID && Information.SubrecordType == "CNAM")
 				{
-					if (Information.SubrecordType == "CNAM") // Replace the ItemCardDescription of books
-					{
-						auto descriptionValue = RE::GFxValue(Information.ReplacerText);
-						itemCard->obj.SetMember("description", descriptionValue);
-					}
+					auto descriptionValue = RE::GFxValue(Information.ReplacerText);
+					itemCard->obj.SetMember("description", descriptionValue);
 				}
 			}
 		}
@@ -370,13 +368,13 @@ namespace Hook
 			return originalFunction01(Menu);
 		}
 
-		for (auto& effect : Menu->buttonText)
+		for (auto& text : Menu->buttonText)
 		{
-			auto it = g_INFO_NAM1_ITXT_Map.find(effect.c_str());
+			auto it = g_INFO_NAM1_ITXT_Map.find(text.c_str());
 
 			if (it != g_INFO_NAM1_ITXT_Map.end())
 			{
-				effect = it->second;
+				text = it->second;
 			}
 		}
 

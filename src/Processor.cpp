@@ -1,3 +1,4 @@
+#include "../include/Globals.h"
 #include "../include/Processor.h"
 #include "../include/Config.h"
 #include "../include/Utils.h"
@@ -6,27 +7,36 @@ void Processor::RunConstTranslation()
 {
 	for (const auto& Information : g_ConstConfigurationInformationStruct)
 	{
-		auto& Form = Information.Form;
-		auto& SubrecordType = Information.SubrecordType;
-		auto& ReplacerText = Information.ReplacerText;
 
-		if (SubrecordType == "FULL") //DIAL FULL, REFR FULL aren't working like this.
+		switch (Information.SubrecordType)
 		{
-			SetConstStrings<RE::TESFullName>(Form, ReplacerText, &RE::TESFullName::fullName);
+		case ConstSubrecordType::kFULL: //DIAL FULL, REFR FULL aren't working like this.
+		{
+			SetConstStrings<RE::TESFullName>(Information.Form, Information.ReplacerText, &RE::TESFullName::fullName);
 		}
-		else if (SubrecordType == "SHRT")
+		break;
+		case ConstSubrecordType::kSHRT:
 		{
-			SetConstStrings<RE::TESNPC>(Form, ReplacerText, &RE::TESNPC::shortName);
+			SetConstStrings<RE::TESNPC>(Information.Form, Information.ReplacerText, &RE::TESNPC::shortName);
 		}
-		else if (SubrecordType == "TNAM")
+		break;
+		case ConstSubrecordType::kTNAM:
 		{
-			SetConstStrings<RE::TESWordOfPower>(Form, ReplacerText, &RE::TESWordOfPower::translation);
+			SetConstStrings<RE::TESWordOfPower>(Information.Form, Information.ReplacerText, &RE::TESWordOfPower::translation);
 		}
-		else if (SubrecordType == "DATA")
+		break;
+		case ConstSubrecordType::kDATA:
 		{
-			auto& EditorID = Information.RecordType; //It's the editorID for const translation in RecordType
+			SetGameSettingsStrings(Information.EditorID, Information.ReplacerText);
+		}
+		break;
+		case ConstSubrecordType::kUnknown:
+		{
+			g_Logger->info("Unknown type {} in ConstTranslation", Information.EditorID);
+		}
+		break;
 
-			SetGameSettingsStrings(EditorID, ReplacerText);
+		default: break;
 		}
 	}
 	g_ConstConfigurationInformationStruct.clear(); //Structs only used once, so no need to keep them for fun

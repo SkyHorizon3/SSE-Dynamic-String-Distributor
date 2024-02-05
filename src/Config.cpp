@@ -331,6 +331,19 @@ Config::RecordTypes Config::GetRecordType(const std::string& type)
 	return (it != typeMap.end()) ? it->second : RecordTypes::kUnknown;
 }
 
+ConstSubrecordType Config::GetConstSubredordType(const std::string& type)
+{
+	static const std::unordered_map<std::string, ConstSubrecordType> typeMap = {
+		{"FULL", ConstSubrecordType::kFULL},
+		{"SHRT", ConstSubrecordType::kSHRT},
+		{"DATA", ConstSubrecordType::kDATA},
+		{"TNAM", ConstSubrecordType::kTNAM},
+	};
+
+	auto it = typeMap.find(type);
+	return (it != typeMap.end()) ? it->second : ConstSubrecordType::kUnknown;
+}
+
 void Config::ParseTranslationFiles()
 {
 	for (const auto& files : m_FilesInPluginFolder)
@@ -366,29 +379,25 @@ void Config::ParseTranslationFiles()
 					case RecordTypes::kREFR_FULL: //For REFR FULL we could also use the other way, but most of REFR don't have a EditorID
 					case RecordTypes::kREGN_RDMP:
 					{
-						const std::string& original = entry["original"];
-						g_FLOR_RNAM_RDMP_Map.insert_or_assign(original, stringValue); //update if key already exists. This simulates the esp load order
+						g_FLOR_RNAM_RDMP_Map.insert_or_assign(entry["original"], stringValue); //update if key already exists. This simulates the esp load order
 					}
 					break;
 					case RecordTypes::kDIAL_FULL:
 					case RecordTypes::kINFO_RNAM:
 					{
-						const std::string& original = entry["original"];
-						g_DIAL_FULL_RNAM_Map.insert_or_assign(original, stringValue);
+						g_DIAL_FULL_RNAM_Map.insert_or_assign(entry["original"], stringValue);
 					}
 					break;
 					case RecordTypes::kQUST_CNAM:
 					case RecordTypes::kQUST_NNAM:
 					{
-						const std::string& original = entry["original"];
-						g_QUST_NNAM_CNAM_Map.insert_or_assign(original, stringValue);
+						g_QUST_NNAM_CNAM_Map.insert_or_assign(entry["original"], stringValue);
 					}
 					break;
 					case RecordTypes::kINFO_NAM1:
 					case RecordTypes::kMESG_ITXT:
 					{
-						const std::string& original = entry["original"];
-						g_INFO_NAM1_ITXT_Map.insert_or_assign(original, stringValue);
+						g_INFO_NAM1_ITXT_Map.insert_or_assign(entry["original"], stringValue);
 					}
 					break;
 					case RecordTypes::kConst_Translation:
@@ -404,7 +413,9 @@ void Config::ParseTranslationFiles()
 							continue;
 						}
 
-						g_ConstConfigurationInformationStruct.emplace_back(form, stringValue, subrecord, editorId);
+						ConstSubrecordType ConstSubrecordType = GetConstSubredordType(subrecord);
+
+						g_ConstConfigurationInformationStruct.emplace_back(form, stringValue, ConstSubrecordType, editorId);
 					}
 					break;
 					case RecordTypes::kNormal_Translation:
