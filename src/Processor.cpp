@@ -66,7 +66,7 @@ void Processor::SetGameSettingString(const std::string& a_name, const std::strin
 	{
 		//RE::free(setting->data.s); -> don't know why this is crashing. If you know, please tell me!
 
-		size_t	length = strlen(a_NewString.c_str()) + 1;
+		auto length = a_NewString.length() + 1;
 		char* NewChar = (char*)RE::MemoryManager::GetSingleton()->Allocate(length + 1, 0, 0);
 
 		if (!NewChar)
