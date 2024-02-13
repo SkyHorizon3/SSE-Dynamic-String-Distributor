@@ -1,6 +1,5 @@
 #include "../include/Processor.h"
 #include "../include/Config.h"
-#include "../include/Utils.h"
 
 void Processor::RunConstTranslation()
 {
@@ -26,7 +25,7 @@ void Processor::RunConstTranslation()
 		break;
 		case ConstSubrecordType::kDATA:
 		{
-			SetGameSettingsStrings(Information.EditorID, Information.ReplacerText);
+			SetGameSettingString(Information.EditorID, Information.ReplacerText);
 		}
 		break;
 		case ConstSubrecordType::kUnknown:
@@ -57,7 +56,27 @@ void Processor::SetConstStrings(RE::TESForm* Form, RE::BSFixedString NewString, 
 
 }
 
-void Processor::SetGameSettingsStrings(const std::string& EditorID, const std::string& NewString)
+void Processor::SetGameSettingString(const std::string& a_name, const std::string& a_NewString)
 {
-	Utils::RunConsoleCommand("setgs " + EditorID + " \"" + NewString + "\"");
+	auto setting = RE::GameSettingCollection::GetSingleton()->GetSetting(a_name.c_str());
+
+	//g_Logger->info("String: {}", std::string(setting->data.s));
+
+	if (setting->GetType() == RE::Setting::Type::kString)
+	{
+		//RE::free(setting->data.s); -> don't know why this is crashing. If you know, please tell me!
+
+		size_t	length = strlen(a_NewString.c_str()) + 1;
+		char* NewChar = (char*)RE::MemoryManager::GetSingleton()->Allocate(length + 1, 0, 0);
+
+		if (!NewChar)
+		{
+			g_Logger->error("Failed to allocate memory for a new string when setting game setting '{}'. Upgrade your RAM and get rid of Windows XP!", a_name);
+			return;
+		}
+
+		memcpy(NewChar, a_NewString.c_str(), length);
+
+		setting->data.s = NewChar;
+	}
 }

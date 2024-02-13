@@ -17,7 +17,7 @@ private:
 	template <typename T>
 	void SetConstStrings(RE::TESForm* Form, RE::BSFixedString NewString, RE::BSFixedString T::* memberPtr);
 
-	void SetGameSettingsStrings(const std::string& EditorID, const std::string& NewString);
+	void SetGameSettingString(const std::string& a_name, const std::string& a_NewString);
 
 	Processor() = default;
 	~Processor() = default;
