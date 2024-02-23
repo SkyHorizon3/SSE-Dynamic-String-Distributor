@@ -1,6 +1,5 @@
-#include "../include/Globals.h"
-#include "../include/Hooks.h"
-#include "../include/Processor.h"
+#include "Hooks.h"
+#include "Processor.h"
 
 #include <detours/detours.h>
 
@@ -91,7 +90,7 @@ namespace Hook
 		{
 			for (const auto& information : g_ConfigurationInformationStruct)
 			{
-				if (information.RecordType == "MGEF" && information.SubrecordType == "DNAM")
+				if (information.RecordType == "MGEF" && information.SubrecordType == "DNAM") //TODO: change to switch
 				{
 
 					if (!a_item->IsMagicItem())
@@ -382,9 +381,9 @@ namespace Hook
 	}
 
 
-	typedef void(WINAPI* LoadScreen_pFunc)(RE::TESLoadScreen* loadscreen, float* a2);
+	typedef void(WINAPI* LoadScreen_pFunc)(RE::TESLoadScreen* loadscreen, float* a2); //TODO: Remove this hook from detours
 	LoadScreen_pFunc originalFunction02;
-	void LoadScreenFunc(RE::TESLoadScreen* loadscreen, float* a2) //LSCR DESC
+	void LoadScreenFunc(RE::TESLoadScreen* loadscreen, float* a2) //LSCR DESC 
 	{
 		if (!loadscreen && !loadscreen->loadingText.size())
 		{
@@ -404,7 +403,7 @@ namespace Hook
 
 	//Credits to po3 https://github.com/powerof3/SimpleActivateSKSE released under MIT
 	//Still compatible
-	struct RNAM_RDMP_TextHook
+	struct CrosshairTextHook
 	{
 		static void thunk(RE::UIMessageQueue* queue_this, const RE::BSFixedString& menuName, RE::UI_MESSAGE_TYPE type, RE::IUIMessageData* data)
 		{
@@ -456,127 +455,109 @@ namespace Hook
 		static inline REL::Relocation<decltype(thunk)> func;
 	};
 
-
-	bool HudMenu::containsOnlySpace(const std::string& str)
+	struct AutoExitDoorTextHook
 	{
-		return std::all_of(str.begin(), str.end(), [](unsigned char c) { return std::isspace(c); });
-	}
-
-	RE::UI_MESSAGE_RESULTS HudMenu::ProcessMessageHook(RE::UIMessage& a_message) //REGN RDMP if you're leaving a cave or something like that
-	{
-		const auto player = RE::PlayerCharacter::GetSingleton();
-
-		if (a_message.type == RE::UI_MESSAGE_TYPE::kUpdate && player && player->GetParentCell() && player->GetParentCell()->IsInteriorCell())
+		static void thunk(RE::UIMessageQueue* queue_this, const RE::BSFixedString& menuName, RE::UI_MESSAGE_TYPE type, RE::IUIMessageData* data)
 		{
+			//REGN RDMP if you're leaving a cave or something like that
+			const auto messagedata = data ? static_cast<RE::HUDData*>(data) : nullptr;
+			const auto player = RE::PlayerCharacter::GetSingleton();
 
-			RE::GFxValue ObjectiveText;
-
-			auto ui = RE::UI::GetSingleton();
-			auto menu = ui->GetMenu(RE::HUDMenu::MENU_NAME);
-
-			menu->uiMovie->GetVariable(&ObjectiveText, "HUDMovieBaseInstance.RolloverText");
-
-			if (ObjectiveText.GetType() != RE::GFxValue::ValueType::kUndefined)
+			if (!messagedata->text.empty() && player && player->GetParentCell() && player->GetParentCell()->IsInteriorCell()) //Exterior is already covered by CELL FULL
 			{
-				RE::GFxValue Text;
-				ObjectiveText.GetMember("text", &Text);
-				std::string OrigString = Text.GetString();
+				//SKSE::log::info("String: {}", messagedata->text.c_str());
 
-				if (!OrigString.empty() && !containsOnlySpace(OrigString))
+				// Extract text before and after the first space
+				std::string text = messagedata->text.c_str();
+				size_t spacePos = text.find(' ');
+				if (spacePos != std::string::npos)
 				{
-					//Look if it's only one line
-					size_t newlinePos = OrigString.find('\n');
-					if (newlinePos == std::string::npos)
+					std::string before = text.substr(0, spacePos);
+					std::string after = text.substr(spacePos + 1);
+
+					auto it = g_FLOR_RNAM_RDMP_Map.find(after);
+					if (it != g_FLOR_RNAM_RDMP_Map.end())
 					{
-						// Extract text before and after the first space
-						size_t spacePos = OrigString.find(' ');
-						if (spacePos != std::string::npos)
-						{
-							std::string before = OrigString.substr(0, spacePos);
-							std::string after = OrigString.substr(spacePos + 1);
+						messagedata->text = before + " " + it->second;
 
-
-							auto it = g_FLOR_RNAM_RDMP_Map.find(after);
-							if (it != g_FLOR_RNAM_RDMP_Map.end())
-							{
-								std::string NewString = before + " " + it->second;
-								RE::GFxValue newDes(NewString);
-								ObjectiveText.SetMember("text", newDes);
-
-								//g_Logger->info("NewString: {}", NewString);
-							}
-
-						}
 					}
+
 				}
 			}
-		}
 
-		return func(this, a_message);
-	}
+			func(queue_this, menuName, type, data);
+		};
+
+		static inline REL::Relocation<decltype(thunk)> func;
+	};
 
 	void InstallHooks()
 	{
+		//AutoExitDoorTextHook
+		REL::Relocation<std::uintptr_t> target20{ RELOCATION_ID(50727, 51622), REL::VariantOffset(0xD7, 0x255, 0xD7) };
+		stl::write_thunk_call<AutoExitDoorTextHook>(target20.address());
+		SKSE::log::info("AutoExitDoorTextHook hooked at address: {:x} and offset: {:x}", target20.address(), target20.offset());
+
 		//REFR FULL Text Hook
 		REL::Relocation<std::uintptr_t> target19{ RELOCATION_ID(18755, 19216), REL::VariantOffset(0xA6, 0xE4, 0xA6) }; //Theres also 40750, 0x176 on AE. But that's leading to random crashes
 		stl::write_thunk_call<MapMarkerDataHook>(target19.address());
-		g_Logger->info("MapMarkerDataHook hooked at address: {:x} and offset: {:x}", target19.address(), target19.offset());
+		SKSE::log::info("MapMarkerDataHook hooked at address: {:x} and offset: {:x}", target19.address(), target19.offset());
 
 		//SpellItem Text Hook
 		REL::Relocation<std::uintptr_t> target18{ RELOCATION_ID(14163, 14271), REL::VariantOffset(0x1C, 0x1A, 0x1C) };
 		stl::write_thunk_call<SpellItemTextHook>(target18.address());
-		g_Logger->info("SpellItemTextHook hooked at address: {:x} and offset: {:x}", target18.address(), target18.offset());
+		SKSE::log::info("SpellItemTextHook hooked at address: {:x} and offset: {:x}", target18.address(), target18.offset());
 
-		//RNAM_RDMP_TextHook
+		//CrosshairTextHook
 		REL::Relocation<std::uintptr_t> target17{ RELOCATION_ID(39535, 40621), REL::VariantOffset(0x289, 0x280, 0x289) };
-		stl::write_thunk_call<RNAM_RDMP_TextHook>(target17.address());
-		g_Logger->info("RNAM_RDMP_TextHook hooked at address: {:x} and offset: {:x}", target17.address(), target17.offset());
+		stl::write_thunk_call<CrosshairTextHook>(target17.address());
+		SKSE::log::info("CrosshairTextHook hooked at address: {:x} and offset: {:x}", target17.address(), target17.offset());
 
 		//DialogueMenu text hook
 		REL::Relocation<std::uintptr_t> target16{ RELOCATION_ID(34434, 35254), REL::VariantOffset(0xCC, 0x226, 0xCC) };
 		stl::write_thunk_call<DialogueMenuTextHook>(target16.address());
-		g_Logger->info("DialogueMenuTextHook hooked at address: {:x} and offset: {:x}", target16.address(), target16.offset());
+		SKSE::log::info("DialogueMenuTextHook hooked at address: {:x} and offset: {:x}", target16.address(), target16.offset());
 
 		//JournalMenu quest description text Hook
 		REL::Relocation<std::uintptr_t> target14{ RELOCATION_ID(24778, 25259), REL::VariantOffset(0x21C, 0x221, 0x21C) };//First: 5B ->Don't know; Second: C4 ->Don't know; Third: 221 ->Quest description text
 		stl::write_thunk_call<QuestObjectiveTextHook>(target14.address());
-		g_Logger->info("QuestObjectiveTextHook hooked at address: {:x} and offset: {:x}", target14.address(), target14.offset());
+		SKSE::log::info("QuestObjectiveTextHook hooked at address: {:x} and offset: {:x}", target14.address(), target14.offset());
 
 		//HudMenu quest objective text Hook
 		REL::Relocation<std::uintptr_t> target13{ RELOCATION_ID(50751, 51646), REL::VariantOffset(0xA6, 0xA6, 0xA6) };//First: A6 ->All NNAM sentences are passing here; (Second: F7 ->"or" (depends on language) if needed; Third: 143 ->Second sentence after "or" if available)
 		stl::write_thunk_call<QuestObjectiveTextHook>(target13.address());
-		g_Logger->info("QuestObjectiveTextHook hooked at address: {:x} and offset: {:x}", target13.address(), target13.offset());
+		SKSE::log::info("QuestObjectiveTextHook hooked at address: {:x} and offset: {:x}", target13.address(), target13.offset());
 
 		//JournalMenu quest objective text Hook
 		REL::Relocation<std::uintptr_t> target12{ RELOCATION_ID(23229, 23684), REL::VariantOffset(0x21, 0x21, 0x21) };
 		stl::write_thunk_call<QuestObjectiveTextHook>(target12.address());
-		g_Logger->info("QuestObjectiveTextHook hooked at address: {:x} and offset: {:x}", target12.address(), target12.offset());
+		SKSE::log::info("QuestObjectiveTextHook hooked at address: {:x} and offset: {:x}", target12.address(), target12.offset());
 
 		//DialogueStream (subtitles) Hook
 		REL::Relocation<std::uintptr_t> target11{ RELOCATION_ID(34429, 35249), REL::VariantOffset(0x61, 0x61, 0x61) };
 		stl::write_thunk_call<DialogueStreamHook>(target11.address());
-		g_Logger->info("DialogueStreamHook hooked at address: {:x} and offset: {:x}", target11.address(), target11.offset());
+		SKSE::log::info("DialogueStreamHook hooked at address: {:x} and offset: {:x}", target11.address(), target11.offset());
 
 		//ItemCard Hook
 		REL::Relocation<std::uintptr_t> target04{ RELOCATION_ID(50005, 50949), REL::VariantOffset(0x80, 0x80, 0x80) };
 		stl::write_thunk_call<ItemCardPopulateHook>(target04.address());
-		g_Logger->info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target04.address(), target04.offset());
+		SKSE::log::info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target04.address(), target04.offset());
 
 		REL::Relocation<std::uintptr_t> target05{ RELOCATION_ID(50201, 51130), REL::VariantOffset(0xB2, 0xB2, 0xB2) };
 		stl::write_thunk_call<ItemCardPopulateHook>(target05.address());
-		g_Logger->info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target05.address(), target05.offset());
+		SKSE::log::info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target05.address(), target05.offset());
 
 		REL::Relocation<std::uintptr_t> target06{ RELOCATION_ID(50297, 51218), REL::VariantOffset(0x35, 0x35, 0x35) };
 		stl::write_thunk_call<ItemCardPopulateHook>(target06.address());
-		g_Logger->info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target06.address(), target06.offset());
+		SKSE::log::info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target06.address(), target06.offset());
 
 		REL::Relocation<std::uintptr_t> target07{ RELOCATION_ID(50674, 51569), REL::VariantOffset(0x80, 0x7A, 0x80) };
 		stl::write_thunk_call<ItemCardPopulateHook>(target07.address());
-		g_Logger->info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target07.address(), target07.offset());
+		SKSE::log::info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target07.address(), target07.offset());
 
 		REL::Relocation<std::uintptr_t> target08{ RELOCATION_ID(50973, 51852), REL::VariantOffset(0x80, 0x7A, 0x80) };
 		stl::write_thunk_call<ItemCardPopulateHook>(target08.address());
-		g_Logger->info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target08.address(), target08.offset());
+		SKSE::log::info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target08.address(), target08.offset());
 
 		//MessageBoxData Hook SE
 		const auto MessageBoxDataFunc = RELOCATION_ID(51422, 52271).address();
@@ -593,13 +574,13 @@ namespace Hook
 		const auto err = DetourTransactionCommit();
 		if (err == NO_ERROR)
 		{
-			g_Logger->info("Installed MessageBoxDataFunc hook at {0:x}", MessageBoxDataFunc);
-			g_Logger->info("Installed LoadScreenFunc hook at {0:x}", LoadScreenOffsetFunc);
+			SKSE::log::info("Installed MessageBoxDataFunc hook at {0:x}", MessageBoxDataFunc);
+			SKSE::log::info("Installed LoadScreenFunc hook at {0:x}", LoadScreenOffsetFunc);
 
 		}
 		else
 		{
-			g_Logger->error("DetourTransactionCommit failed with error code: {}", err);
+			SKSE::log::error("DetourTransactionCommit failed with error code: {}", err);
 		}
 
 		if (REL::Module::IsAE())
@@ -613,26 +594,26 @@ namespace Hook
 
 			REL::Relocation<std::uintptr_t> target01{ RELOCATION_ID(0, 14552), REL::VariantOffset(0x0, 0x93, 0x0) };
 			stl::write_thunk_call<ParentDESCHookAE>(target01.address());
-			g_Logger->info("ParentDESCHookAE hooked at address: {:x} and offset: {:x}", target01.address(), target01.offset());
+			SKSE::log::info("ParentDESCHookAE hooked at address: {:x} and offset: {:x}", target01.address(), target01.offset());
 
 			//GetDescription Hook AE
 			REL::Relocation<std::uintptr_t> target02{ RELOCATION_ID(0, 14552), REL::VariantOffset(0x0, 0xFB, 0x0) };
 			stl::write_thunk_call<GetDescriptionHookAE>(target02.address());
-			g_Logger->info("GetDescriptionHookAE hooked at address: {:x} and offset: {:x}", target02.address(), target02.offset());
+			SKSE::log::info("GetDescriptionHookAE hooked at address: {:x} and offset: {:x}", target02.address(), target02.offset());
 
 			REL::Relocation<std::uintptr_t> target03{ RELOCATION_ID(0, 14552), REL::VariantOffset(0x0, 0x174, 0x0) };
 			stl::write_thunk_call<GetDescriptionHookAE>(target03.address());
-			g_Logger->info("GetDescriptionHookAE hooked at address: {:x} and offset: {:x}", target03.address(), target03.offset());
+			SKSE::log::info("GetDescriptionHookAE hooked at address: {:x} and offset: {:x}", target03.address(), target03.offset());
 
 			//ItemCard Hook AE
 			REL::Relocation<std::uintptr_t> target09{ RELOCATION_ID(0, 51458), REL::VariantOffset(0x0, 0x87, 0x0) };
 			stl::write_thunk_call<ItemCardPopulateHook>(target09.address());
-			g_Logger->info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target09.address(), target09.offset());
+			SKSE::log::info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target09.address(), target09.offset());
 
 			//DialogueMenu text hook AE
 			REL::Relocation<std::uintptr_t> target15{ RELOCATION_ID(0, 35254), REL::VariantOffset(0x0, 0x115, 0x0) };
 			stl::write_thunk_call<DialogueMenuTextHook>(target15.address());
-			g_Logger->info("DialogueMenuTextHook hooked at address: {:x} and offset: {:x}", target15.address(), target15.offset());
+			SKSE::log::info("DialogueMenuTextHook hooked at address: {:x} and offset: {:x}", target15.address(), target15.offset());
 		}
 
 		if (REL::Module::IsSE() || REL::Module::IsVR())
@@ -640,7 +621,7 @@ namespace Hook
 			//GetDescription Hook SE
 			REL::Relocation<std::uintptr_t> target10{ RELOCATION_ID(14399, 0), REL::VariantOffset(0x53, 0x0, 0x53) };
 			stl::write_thunk_call<GetDescriptionHookSE>(target10.address());
-			g_Logger->info("GetDescriptionHookSE hooked at address: {:x} and offset: {:x}", target10.address(), target10.offset());
+			SKSE::log::info("GetDescriptionHookSE hooked at address: {:x} and offset: {:x}", target10.address(), target10.offset());
 		}
 
 	}

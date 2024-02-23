@@ -1,4 +1,6 @@
-#include "../include/Config.h"
+#include "Config.h"
+#include "Hooks.h"
+#include "Processor.h"
 
 //I don't like the way it looks, but it fulfils its purpose...
 
@@ -24,7 +26,9 @@ std::vector<std::string> Config::GetLoadOrder()
 		{
 			loadOrderPath += L"\\AppData\\Local\\Skyrim VR\\plugins.txt";
 
-			DEBUG_LOG(g_Logger, "Directory: Skyrim VR", nullptr);
+#ifndef NDEBUG
+			SKSE::log::debug("Directory: Skyrim VR");
+#endif
 		}
 		else
 		{
@@ -33,8 +37,9 @@ std::vector<std::string> Config::GetLoadOrder()
 
 #ifndef NDEBUG
 			std::string second = std::filesystem::exists("steam_api64.dll") ? "Skyrim Special Edition" : "Skyrim Special Edition GOG";
+
+			SKSE::log::debug("Directory: {}", second);
 #endif
-			DEBUG_LOG(g_Logger, "Directory: {}", second);
 		}
 
 		std::vector<std::string> loadOrder;
@@ -54,7 +59,7 @@ std::vector<std::string> Config::GetLoadOrder()
 		}
 		else
 		{
-			g_Logger->error("The plugins.txt file could not be opened.");
+			SKSE::log::error("The plugins.txt file could not be opened.");
 		}
 
 		m_BaseGamePlugins.erase( //Just in case a BaseGamePlugin is inside the plugins.txt
@@ -133,7 +138,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 			folder.find(".esl") == std::string::npos &&
 			folder != "Overwrite")
 		{
-			g_Logger->error("Unexpected pluginfolder file extension in {}", folder);
+			SKSE::log::error("Unexpected pluginfolder file extension in {}", folder);
 			it = m_Folders.erase(it);
 		}
 		else
@@ -143,7 +148,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 					return caseInsensitiveStringCompare(folder, loadedPlugin);
 				}) == loadOrder.end())
 			{
-				g_Logger->info("Plugin {} not found, skipping all files in the folder", folder);
+				SKSE::log::info("Plugin {} not found, skipping all files in the folder", folder);
 				it = m_Folders.erase(it);
 			}
 			else
@@ -157,7 +162,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 	static int position = 1;
 	for (const auto& Plugin : loadOrder)
 	{
-		g_Logger->info("Plugin{}: {}", position++, Plugin);
+		SKSE::log::debug("Plugin{}: {}", position++, Plugin);
 	}
 #endif
 
@@ -190,7 +195,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 	static int position2 = 1;
 	for (const auto& Plugin : m_Folders)
 	{
-		g_Logger->info("Folder{}: {}", position2++, Plugin);
+		SKSE::log::debug("Folder{}: {}", position2++, Plugin);
 	}
 #endif
 
@@ -208,13 +213,6 @@ void Config::EnumerateFilesInFolders(const std::string folders) //Get all files 
 		if (entry.is_regular_file() && entry.path().extension() == L".json")
 		{
 			m_Files.emplace_back(entry.path().filename().string());
-
-			/*
-			for (const auto& mfile : m_Files)
-			{
-				DEBUG_LOG(g_Logger, "m_Files: {} ", mfile);
-			}
-			*/
 		}
 
 	}
@@ -229,7 +227,10 @@ void Config::EnumerateFilesInFolders(const std::string folders) //Get all files 
 	{
 		m_FilesInPluginFolder.emplace_back(folderPath + "\\" + file);
 
-		DEBUG_LOG(g_Logger, "File{}: {}", folderCount++, (folderPath + "\\" + file));
+#ifndef NDEBUG
+		SKSE::log::debug("File{}: {}", folderCount++, (folderPath + "\\" + file));
+#endif
+
 	}
 }
 
@@ -330,7 +331,7 @@ Config::RecordTypes Config::GetRecordType(const std::string& type)
 	return (it != typeMap.end()) ? it->second : RecordTypes::kUnknown;
 }
 
-ConstSubrecordType Config::GetConstSubrecordType(const std::string& type)
+Config::ConstSubrecordType Config::GetConstSubrecordType(const std::string& type)
 {
 	static const std::unordered_map<std::string, ConstSubrecordType> typeMap = {
 		{"FULL", ConstSubrecordType::kFULL},
@@ -347,14 +348,16 @@ void Config::ParseTranslationFiles()
 {
 	for (const auto& files : m_FilesInPluginFolder)
 	{
-		DEBUG_LOG(g_Logger, "Parsing file {}", files);
+#ifndef NDEBUG
+		SKSE::log::debug("Parsing file {}", files);
+#endif
 
 		try
 		{
 			std::ifstream file(files);
 			if (!file.is_open())
 			{
-				g_Logger->error("Couldn't open file {}", files);
+				SKSE::log::error("Couldn't open file {}", files);
 				continue;
 			}
 
@@ -378,25 +381,25 @@ void Config::ParseTranslationFiles()
 					case RecordTypes::kREFR_FULL: //For REFR FULL we could also use the other way, but most of REFR don't have a EditorID
 					case RecordTypes::kREGN_RDMP:
 					{
-						g_FLOR_RNAM_RDMP_Map.insert_or_assign(entry["original"], stringValue); //update if key already exists. This simulates the esp load order
+						Hook::g_FLOR_RNAM_RDMP_Map.insert_or_assign(entry["original"], stringValue); //update if key already exists. This simulates the esp load order
 					}
 					break;
 					case RecordTypes::kDIAL_FULL:
 					case RecordTypes::kINFO_RNAM:
 					{
-						g_DIAL_FULL_RNAM_Map.insert_or_assign(entry["original"], stringValue);
+						Hook::g_DIAL_FULL_RNAM_Map.insert_or_assign(entry["original"], stringValue); //TODO: Move into functions
 					}
 					break;
 					case RecordTypes::kQUST_CNAM:
 					case RecordTypes::kQUST_NNAM:
 					{
-						g_QUST_NNAM_CNAM_Map.insert_or_assign(entry["original"], stringValue);
+						Hook::g_QUST_NNAM_CNAM_Map.insert_or_assign(entry["original"], stringValue);
 					}
 					break;
 					case RecordTypes::kINFO_NAM1:
 					case RecordTypes::kMESG_ITXT:
 					{
-						g_INFO_NAM1_ITXT_Map.insert_or_assign(entry["original"], stringValue);
+						Hook::g_INFO_NAM1_ITXT_Map.insert_or_assign(entry["original"], stringValue);
 					}
 					break;
 					case RecordTypes::kConst_Translation:
@@ -408,13 +411,14 @@ void Config::ParseTranslationFiles()
 						RE::TESForm* form = RE::TESForm::LookupByEditorID(editorId);
 						if (!form && subrecord != "DATA")
 						{
-							g_Logger->error("Couldn't find Editor ID {} out of file {}", editorId, files);
+							SKSE::log::error("Couldn't find Editor ID {} out of file {}", editorId, files);
 							continue;
 						}
 
 						ConstSubrecordType ConstSubrecordType = GetConstSubrecordType(subrecord);
 
-						g_ConstConfigurationInformationStruct.emplace_back(form, stringValue, ConstSubrecordType, editorId);
+
+						Processor::AddToConstTranslationStruct(form, stringValue, ConstSubrecordType, editorId);
 					}
 					break;
 					case RecordTypes::kNormal_Translation:
@@ -424,21 +428,21 @@ void Config::ParseTranslationFiles()
 						RE::TESForm* form = RE::TESForm::LookupByEditorID(editorId);
 						if (!form)
 						{
-							g_Logger->error("Couldn't find Editor ID {} out of file {}", editorId, files);
+							SKSE::log::error("Couldn't find Editor ID {} out of file {}", editorId, files);
 							continue;
 						}
 
-						g_ConfigurationInformationStruct.emplace_back(form, stringValue, GetSubrecordType(types), types.substr(0, 4));
+						Hook::g_ConfigurationInformationStruct.emplace_back(form, stringValue, GetSubrecordType(types), types.substr(0, 4));
 					}
 					break;
 					case RecordTypes::kNotVisible:
 					{
-						g_Logger->info("File {} contains not visible type: {}", files, types);
+						SKSE::log::info("File {} contains not visible type: {}", files, types);
 					}
 					break;
 					case RecordTypes::kUnknown:
 					{
-						g_Logger->info("File {} contains unkown type: {}", files, types);
+						SKSE::log::info("File {} contains unkown type: {}", files, types);
 					}
 					break;
 
@@ -449,13 +453,13 @@ void Config::ParseTranslationFiles()
 				}
 				catch (const std::exception& e)
 				{
-					g_Logger->error("Exception while processing entry in file {}: {}", files, e.what());
+					SKSE::log::error("Exception while processing entry in file {}: {}", files, e.what());
 				}
 			}
 		}
 		catch (const std::exception& e)
 		{
-			g_Logger->error("Exception while parsing JSON file {}: {}", files, e.what());
+			SKSE::log::error("Exception while parsing JSON file {}: {}", files, e.what());
 		}
 	}
 }

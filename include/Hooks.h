@@ -1,27 +1,22 @@
 #pragma once
-#include "../include/Globals.h"
+
 
 namespace Hook
 {
 	void InstallHooks();
 
-	class HudMenu : public RE::HUDMenu
+	struct ConfigurationInformation
 	{
-
-	public:
-
-		static void InstallUIHook()
-		{
-			REL::Relocation<std::uintptr_t> Vtbl{ RE::VTABLE_HUDMenu[0] };
-			func = Vtbl.write_vfunc(0x4, &ProcessMessageHook);
-			g_Logger->info("Installed HUDMenuUIHook");
-		}
-
-
-	private:
-		bool containsOnlySpace(const std::string& str);
-		RE::UI_MESSAGE_RESULTS ProcessMessageHook(RE::UIMessage& a_message);
-
-		static inline REL::Relocation<decltype(&RE::HUDMenu::ProcessMessage)> func;
+		RE::TESForm* Form;
+		std::string ReplacerText = "";
+		std::string SubrecordType = "";
+		std::string RecordType = "";
 	};
+
+	inline std::vector<ConfigurationInformation> g_ConfigurationInformationStruct;
+
+	inline std::unordered_map<std::string, std::string> g_INFO_NAM1_ITXT_Map;
+	inline std::unordered_map<std::string, std::string> g_DIAL_FULL_RNAM_Map;
+	inline std::unordered_map<std::string, std::string> g_QUST_NNAM_CNAM_Map;
+	inline std::unordered_map<std::string, std::string> g_FLOR_RNAM_RDMP_Map;
 }

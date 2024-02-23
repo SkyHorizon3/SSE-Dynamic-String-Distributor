@@ -4,7 +4,6 @@
 
 #include <unordered_map>
 #include <ShlObj.h>
-#include <regex>
 
 #include <spdlog/sinks/basic_file_sink.h>
 #include <xbyak/xbyak.h>
@@ -38,11 +37,5 @@ namespace stl
 		write_vfunc<F, 0, T>();
 	}
 }
-
-#if _DEBUG
-#define DEBUG_LOG(logger, msg, ...) logger->info(msg, __VA_ARGS__)
-#else
-#define DEBUG_LOG(logger, msg, ...)
-#endif
 
 #include "Plugin.h"

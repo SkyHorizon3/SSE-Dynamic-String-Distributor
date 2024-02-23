@@ -1,44 +1,44 @@
-#include "../include/Processor.h"
-#include "../include/Config.h"
+#include "Processor.h"
+#include "Config.h"
 
 void Processor::RunConstTranslation()
 {
-	for (const auto& Information : g_ConstConfigurationInformationStruct)
+	for (const auto& Information : m_ConstConfigurationInformationStruct)
 	{
 
 		switch (Information.SubrecordType)
 		{
-		case ConstSubrecordType::kFULL: //DIAL FULL, REFR FULL aren't working like this.
+		case Config::ConstSubrecordType::kFULL: //DIAL FULL, REFR FULL aren't working like this.
 		{
 			SetConstStrings<RE::TESFullName>(Information.Form, Information.ReplacerText, &RE::TESFullName::fullName);
 		}
 		break;
-		case ConstSubrecordType::kSHRT:
+		case Config::ConstSubrecordType::kSHRT:
 		{
 			SetConstStrings<RE::TESNPC>(Information.Form, Information.ReplacerText, &RE::TESNPC::shortName);
 		}
 		break;
-		case ConstSubrecordType::kTNAM:
+		case Config::ConstSubrecordType::kTNAM:
 		{
 			SetConstStrings<RE::TESWordOfPower>(Information.Form, Information.ReplacerText, &RE::TESWordOfPower::translation);
 		}
 		break;
-		case ConstSubrecordType::kDATA:
+		case Config::ConstSubrecordType::kDATA:
 		{
 			SetGameSettingString(Information.EditorID, Information.ReplacerText);
 		}
 		break;
-		case ConstSubrecordType::kUnknown:
+		case Config::ConstSubrecordType::kUnknown:
 		{
-			g_Logger->info("Unknown type {} in ConstTranslation", Information.EditorID);
+			SKSE::log::info("Unknown type {} in ConstTranslation", Information.EditorID);
 		}
 		break;
 
 		default: break;
 		}
 	}
-	g_ConstConfigurationInformationStruct.clear(); //Structs only used once, so no need to keep them for fun
-	g_ConstConfigurationInformationStruct.shrink_to_fit();
+	m_ConstConfigurationInformationStruct.clear(); //Structs only used once, so no need to keep them for fun
+	m_ConstConfigurationInformationStruct.shrink_to_fit();
 }
 
 template <typename T>
@@ -51,7 +51,7 @@ void Processor::SetConstStrings(RE::TESForm* Form, RE::BSFixedString NewString, 
 	}
 	else
 	{
-		g_Logger->info("Issue during ConstTranslation with FormID: {0:08X}.", Form->formID);
+		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}.", Form->formID);
 	}
 
 }
@@ -60,7 +60,7 @@ void Processor::SetGameSettingString(const std::string& a_name, const std::strin
 {
 	auto setting = RE::GameSettingCollection::GetSingleton()->GetSetting(a_name.c_str());
 
-	//g_Logger->info("String: {}", std::string(setting->data.s));
+	//SKSE::log::info("String: {}", std::string(setting->data.s));
 
 	if (setting->GetType() == RE::Setting::Type::kString)
 	{
@@ -71,7 +71,7 @@ void Processor::SetGameSettingString(const std::string& a_name, const std::strin
 
 		if (!NewChar)
 		{
-			g_Logger->error("Failed to allocate memory for a new string when setting game setting '{}'. Upgrade your RAM and get rid of Windows XP!", a_name);
+			SKSE::log::error("Failed to allocate memory for a new string when setting game setting '{}'. Upgrade your RAM and get rid of Windows XP!", a_name);
 			return;
 		}
 

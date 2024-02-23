@@ -1,7 +1,6 @@
-﻿#include "../include/Globals.h"
-#include "../include/Config.h"
-#include "../include/Hooks.h"
-#include "../include/Processor.h"
+﻿#include "Config.h"
+#include "Hooks.h"
+#include "Processor.h"
 
 // Setup logger for plugin
 void SetupLog()
@@ -14,12 +13,13 @@ void SetupLog()
 
 	auto pluginName = SKSE::PluginDeclaration::GetSingleton()->GetName();
 	auto logFilePath = *logsFolder / std::format("{}.log", pluginName);
-
 	auto fileLoggerPtr = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFilePath.string(), true);
-	g_Logger = std::make_shared<spdlog::logger>("log", std::move(fileLoggerPtr));
-	spdlog::set_default_logger(g_Logger);
-	spdlog::set_level(spdlog::level::trace);
-	spdlog::flush_on(spdlog::level::trace);
+	auto loggerPtr = std::make_shared<spdlog::logger>("log", std::move(fileLoggerPtr));
+
+	loggerPtr->set_level(spdlog::level::trace);
+	loggerPtr->flush_on(spdlog::level::trace);
+
+	spdlog::set_default_logger(std::move(loggerPtr));
 }
 
 void MessageListener(SKSE::MessagingInterface::Message* message)
@@ -31,7 +31,7 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 	{
 		if (!GetModuleHandle(L"po3_Tweaks"))
 		{
-			g_Logger->error("po3_Tweaks not found, mod won't work!");
+			SKSE::log::critical("po3_Tweaks not found, mod won't work!");
 		}
 
 		Config::GetSingleton()->EnumerateFolder();
@@ -50,7 +50,7 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 
 		auto endTime = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-		g_Logger->info("The retrieval and parsing of jsons, the execution of ConstTranslation and the installation of hooks took {} milliseconds.", duration.count());
+		SKSE::log::info("The retrieval and parsing of jsons, the execution of ConstTranslation and the installation of hooks took {} milliseconds.", duration.count());
 
 	}
 	break;
@@ -69,7 +69,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 	SetupLog();
 
 	SKSE::GetMessagingInterface()->RegisterListener(MessageListener);
-	g_Logger->info("{} v{} loaded", Plugin::NAME, Plugin::VERSION);
+	SKSE::log::info("{} v{} loaded", Plugin::NAME, Plugin::VERSION);
 
 	return true;
 }

@@ -1,6 +1,4 @@
 #pragma once
-#include "Globals.h"
-
 using json = nlohmann::json;
 
 class Config
@@ -36,6 +34,16 @@ public:
 
 	};
 
+	enum class ConstSubrecordType
+	{
+		kFULL,
+		kSHRT,
+		kTNAM,
+		kDATA,
+
+		kUnknown
+	};
+
 private:
 	bool caseInsensitiveStringCompare(const std::string& a, const std::string& b);
 	std::vector<std::string> GetLoadOrder();
@@ -52,7 +60,6 @@ private:
 	Config& operator=(const Config&) = delete;
 	Config& operator=(Config&&) = delete;
 
-private:
 	std::vector<std::string> m_Folders;
 	std::vector<std::string> m_Files;
 	std::vector<std::string> m_FilesInPluginFolder;
