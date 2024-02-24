@@ -8,27 +8,27 @@ void Processor::RunConstTranslation()
 
 		switch (Information.SubrecordType)
 		{
-		case Config::ConstSubrecordType::kFULL: //DIAL FULL, REFR FULL aren't working like this.
+		case Config::SubrecordTypes::kFULL: //DIAL FULL, REFR FULL aren't working like this.
 		{
 			SetConstStrings<RE::TESFullName>(Information.Form, Information.ReplacerText, &RE::TESFullName::fullName);
 		}
 		break;
-		case Config::ConstSubrecordType::kSHRT:
+		case Config::SubrecordTypes::kSHRT:
 		{
 			SetConstStrings<RE::TESNPC>(Information.Form, Information.ReplacerText, &RE::TESNPC::shortName);
 		}
 		break;
-		case Config::ConstSubrecordType::kTNAM:
+		case Config::SubrecordTypes::kTNAM:
 		{
 			SetConstStrings<RE::TESWordOfPower>(Information.Form, Information.ReplacerText, &RE::TESWordOfPower::translation);
 		}
 		break;
-		case Config::ConstSubrecordType::kDATA:
+		case Config::SubrecordTypes::kDATA:
 		{
 			SetGameSettingString(Information.EditorID, Information.ReplacerText);
 		}
 		break;
-		case Config::ConstSubrecordType::kUnknown:
+		case Config::SubrecordTypes::kUnknown:
 		{
 			SKSE::log::info("Unknown type {} in ConstTranslation", Information.EditorID);
 		}

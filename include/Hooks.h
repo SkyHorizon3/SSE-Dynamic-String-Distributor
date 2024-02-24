@@ -1,5 +1,5 @@
 #pragma once
-
+#include "Config.h"
 
 namespace Hook
 {
@@ -9,8 +9,7 @@ namespace Hook
 	{
 		RE::TESForm* Form;
 		std::string ReplacerText = "";
-		std::string SubrecordType = "";
-		std::string RecordType = "";
+		Config::SubrecordTypes SubrecordType;
 	};
 
 	inline std::vector<ConfigurationInformation> g_ConfigurationInformationStruct;

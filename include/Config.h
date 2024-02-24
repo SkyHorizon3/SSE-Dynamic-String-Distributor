@@ -34,12 +34,16 @@ public:
 
 	};
 
-	enum class ConstSubrecordType
+	enum class SubrecordTypes
 	{
-		kFULL,
+		kFULL, //Used for const translation
 		kSHRT,
 		kTNAM,
 		kDATA,
+
+		kDESC, //Used in hooks
+		kCNAM,
+		kDNAM,
 
 		kUnknown
 	};
@@ -49,8 +53,8 @@ private:
 	std::vector<std::string> GetLoadOrder();
 	void EnumerateFilesInFolders(std::string folders);
 	std::string GetSubrecordType(const std::string& types) const;
-	RecordTypes GetRecordType(const std::string& type);
-	ConstSubrecordType GetConstSubrecordType(const std::string& type);
+	RecordTypes GetRecordType_map(const std::string& type);
+	SubrecordTypes GetSubrecordType_map(const std::string& type);
 	void ParseTranslationFiles();
 
 	Config() = default;

@@ -90,9 +90,10 @@ namespace Hook
 		{
 			for (const auto& information : g_ConfigurationInformationStruct)
 			{
-				if (information.RecordType == "MGEF" && information.SubrecordType == "DNAM") //TODO: change to switch
+				switch (information.SubrecordType)
 				{
-
+				case Config::SubrecordTypes::kDNAM:
+				{
 					if (!a_item->IsMagicItem())
 					{
 						switch (a_item->GetFormType())
@@ -130,6 +131,10 @@ namespace Hook
 						handleMagicItem(magicItem, information);
 					}
 				}
+				break;
+
+				default: break;
+				}
 			}
 		}
 
@@ -137,11 +142,20 @@ namespace Hook
 		{
 			for (const auto& Information : g_ConfigurationInformationStruct)
 			{
-				// Replace the ItemCardDescription of books
-				if (a_item->formID == Information.Form->formID && Information.SubrecordType == "CNAM")
+				switch (Information.SubrecordType)
 				{
-					auto descriptionValue = RE::GFxValue(Information.ReplacerText);
-					itemCard->obj.SetMember("description", descriptionValue);
+				case Config::SubrecordTypes::kCNAM:
+				{
+					// Replace the ItemCardDescription of books
+					if (a_item->formID == Information.Form->formID)
+					{
+						auto descriptionValue = RE::GFxValue(Information.ReplacerText);
+						itemCard->obj.SetMember("description", descriptionValue);
+					}
+				}
+				break;
+
+				default: break;
 				}
 			}
 		}
@@ -162,7 +176,9 @@ namespace Hook
 
 			for (const auto& Information : g_ConfigurationInformationStruct)
 			{
-				if (Information.RecordType == "MGEF" && Information.SubrecordType == "DNAM")
+				switch (Information.SubrecordType)
+				{
+				case Config::SubrecordTypes::kDNAM:
 				{
 					if (form->Is(RE::FormType::Spell))
 					{
@@ -180,6 +196,11 @@ namespace Hook
 						}
 					}
 				}
+				break;
+
+				default: break;
+				}
+
 			}
 		};
 		static inline REL::Relocation<decltype(thunk)> func;
@@ -201,18 +222,23 @@ namespace Hook
 
 			for (const auto& Information : g_ConfigurationInformationStruct)
 			{
-
-				if (a_parent && a_parent->formID == Information.Form->formID && Information.SubrecordType == "DESC") //So it doesn't set CNAM as DESC if both are in a json
+				switch (Information.SubrecordType)
 				{
-					IsDESC = true;
-					SetDescription = Information.ReplacerText;
-					// Set object valid for GetDescription hook to check
+				case Config::SubrecordTypes::kDESC: //So it doesn't set CNAM as DESC if both are in a json
+				{
+					if (a_parent && a_parent->formID == Information.Form->formID)
+					{
+						IsDESC = true;
+						SetDescription = Information.ReplacerText;
+						// Set object valid for GetDescription hook to check
+					}
+				}
+				break;
 
+				default: break;
 				}
 
 			}
-
-
 		}
 
 		static inline REL::Relocation<decltype(thunk)> func;
@@ -255,11 +281,19 @@ namespace Hook
 
 			for (const auto& Information : g_ConfigurationInformationStruct)
 			{
-				if (a_parent && a_parent->formID == Information.Form->formID && Information.SubrecordType == "DESC" && !a_out->empty())
+				switch (Information.SubrecordType)
 				{
-					*a_out = Information.ReplacerText;
+				case Config::SubrecordTypes::kDESC: //So it doesn't set CNAM as DESC if both are in a json
+				{
+					if (a_parent && a_parent->formID == Information.Form->formID && !a_out->empty())
+					{
+						*a_out = Information.ReplacerText;
+					}
 				}
+				break;
 
+				default: break;
+				}
 			}
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
@@ -393,9 +427,18 @@ namespace Hook
 
 			for (const auto& Information : g_ConfigurationInformationStruct)
 			{
-				if (loadscreen && loadscreen->formID == Information.Form->formID)
+				switch (Information.SubrecordType)
 				{
-					loadscreen->loadingText = Information.ReplacerText;
+				case Config::SubrecordTypes::kDESC:
+				{
+					if (loadscreen && loadscreen->formID == Information.Form->formID)
+					{
+						loadscreen->loadingText = Information.ReplacerText;
+					}
+				}
+				break;
+
+				default: break;
 				}
 			}
 

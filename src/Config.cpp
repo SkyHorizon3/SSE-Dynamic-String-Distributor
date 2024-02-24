@@ -244,7 +244,7 @@ std::string Config::GetSubrecordType(const std::string& types) const
 	return "";
 }
 
-Config::RecordTypes Config::GetRecordType(const std::string& type)
+Config::RecordTypes Config::GetRecordType_map(const std::string& type)
 {
 	static const std::unordered_map<std::string, RecordTypes> typeMap = {
 		{"ACTI FULL", RecordTypes::kConst_Translation},
@@ -331,17 +331,21 @@ Config::RecordTypes Config::GetRecordType(const std::string& type)
 	return (it != typeMap.end()) ? it->second : RecordTypes::kUnknown;
 }
 
-Config::ConstSubrecordType Config::GetConstSubrecordType(const std::string& type)
+Config::SubrecordTypes Config::GetSubrecordType_map(const std::string& type)
 {
-	static const std::unordered_map<std::string, ConstSubrecordType> typeMap = {
-		{"FULL", ConstSubrecordType::kFULL},
-		{"SHRT", ConstSubrecordType::kSHRT},
-		{"DATA", ConstSubrecordType::kDATA},
-		{"TNAM", ConstSubrecordType::kTNAM},
+	static const std::unordered_map<std::string, SubrecordTypes> typeMap = {
+		{"FULL", SubrecordTypes::kFULL},
+		{"SHRT", SubrecordTypes::kSHRT},
+		{"DATA", SubrecordTypes::kDATA},
+		{"TNAM", SubrecordTypes::kTNAM},
+
+		{"DESC", SubrecordTypes::kDESC},
+		{"CNAM", SubrecordTypes::kCNAM},
+		{"DNAM", SubrecordTypes::kDNAM},
 	};
 
 	auto it = typeMap.find(type);
-	return (it != typeMap.end()) ? it->second : ConstSubrecordType::kUnknown;
+	return (it != typeMap.end()) ? it->second : SubrecordTypes::kUnknown;
 }
 
 void Config::ParseTranslationFiles()
@@ -372,7 +376,7 @@ void Config::ParseTranslationFiles()
 					const std::string& types = entry["type"];
 					const std::string& stringValue = entry["string"];
 
-					RecordTypes RecordType = GetRecordType(types);
+					RecordTypes RecordType = GetRecordType_map(types);
 
 					switch (RecordType)
 					{
@@ -387,7 +391,7 @@ void Config::ParseTranslationFiles()
 					case RecordTypes::kDIAL_FULL:
 					case RecordTypes::kINFO_RNAM:
 					{
-						Hook::g_DIAL_FULL_RNAM_Map.insert_or_assign(entry["original"], stringValue); //TODO: Move into functions
+						Hook::g_DIAL_FULL_RNAM_Map.insert_or_assign(entry["original"], stringValue);
 					}
 					break;
 					case RecordTypes::kQUST_CNAM:
@@ -415,7 +419,7 @@ void Config::ParseTranslationFiles()
 							continue;
 						}
 
-						ConstSubrecordType ConstSubrecordType = GetConstSubrecordType(subrecord);
+						SubrecordTypes ConstSubrecordType = GetSubrecordType_map(subrecord);
 
 
 						Processor::AddToConstTranslationStruct(form, stringValue, ConstSubrecordType, editorId);
@@ -432,7 +436,9 @@ void Config::ParseTranslationFiles()
 							continue;
 						}
 
-						Hook::g_ConfigurationInformationStruct.emplace_back(form, stringValue, GetSubrecordType(types), types.substr(0, 4));
+						SubrecordTypes SubrecordType = GetSubrecordType_map(GetSubrecordType(types));
+
+						Hook::g_ConfigurationInformationStruct.emplace_back(form, stringValue, SubrecordType);
 					}
 					break;
 					case RecordTypes::kNotVisible:
