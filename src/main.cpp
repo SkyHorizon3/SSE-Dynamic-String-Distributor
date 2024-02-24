@@ -45,7 +45,6 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 
 		Processor::GetSingleton()->RunConstTranslation();
 
-		Hook::HudMenu::InstallUIHook();
 		Hook::InstallHooks();
 
 		auto endTime = std::chrono::high_resolution_clock::now();

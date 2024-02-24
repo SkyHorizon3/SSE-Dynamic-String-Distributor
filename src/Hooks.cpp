@@ -380,26 +380,29 @@ namespace Hook
 		return originalFunction01(Menu);
 	}
 
-
-	typedef void(WINAPI* LoadScreen_pFunc)(RE::TESLoadScreen* loadscreen, float* a2); //TODO: Remove this hook from detours
-	LoadScreen_pFunc originalFunction02;
-	void LoadScreenFunc(RE::TESLoadScreen* loadscreen, float* a2) //LSCR DESC 
+	struct LoadScreenTextHook //LSCR DESC
 	{
-		if (!loadscreen && !loadscreen->loadingText.size())
+		static void thunk(RE::TESLoadScreen* loadscreen, float* a2)
 		{
-			return originalFunction02(loadscreen, a2);
-		}
-
-		for (const auto& Information : g_ConfigurationInformationStruct)
-		{
-			if (loadscreen && loadscreen->formID == Information.Form->formID)
+			if (!loadscreen && !loadscreen->loadingText.size())
 			{
-				loadscreen->loadingText = Information.ReplacerText;
+				return func(loadscreen, a2);
 			}
-		}
 
-		return originalFunction02(loadscreen, a2);
-	}
+			func(loadscreen, a2);
+
+			for (const auto& Information : g_ConfigurationInformationStruct)
+			{
+				if (loadscreen && loadscreen->formID == Information.Form->formID)
+				{
+					loadscreen->loadingText = Information.ReplacerText;
+				}
+			}
+
+		};
+		static inline REL::Relocation<decltype(thunk)> func;
+
+	};
 
 	//Credits to po3 https://github.com/powerof3/SimpleActivateSKSE released under MIT
 	//Still compatible
@@ -479,7 +482,6 @@ namespace Hook
 					if (it != g_FLOR_RNAM_RDMP_Map.end())
 					{
 						messagedata->text = before + " " + it->second;
-
 					}
 
 				}
@@ -493,6 +495,11 @@ namespace Hook
 
 	void InstallHooks()
 	{
+		//loadscreen text hook
+		REL::Relocation<std::uintptr_t> target21{ RELOCATION_ID(51048, 51929), REL::VariantOffset(0x2BB, 0x1BC, 0x2BB) };
+		stl::write_thunk_call<LoadScreenTextHook>(target21.address());
+		SKSE::log::info("LoadScreenTextHook hooked at address: {:x} and offset: {:x}", target21.address(), target21.offset());
+
 		//AutoExitDoorTextHook
 		REL::Relocation<std::uintptr_t> target20{ RELOCATION_ID(50727, 51622), REL::VariantOffset(0xD7, 0x255, 0xD7) };
 		stl::write_thunk_call<AutoExitDoorTextHook>(target20.address());
@@ -561,22 +568,17 @@ namespace Hook
 
 		//MessageBoxData Hook SE
 		const auto MessageBoxDataFunc = RELOCATION_ID(51422, 52271).address();
-		const auto LoadScreenOffsetFunc = RELOCATION_ID(21368, 21833).address();
 
 		originalFunction01 = (MessageBoxDataHook_pFunc)MessageBoxDataFunc;
-		originalFunction02 = (LoadScreen_pFunc)LoadScreenOffsetFunc;
 
 		DetourTransactionBegin();
 		DetourUpdateThread(GetCurrentThread());
 		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction01), static_cast<PVOID>(&MessageBoxFunc));
-		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction02), static_cast<PVOID>(&LoadScreenFunc));
 
 		const auto err = DetourTransactionCommit();
 		if (err == NO_ERROR)
 		{
 			SKSE::log::info("Installed MessageBoxDataFunc hook at {0:x}", MessageBoxDataFunc);
-			SKSE::log::info("Installed LoadScreenFunc hook at {0:x}", LoadScreenOffsetFunc);
-
 		}
 		else
 		{
