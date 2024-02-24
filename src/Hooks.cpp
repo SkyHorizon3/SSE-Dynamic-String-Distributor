@@ -214,7 +214,7 @@ namespace Hook
 	{
 		static void thunk(RE::BSString* a_out, RE::TESForm* a_parent, std::uint64_t a_unk)
 		{
-			//Perks, Loading Screens, Race Descriptions and any other DESC in SSEDIT
+			//Perks, Race Descriptions and any other DESC in xEdit except for loading screens
 
 			UNREFERENCED_PARAMETER(a_unk);
 
