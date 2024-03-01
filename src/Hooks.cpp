@@ -394,7 +394,7 @@ namespace Hook
 
 	typedef void(WINAPI* MessageBoxDataHook_pFunc)(RE::MessageBoxData* Menu);
 	MessageBoxDataHook_pFunc originalFunction01;
-	void MessageBoxFunc(RE::MessageBoxData* Menu) //MESG ITXT
+	void MessageBoxFunc(RE::MessageBoxData* Menu) //MESG ITXT, PERK EPF2
 	{
 		if (!Menu && !Menu->buttonText.size())
 		{
@@ -460,14 +460,26 @@ namespace Hook
 			{
 				switch (crosshairRef->GetFormType())
 				{
+				case RE::FormType::ActorCharacter: //PERK EPFD
 				case RE::FormType::Reference: //ACTI RNAM, FLOR RNAM, REGN RDMP for doors
 				{
+					//SKSE::log::info("String: {}", messagedata->text.c_str());
+
 					std::istringstream iss(messagedata->text.c_str());
 					std::string line1, line2;
 
 					if (std::getline(iss, line1) && std::getline(iss, line2))
 					{
 						HandleFormTypeHelper(messagedata, line1, line2);
+					}
+					else
+					{
+						auto it1 = g_FLOR_RNAM_RDMP_Map.find(line1);
+
+						if (it1 != g_FLOR_RNAM_RDMP_Map.end())
+						{
+							messagedata->text = it1->second;
+						}
 					}
 				}
 				break;
