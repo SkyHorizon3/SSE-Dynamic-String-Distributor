@@ -20,9 +20,9 @@ o If there is an issue in a json file you will see it in the DynamicStringDistri
 
 ## Compatibility
 
-Works on:
-o SE - 1.5.97
-o AE - 1.6.640, 1.6.1130, 1.6.1170 + GOG
+Works on:\
+o SE - 1.5.97\
+o AE - 1.6.640, 1.6.1130, 1.6.1170 + GOG\
 o VR
 
 ## FAQ
