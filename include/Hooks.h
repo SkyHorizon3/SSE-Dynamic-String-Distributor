@@ -14,8 +14,8 @@ namespace Hook
 
 	inline std::vector<ConfigurationInformation> g_ConfigurationInformationStruct;
 
-	inline std::unordered_map<std::string, std::string> g_INFO_NAM1_ITXT_Map;
-	inline std::unordered_map<std::string, std::string> g_DIAL_FULL_RNAM_Map;
-	inline std::unordered_map<std::string, std::string> g_QUST_NNAM_CNAM_Map;
-	inline std::unordered_map<std::string, std::string> g_FLOR_RNAM_RDMP_Map;
+	inline ankerl::unordered_dense::map<std::string, std::string> g_INFO_NAM1_ITXT_Map;
+	inline ankerl::unordered_dense::map<std::string, std::string> g_DIAL_FULL_RNAM_Map;
+	inline ankerl::unordered_dense::map<std::string, std::string> g_QUST_NNAM_CNAM_Map;
+	inline ankerl::unordered_dense::map<std::string, std::string> g_FLOR_RNAM_RDMP_Map;
 }

@@ -8,6 +8,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <xbyak/xbyak.h>
 #include <nlohmann/json.hpp>
+#include <ankerl/unordered_dense.h>
 
 using namespace std::literals;
 

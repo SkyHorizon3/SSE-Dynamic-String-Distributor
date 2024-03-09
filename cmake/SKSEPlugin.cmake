@@ -63,6 +63,7 @@ endif()
 # Find required packages (adjust as needed)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/CommonLibSSE-NG CommonLibSSE)
 find_package(spdlog CONFIG REQUIRED)
+find_package(unordered_dense CONFIG REQUIRED)
 find_library(Detours_LIBRARIES NAMES detours.lib)
 
 # Include directories and libraries
@@ -71,4 +72,4 @@ target_include_directories("${PROJECT_NAME}" PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
 
 # Link libraries
 target_link_libraries("${PROJECT_NAME}" PUBLIC CommonLibSSE::CommonLibSSE)
-target_link_libraries("${PROJECT_NAME}" PRIVATE ${Detours_LIBRARIES})
+target_link_libraries("${PROJECT_NAME}" PRIVATE ${Detours_LIBRARIES} unordered_dense::unordered_dense)
