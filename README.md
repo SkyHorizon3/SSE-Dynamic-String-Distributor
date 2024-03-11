@@ -1,18 +1,18 @@
 ﻿# Features
 
-- This SKSE plugin allows you to replace existing game strings with new ones defined in jsons\
-- Esp/esm/esl version independent text replacements\
+- This SKSE plugin allows you to replace existing game strings with new ones defined in jsons
+- Esp/esm/esl version independent text replacements
 - Primarily designed for translations generated via [SSE Auto Translator](https://www.nexusmods.com/skyrimspecialedition/mods/111491)﻿.
 
 
 # JSON-Configuration
 
-- The json-configuration works similar to the esp/esm/esl-plugin list\
+- The json-configuration works similar to the esp/esm/esl-plugin list
 - Within SKSE\Plugins\DynamicStringDistributor, create a folder named after the ESP/ESM/ESL you want to create replacements for (e.g.
 SKSE\Plugins\DynamicStringDistributor\skyrim.esm)\
-- Inside each of those folders named like plugins you can put json files with any name and following [scheme](https://github.com/SkyHorizon3/SSE-Dynamic-String-Distributor/blob/main/doc/Doc.md)﻿﻿\
-- JSON files are only loaded from the folder if the corresponding plugin is in your active plugin list\
-- Conflicts between JSON definitions within plugin folders are solved by the position of the active plugin in your plugin list.\
+- Inside each of those folders named like plugins you can put json files with any name and following [scheme](https://github.com/SkyHorizon3/SSE-Dynamic-String-Distributor/blob/main/doc/Doc.md)﻿﻿
+- JSON files are only loaded from the folder if the corresponding plugin is in your active plugin list
+- Conflicts between JSON definitions between plugin folders are solved by the position of the active plugin in your plugin list
 - Conflicts inside of the plugin folders are solved alphabetically
   - Use SSE Auto Translator﻿ for automation
 
@@ -40,6 +40,9 @@ Works on:
 
 ### What's the point?
 - This mod is mainly intended to make translations plugin independent. This reduces the effort of updating the translations after every small plugin update.The automation provided by SSE Auto Translator makes the whole process even easier.
+
+### Which files are supported?
+- Esp/esm/esl. Overall it's difficult to say which files are supported. After all, it depends on recordtypes. For example, a script (.pex) can change the full name of something. This is not supported, but full name in general is supported...
 
 
 # Source
