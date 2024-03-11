@@ -9,7 +9,7 @@
 
 - The json-configuration works similar to the esp/esm/esl-plugin list
 - Within SKSE\Plugins\DynamicStringDistributor, create a folder named after the ESP/ESM/ESL you want to create replacements for (e.g.
-SKSE\Plugins\DynamicStringDistributor\skyrim.esm)\
+SKSE\Plugins\DynamicStringDistributor\skyrim.esm)
 - Inside each of those folders named like plugins you can put json files with any name and following [scheme](https://github.com/SkyHorizon3/SSE-Dynamic-String-Distributor/blob/main/doc/Doc.md)﻿﻿
 - JSON files are only loaded from the folder if the corresponding plugin is in your active plugin list
 - Conflicts between JSON definitions between plugin folders are solved by the position of the active plugin in your plugin list
@@ -53,4 +53,5 @@ Works on:
 # Credits
 Nightfallstorm, SeaSparrow, Fenix, meatdeath and Sylennus for answering my questions\
 Nightfallstorm and po3 for some hooks
-
+Wuerfelhusten﻿ for idea
+Cutleast for thumbnail
