@@ -580,7 +580,7 @@ namespace Hook
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(51048, 51929), REL::VariantOffset(0x2BB, 0x1BC, 0x2BB) };
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(51048, 51929), REL::VariantOffset(0x2BB, 0x1BC, 0x2CB) };
 			stl::write_thunk_call<LoadScreenTextHook>(target1.address());
 			SKSE::log::info("LoadScreenTextHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 		}
@@ -654,7 +654,7 @@ namespace Hook
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(39535, 40621), REL::VariantOffset(0x289, 0x280, 0x289) };
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(39535, 40621), REL::VariantOffset(0x289, 0x280, 0x22E) };
 			stl::write_thunk_call<CrosshairTextHook>(target1.address());
 			SKSE::log::info("CrosshairTextHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 		}
@@ -697,7 +697,7 @@ namespace Hook
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(50727, 51622), REL::VariantOffset(0xD7, 0x255, 0xD7) };
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(50727, 51622), REL::VariantOffset(0xD7, 0x255, 0x101) };//VR: 1408AC8A0
 			stl::write_thunk_call<AutoExitDoorTextHook>(target1.address());
 			SKSE::log::info("AutoExitDoorTextHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 		}
