@@ -42,7 +42,7 @@ Works on:
 - This mod is mainly intended to make translations plugin independent. This reduces the effort of updating the translations after every small plugin update.The automation provided by SSE Auto Translator makes the whole process even easier.
 
 ### Which files are supported?
-- Esp/esm/esl. Overall it's difficult to say which files are supported. After all, it depends on recordtypes. For example, a script (.pex) can change the full name of something. This is not supported, but full name in general is supported...
+- Esp/esm/esl files. In general strings to which a record type can be assigned are supported. 
 
 
 # Source
