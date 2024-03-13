@@ -38,19 +38,30 @@ Example:
 ```json
 [
     {
-        "editor_id": "CACO_FoodMeatTernCooked_HOC",
-        "type": "ALCH FULL",
-        "string": "Gegarte Tern"
+        "editor_id": "WhiterunDrunkenHuntsman",
+        "type": "CELL FULL",
+        "string": "New full name"
     },
     {
-        "editor_id": "DBJarrinRoot",
-        "type": "INGR FULL",
-        "string": "Jarrinwurzel"
+        "editor_id": "EnchDwarvenSwordFire02",
+        "type": "WEAP FULL",
+        "string": "New full name"
     },
     {
-        "type": "REGN RDMP",
-        "original": "Falskaar Hold",
-        "string": "Ersetzt"
+        "type": "INFO RNAM",
+        "original": "You... sent me to die? Traitor!",
+        "string": "New string"
+    },
+    {
+        "editor_id": "EnchFrostDamageFFContact",
+        "type": "MGEF DNAM",
+        "original": "Target takes <mag> points of frost damage to Health and Stamina.",
+        "string": "New string"
+    },
+    {
+        "editor_id": "DLC2TGFormula",
+        "type": "BOOK DESC",
+        "string": "<font face='$HandwrittenFont'>\r\nDelvin,\r\nhier ist die Rezeptur für die Verbesserte Knochenrüstung, die ich in meinem letzten Brief erwähnt habe. Behaltet das Gold, das Ihr durch den Verkauf einnehmt, und stellt sicher, dass es unserer kleinen Schwester an nichts mangelt.\r\n\r\nZutaten:\r\n- 4 Tassen Knochenstaub\r\n- 1 Tasse Salz\r\n- 1 Flasche Netchgelee\r\n- 1 Tasse gemahlenen Mammutstoßzahn\r\n- 1 Eimer frisches Wasser\r\n\r\nGebt den Knochenstaub und das Salz ins Wasser und lasst sie dort mindestens einen Tag lang einweichen. Dann gebt das Netchgelee und den Mammutstoßzahn hinzu. Rührt alles über einer heißen Flamme um, bis die Mischung sich langsam erhärtet. Gießt sie anschließend in die gewünschte Form und platziert die Form in der Mitte Eurer Schmiede. Erhitzt die Mischung mindestens einen halben Tag lang, dann lasst sie auskühlen und entfernt sie aus der Form.\r\n\r\n- Glover Mallory"
     }
 ]
 ```
