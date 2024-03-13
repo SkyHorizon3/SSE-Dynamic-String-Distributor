@@ -65,3 +65,5 @@ Example:
     }
 ]
 ```
+
+To convert texts like the BOOK DESC exmaple above, you can just use [freeformatter](https://www.freeformatter.com/json-escape.html#before-output) or SSE Auto Translator.
