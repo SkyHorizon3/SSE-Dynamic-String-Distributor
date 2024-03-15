@@ -53,6 +53,8 @@ private:
 	std::vector<std::string> GetLoadOrder();
 	void EnumerateFilesInFolders(std::string folders);
 	std::string GetSubrecordType(const std::string& types) const;
+	std::string ExtractContentInBrackets(const std::string& input);
+	RE::FormID ConvertToFormID(std::string input);
 	RecordTypes GetRecordType_map(const std::string& type);
 	SubrecordTypes GetSubrecordType_map(const std::string& type);
 	void ParseTranslationFiles();

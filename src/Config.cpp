@@ -1,6 +1,7 @@
 #include "Config.h"
 #include "Hooks.h"
 #include "Processor.h"
+#include "Utils.h"
 
 //I don't like the way it looks, but it fulfils its purpose...
 
@@ -249,6 +250,40 @@ std::string Config::GetSubrecordType(const std::string& types) const
 	return "";
 }
 
+std::string Config::ExtractContentInBrackets(const std::string& input)
+{
+	size_t startPos = input.find('[');
+	size_t endPos = input.find(']');
+
+	if (startPos != std::string::npos && endPos != std::string::npos && startPos < endPos)
+	{
+		return input.substr(startPos + 1, endPos - startPos - 1);
+	}
+
+	return "";
+}
+
+RE::FormID Config::ConvertToFormID(std::string input)
+{
+	if (input.substr(0, 2) == "FE")
+	{
+		if (input.length() >= 5)
+		{
+			input[3] = 'x';
+			input.erase(0, 2);
+		}
+	}
+	else
+	{
+		if (input.length() >= 3)
+		{
+			input[1] = 'x';
+		}
+	}
+
+	return std::stoul(input, nullptr, 16);
+}
+
 Config::RecordTypes Config::GetRecordType_map(const std::string& type)
 {
 	static const std::unordered_map<std::string, RecordTypes> typeMap = {
@@ -405,10 +440,18 @@ void Config::ParseTranslationFiles()
 						Hook::g_QUST_NNAM_CNAM_Map.insert_or_assign(entry["original"], stringValue);
 					}
 					break;
-					case RecordTypes::kINFO_NAM1:
 					case RecordTypes::kMESG_ITXT:
 					{
-						Hook::g_INFO_NAM1_ITXT_Map.insert_or_assign(entry["original"], stringValue);
+						Hook::g_MESG_ITXT_Map.insert_or_assign(entry["original"], stringValue);
+					}
+					break;
+					case RecordTypes::kINFO_NAM1:
+					{
+						const std::string& stringFormID = ExtractContentInBrackets(entry["editor_id"]);
+						RE::FormID form = ConvertToFormID(stringFormID);
+						size_t key = Utils::combineHash(form, entry["index"].get<int>());
+
+						Hook::g_INFO_NAM1_Map.insert_or_assign(key, stringValue);
 					}
 					break;
 					case RecordTypes::kConst_Translation:
