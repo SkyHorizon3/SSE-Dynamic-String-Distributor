@@ -1,5 +1,7 @@
 #include "Config.h"
-#include "Hooks.h"
+#include "MiscHooks.h"
+#include "DialogueHooks.h"
+#include "QuestHooks.h"
 #include "Processor.h"
 #include "Utils.h"
 
@@ -435,9 +437,33 @@ void Config::ParseTranslationFiles()
 					}
 					break;
 					case RecordTypes::kQUST_CNAM:
+					{
+						RE::TESForm* form = RE::TESForm::LookupByEditorID(entry["editor_id"]);
+						if (!form)
+						{
+							SKSE::log::error("Couldn't find Editor ID {} out of file {}", entry["editor_id"].get<std::string>(), files);
+							continue;
+						}
+
+
+						//Extract index -> umrechnen -> combine hash -> key
+
+
+						//Hook::g_QUST_CNAM_Map.insert_or_assign(key, stringValue);
+					}
+					break;
 					case RecordTypes::kQUST_NNAM:
 					{
-						Hook::g_QUST_NNAM_CNAM_Map.insert_or_assign(entry["original"], stringValue);
+						RE::TESForm* form = RE::TESForm::LookupByEditorID(entry["editor_id"]);
+						if (!form)
+						{
+							SKSE::log::error("Couldn't find Editor ID {} out of file {}", entry["editor_id"].get<std::string>(), files);
+							continue;
+						}
+
+						size_t key = Utils::combineHash(form->formID, entry["index"].get<int>());
+
+						Hook::g_QUST_NNAM_Map.insert_or_assign(key, stringValue);
 					}
 					break;
 					case RecordTypes::kMESG_ITXT:

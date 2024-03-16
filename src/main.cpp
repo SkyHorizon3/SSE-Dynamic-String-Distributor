@@ -1,5 +1,5 @@
 ﻿#include "Config.h"
-#include "Hooks.h"
+#include "MiscHooks.h"
 #include "Processor.h"
 
 // Setup logger for plugin
