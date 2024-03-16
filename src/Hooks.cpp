@@ -34,6 +34,11 @@ namespace Hook
 					if (effect->baseEffect->formID == information.Form->formID)
 					{
 						effect->baseEffect->magicItemDescription = information.ReplacerText;
+
+#ifndef NDEBUG
+						SKSE::log::debug("Replaced MGEF DNAM {0:08X} with:", effect->baseEffect->formID);
+						SKSE::log::debug("{}", information.ReplacerText);
+#endif
 					}
 				}
 			}
@@ -48,6 +53,11 @@ namespace Hook
 					if (effect->baseEffect->formID == information.Form->formID)
 					{
 						effect->baseEffect->magicItemDescription = information.ReplacerText;
+
+#ifndef NDEBUG
+						SKSE::log::debug("Replaced MGEF DNAM {0:08X} with:", effect->baseEffect->formID);
+						SKSE::log::debug("{}", information.ReplacerText);
+#endif
 					}
 				}
 
@@ -64,6 +74,11 @@ namespace Hook
 					if (effect->baseEffect->formID == information.Form->formID)
 					{
 						effect->baseEffect->magicItemDescription = information.ReplacerText;
+
+#ifndef NDEBUG
+						SKSE::log::debug("Replaced MGEF DNAM {0:08X} with:", effect->baseEffect->formID);
+						SKSE::log::debug("{}", information.ReplacerText);
+#endif
 					}
 				}
 
@@ -80,6 +95,11 @@ namespace Hook
 					if (effect->baseEffect->formID == information.Form->formID)
 					{
 						effect->baseEffect->magicItemDescription = information.ReplacerText;
+
+#ifndef NDEBUG
+						SKSE::log::debug("Replaced MGEF DNAM {0:08X} with:", effect->baseEffect->formID);
+						SKSE::log::debug("{}", information.ReplacerText);
+#endif
 					}
 				}
 
@@ -151,6 +171,11 @@ namespace Hook
 					{
 						auto descriptionValue = RE::GFxValue(Information.ReplacerText);
 						itemCard->obj.SetMember("description", descriptionValue);
+
+#ifndef NDEBUG
+						SKSE::log::debug("Replaced BOOK CNAM {0:08X} with:", a_item->formID);
+						SKSE::log::debug("{}", Information.ReplacerText);
+#endif
 					}
 				}
 				break;
@@ -222,6 +247,11 @@ namespace Hook
 								if (effect->baseEffect->formID == Information.Form->formID)
 								{
 									effect->baseEffect->magicItemDescription = Information.ReplacerText;
+
+#ifndef NDEBUG
+									SKSE::log::debug("Replaced MGEF DNAM {0:08X} with:", effect->baseEffect->formID);
+									SKSE::log::debug("{}", Information.ReplacerText);
+#endif
 								}
 							}
 						}
@@ -270,6 +300,12 @@ namespace Hook
 						IsDESC = true;
 						SetDescription = Information.ReplacerText;
 						// Set object valid for GetDescription hook to check
+
+#ifndef NDEBUG
+						SKSE::log::debug("Replaced XXXX DESC {0:08X} with:", a_parent->formID);
+						SKSE::log::debug("{}", Information.ReplacerText);
+#endif
+
 					}
 				}
 				break;
@@ -361,6 +397,11 @@ namespace Hook
 					if (a_parent && a_parent->formID == Information.Form->formID && !a_out->empty())
 					{
 						*a_out = Information.ReplacerText;
+
+#ifndef NDEBUG
+						SKSE::log::debug("Replaced XXXX DESC {0:08X} with:", a_parent->formID);
+						SKSE::log::debug("{}", Information.ReplacerText);
+#endif
 					}
 				}
 				break;
@@ -395,6 +436,7 @@ namespace Hook
 			if (it != g_INFO_NAM1_Map.end())
 			{
 				g_INFO_NAM1_TEMP_Map.emplace(response->responseText.c_str(), it->second);
+				g_INFO_NAM1_Map.erase(it);
 			}
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
@@ -572,6 +614,7 @@ namespace Hook
 			}
 		}
 
+
 		return originalFunction01(Menu);
 	}
 
@@ -595,6 +638,11 @@ namespace Hook
 					if (loadscreen && loadscreen->formID == Information.Form->formID)
 					{
 						loadscreen->loadingText = Information.ReplacerText;
+
+#ifndef NDEBUG
+						SKSE::log::debug("Replaced LSCR DESC {0:08X} with:", loadscreen->formID);
+						SKSE::log::debug("{}", Information.ReplacerText);
+#endif
 					}
 				}
 				break;
@@ -731,7 +779,6 @@ namespace Hook
 			SKSE::log::info("AutoExitDoorTextHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 		}
 	};
-
 
 	void InstallHooks()
 	{
