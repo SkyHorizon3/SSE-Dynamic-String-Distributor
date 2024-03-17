@@ -8,16 +8,16 @@ namespace Hook
 {
 	struct DialogueConstructHook //INFO NAM1
 	{
-		static void thunk(RE::TESTopicInfo::ResponseData* response, char* voicePath, RE::BGSVoiceType* voiceType, RE::TESTopic* topic, RE::TESTopicInfo* topicInfo)
+		static void thunk(RE::TESTopicInfo::ResponseData* a_response, char* a_voiceFilePath, RE::BGSVoiceType* a_voiceType, RE::TESTopic* a_topic, RE::TESTopicInfo* a_topicInfo)
 		{
-			func(response, voicePath, voiceType, topic, topicInfo);
+			func(a_response, a_voiceFilePath, a_voiceType, a_topic, a_topicInfo);
 
-			size_t key = Utils::combineHash(topicInfo->formID, response->responseNumber);
+			size_t key = Utils::combineHash(a_topicInfo->formID, a_response->responseNumber);
 
 			auto it = g_INFO_NAM1_Map.find(key);
 			if (it != g_INFO_NAM1_Map.end())
 			{
-				g_INFO_NAM1_TEMP_Map.emplace(response->responseText.c_str(), it->second);
+				g_INFO_NAM1_TEMP_Map.emplace(a_response->responseText.c_str(), it->second); //Can't set with responseText = "newText". So setting it with the hook below. The function is called directly after this construct function.
 				g_INFO_NAM1_Map.erase(it);
 			}
 		}
@@ -59,10 +59,48 @@ namespace Hook
 
 	};
 
+	struct DialogueMenuTextHook //DIAL FULL, INFO RNAM
+	{
+		static void thunk(RE::MenuTopicManager::Dialogue& a_out, char* a2, std::uint64_t a3) //Skyrim is not only passing BSStrings into this function
+		{
+			func(a_out, a2, a3);
+
+			auto it1 = g_DIAL_FULL_Map.find(a_out.parentTopic->formID);
+
+			if (it1 != g_DIAL_FULL_Map.end())
+			{
+				a_out.topicText = it1->second;
+			}
+
+			auto it2 = g_INFO_RNAM_Map.find(a_out.parentTopicInfo->formID); //INFO RNAM always overwrites DIAL FULL of parenttopic
+			if (it2 != g_INFO_RNAM_Map.end())
+			{
+				a_out.topicText = it2->second;
+			}
+
+		};
+		static inline REL::Relocation<decltype(thunk)> func;
+
+
+		static void Install()
+		{
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(34434, 35254), REL::VariantOffset(0xCC, 0x226, 0xCC) };
+			stl::write_thunk_call<DialogueMenuTextHook>(target1.address());
+			SKSE::log::info("DialogueMenuTextHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
+
+			if (REL::Module::IsAE())
+			{
+				REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(0, 35254), REL::VariantOffset(0x0, 0x115, 0x0) };
+				stl::write_thunk_call<DialogueMenuTextHook>(target2.address());
+				SKSE::log::info("DialogueMenuTextHook hooked at address: {:x} and offset: {:x}", target2.address(), target2.offset());
+			}
+		}
+	};
+
+
 	void InstallDialogueHooks()
 	{
 		Hook::DialogueStreamHook::Install();
 		Hook::DialogueConstructHook::Install();
+		Hook::DialogueMenuTextHook::Install();
 	}
-
-}

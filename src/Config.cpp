@@ -431,9 +431,15 @@ void Config::ParseTranslationFiles()
 					}
 					break;
 					case RecordTypes::kDIAL_FULL:
+					{
+						const std::string& stringFormID = ExtractContentInBrackets(entry["editor_id"]);
+						Hook::g_DIAL_FULL_Map.insert_or_assign(ConvertToFormID(stringFormID), stringValue);
+					}
+					break;
 					case RecordTypes::kINFO_RNAM:
 					{
-						Hook::g_DIAL_FULL_RNAM_Map.insert_or_assign(entry["original"], stringValue);
+						const std::string& stringFormID = ExtractContentInBrackets(entry["editor_id"]);
+						Hook::g_INFO_RNAM_Map.insert_or_assign(ConvertToFormID(stringFormID), stringValue);
 					}
 					break;
 					case RecordTypes::kQUST_CNAM:
