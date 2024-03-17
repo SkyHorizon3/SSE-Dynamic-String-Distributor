@@ -104,3 +104,5 @@ namespace Hook
 		Hook::DialogueConstructHook::Install();
 		Hook::DialogueMenuTextHook::Install();
 	}
+
+}
