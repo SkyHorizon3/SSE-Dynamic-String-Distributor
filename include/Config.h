@@ -13,7 +13,7 @@ public:
 	void EnumerateFolder();
 	void LoadFiles();
 
-	enum class RecordTypes
+	enum class RecordType
 	{
 		kNormal_Translation,
 		kConst_Translation,
@@ -27,6 +27,7 @@ public:
 		kREGN_RDMP,
 		kFLOR_RNAM,
 		kACTI_RNAM,
+		kPERK_EPFD,
 		kREFR_FULL,
 
 		kNotVisible,
@@ -34,7 +35,7 @@ public:
 
 	};
 
-	enum class SubrecordTypes
+	enum class SubrecordType
 	{
 		kFULL, //Used for const translation
 		kSHRT,
@@ -55,8 +56,8 @@ private:
 	std::string GetSubrecordType(const std::string& types) const;
 	std::string ExtractContentInBrackets(const std::string& input);
 	RE::FormID ConvertToFormID(std::string input);
-	RecordTypes GetRecordType_map(const std::string& type);
-	SubrecordTypes GetSubrecordType_map(const std::string& type);
+	RecordType GetRecordType_map(const std::string& type);
+	SubrecordType GetSubrecordType_map(const std::string& type);
 	void ParseTranslationFiles();
 
 	Config() = default;

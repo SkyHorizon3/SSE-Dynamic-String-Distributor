@@ -111,7 +111,7 @@ namespace Hook
 			{
 				switch (information.SubrecordType)
 				{
-				case Config::SubrecordTypes::kDNAM:
+				case Config::SubrecordType::kDNAM:
 				{
 					if (!a_item->IsMagicItem())
 					{
@@ -163,7 +163,7 @@ namespace Hook
 			{
 				switch (Information.SubrecordType)
 				{
-				case Config::SubrecordTypes::kCNAM:
+				case Config::SubrecordType::kCNAM:
 				{
 					// Replace the ItemCardDescription of books
 					if (a_item->formID == Information.Form->formID)
@@ -233,7 +233,7 @@ namespace Hook
 			{
 				switch (Information.SubrecordType)
 				{
-				case Config::SubrecordTypes::kDNAM:
+				case Config::SubrecordType::kDNAM:
 				{
 					if (form->Is(RE::FormType::Spell))
 					{

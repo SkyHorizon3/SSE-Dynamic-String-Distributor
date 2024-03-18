@@ -21,7 +21,7 @@ namespace Hook
 			{
 				switch (Information.SubrecordType)
 				{
-				case Config::SubrecordTypes::kDESC: //So it doesn't set CNAM as DESC if both are in a json
+				case Config::SubrecordType::kDESC: //So it doesn't set CNAM as DESC if both are in a json
 				{
 					if (a_parent && a_parent->formID == Information.Form->formID)
 					{
@@ -120,7 +120,7 @@ namespace Hook
 			{
 				switch (Information.SubrecordType)
 				{
-				case Config::SubrecordTypes::kDESC: //So it doesn't set CNAM as DESC if both are in a json
+				case Config::SubrecordType::kDESC: //So it doesn't set CNAM as DESC if both are in a json
 				{
 					if (a_parent && a_parent->formID == Information.Form->formID && !a_out->empty())
 					{
@@ -168,7 +168,7 @@ namespace Hook
 			{
 				switch (Information.SubrecordType)
 				{
-				case Config::SubrecordTypes::kDESC:
+				case Config::SubrecordType::kDESC:
 				{
 					if (loadscreen && loadscreen->formID == Information.Form->formID)
 					{

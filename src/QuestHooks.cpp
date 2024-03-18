@@ -33,22 +33,31 @@ namespace Hook
 		};
 		static inline REL::Relocation<decltype(thunk)> func;
 
-
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(21951, 0), REL::VariantOffset(0x147, 0x0, 0x0) };
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(21951, 22433), REL::VariantOffset(0x147, 0x161, 0x147) };
 			stl::write_thunk_call<QuestObjectiveHook>(target1.address());
 			SKSE::log::info("QuestObjectiveHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 
-			REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(52181, 0), REL::VariantOffset(0xD9, 0x0, 0x0) };
+			REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(52181, 53073), REL::VariantOffset(0xD9, 0xD3, 0xD9) };
 			stl::write_thunk_call<QuestObjectiveHook>(target2.address());
 			SKSE::log::info("QuestObjectiveHook hooked at address: {:x} and offset: {:x}", target2.address(), target2.offset());
 
-			REL::Relocation<std::uintptr_t> target3{ RELOCATION_ID(52276, 0), REL::VariantOffset(0x208, 0x0, 0x0) };
+			REL::Relocation<std::uintptr_t> target3{ RELOCATION_ID(52276, 53171), REL::VariantOffset(0x208, 0x22F, 0x208) };
 			stl::write_thunk_call<QuestObjectiveHook>(target3.address());
 			SKSE::log::info("QuestObjectiveHook hooked at address: {:x} and offset: {:x}", target3.address(), target3.offset());
 		}
 	};
+
+	/*
+	RE::BSString GetInstanceQuestDescription(RE::TESQuest* a_quest, std::uint32_t a_instanceID)
+	{
+		using func_t = void (RE::TESQuest::*)(RE::BSString&, std::uint32_t) const;
+		REL::Relocation<func_t> func{ RELOCATION_ID(24549, 25078) };
+		RE::BSString CNAM;
+		func(a_quest, CNAM, a_instanceID);
+		return CNAM;
+	}
 
 	struct QuestDescriptionHook //QUST CNAM text hook for Journal menu
 	{
@@ -61,6 +70,10 @@ namespace Hook
 			func(a_quest, a_out, a_instanceID);
 
 			//			auto stage = a_quest->GetCurrentStageID();
+
+
+			SKSE::log::info("InstanceID: {}", a_instanceID);
+
 
 			if (a_quest->objConditions)
 			{
@@ -92,6 +105,34 @@ namespace Hook
 			stl::write_thunk_call<QuestDescriptionHook>(target1.address());
 			SKSE::log::info("QuestDescriptionHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 		}
+	};
+	*/
+
+	struct QuestCNAMTextHook //QUST CNAM
+	{
+		static void thunk(RE::BSString* a_out, std::uint64_t a2, std::uint64_t a3)
+		{
+			func(a_out, a2, a3);
+
+			auto it = g_QUST_CNAM_Map.find(a_out->c_str()); //using original language as key since I couldn't find a way to match the strings without the QuestInstanceID
+
+			if (it != g_QUST_CNAM_Map.end())
+			{
+				*a_out = it->second;
+			}
+
+		}
+		static inline REL::Relocation<decltype(thunk)> func;
+
+
+		static void Install()
+		{
+			//JournalMenu quest description text Hook
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(24778, 25259), REL::VariantOffset(0x21C, 0x221, 0x21C) };//First: 5B ->Don't know; Second: C4 ->Don't know; Third: 221 ->Quest description text
+			stl::write_thunk_call<QuestCNAMTextHook>(target1.address());
+			SKSE::log::info("QuestCNAMTextHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
+		}
+
 	};
 
 	struct HudMenuQuestObjectiveHook //QUST NNAM text hook for Hudmenu
@@ -129,27 +170,27 @@ namespace Hook
 		static void Install()
 		{
 
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(24472, 0), REL::VariantOffset(0x72, 0x0, 0x0) };
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(24472, 24991), REL::VariantOffset(0x72, 0x7D, 0x72) };
 			stl::write_thunk_call<HudMenuQuestObjectiveHook>(target1.address());
 			SKSE::log::info("HudMenuQuestObjectiveHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 
-			REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(23467, 0), REL::VariantOffset(0x107, 0x0, 0x0) }; //Objective
+			REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(23467, 23933), REL::VariantOffset(0x107, 0x17F, 0x107) }; //Objective
 			stl::write_thunk_call<HudMenuQuestObjectiveHook>(target2.address());
 			SKSE::log::info("HudMenuQuestObjectiveHook hooked at address: {:x} and offset: {:x}", target2.address(), target2.offset());
 
-			REL::Relocation<std::uintptr_t> target6{ RELOCATION_ID(23467, 0), REL::VariantOffset(0xAC, 0x0, 0x0) }; //Multiple objectives 
+			REL::Relocation<std::uintptr_t> target6{ RELOCATION_ID(23467, 23933), REL::VariantOffset(0xAC, 0x1D5, 0xAC) }; //Multiple objectives 
 			stl::write_thunk_call<HudMenuQuestObjectiveHook>(target6.address());
 			SKSE::log::info("HudMenuQuestObjectiveHook hooked at address: {:x} and offset: {:x}", target6.address(), target6.offset());
 
-			REL::Relocation<std::uintptr_t> target3{ RELOCATION_ID(23467, 0), REL::VariantOffset(0x153, 0x0, 0x0) }; //Multiple objectives 
+			REL::Relocation<std::uintptr_t> target3{ RELOCATION_ID(23467, 23933), REL::VariantOffset(0x153, 0x221, 0x153) }; //Multiple objectives 
 			stl::write_thunk_call<HudMenuQuestObjectiveHook>(target3.address());
 			SKSE::log::info("HudMenuQuestObjectiveHook hooked at address: {:x} and offset: {:x}", target3.address(), target3.offset());
 
-			REL::Relocation<std::uintptr_t> target4{ RELOCATION_ID(24469, 0), REL::VariantOffset(0x60, 0x0, 0x0) };
+			REL::Relocation<std::uintptr_t> target4{ RELOCATION_ID(24469, 24988), REL::VariantOffset(0x60, 0x5E, 0x60) };
 			stl::write_thunk_call<HudMenuQuestObjectiveHook>(target4.address());
 			SKSE::log::info("HudMenuQuestObjectiveHook hooked at address: {:x} and offset: {:x}", target4.address(), target4.offset());
 
-			REL::Relocation<std::uintptr_t> target5{ RELOCATION_ID(40554, 0), REL::VariantOffset(0x2b4, 0x0, 0x0) };
+			REL::Relocation<std::uintptr_t> target5{ RELOCATION_ID(40554, 41561), REL::VariantOffset(0x2b4, 0x35C, 0x2b4) };
 			stl::write_thunk_call<HudMenuQuestObjectiveHook>(target5.address());
 			SKSE::log::info("HudMenuQuestObjectiveHook hooked at address: {:x} and offset: {:x}", target5.address(), target5.offset());
 
@@ -160,6 +201,7 @@ namespace Hook
 	{
 		Hook::QuestObjectiveHook::Install();
 		//Hook::QuestDescriptionHook::Install();
+		Hook::QuestCNAMTextHook::Install();
 		Hook::HudMenuQuestObjectiveHook::Install();
 	}
 

@@ -29,9 +29,9 @@ namespace Hook
 				{
 					if (mapMarker && mapMarker->mapData)
 					{
-						auto it = g_FLOR_RNAM_RDMP_Map.find(mapMarker->mapData->locationName.fullName.c_str());
+						auto it = g_REFR_FULL_Map.find(marker->formID);
 
-						if (it != g_FLOR_RNAM_RDMP_Map.end())
+						if (it != g_REFR_FULL_Map.end())
 						{
 							mapMarker->mapData->locationName.fullName = it->second;
 						}
@@ -79,7 +79,7 @@ namespace Hook
 
 	//Credits to po3 https://github.com/powerof3/SimpleActivateSKSE released under MIT
 	//Still compatible
-	struct CrosshairTextHook
+	struct CrosshairTextHook //Could also hook the calls of 1400F9E60... Unfortunately there are only 148
 	{
 		static void thunk(RE::UIMessageQueue* queue_this, const RE::BSFixedString& menuName, RE::UI_MESSAGE_TYPE type, RE::IUIMessageData* data)
 		{
@@ -194,7 +194,6 @@ namespace Hook
 		}
 	};
 
-
 	void InstallHooks()
 	{
 		InstallInventoryHooks();
@@ -205,7 +204,6 @@ namespace Hook
 		Hook::MapMarkerDataHook::Install();
 		Hook::CrosshairTextHook::Install();
 		Hook::AutoExitDoorTextHook::Install();
-
 
 		//MessageBoxData Hook
 		const auto MessageBoxDataFunc = RELOCATION_ID(51422, 52271).address();

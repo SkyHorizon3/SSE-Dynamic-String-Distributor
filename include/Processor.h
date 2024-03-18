@@ -10,9 +10,9 @@ public:
 		return &menu;
 	}
 
-	static void AddToConstTranslationStruct(RE::TESForm* form, const std::string& string, Config::SubrecordTypes SubrecordTypes, const std::string& editorid)
+	static void AddToConstTranslationStruct(RE::TESForm* form, const std::string& string, Config::SubrecordType SubrecordType, const std::string& editorid)
 	{
-		m_ConstConfigurationInformationStruct.emplace_back(form, string, SubrecordTypes, editorid);
+		m_ConstConfigurationInformationStruct.emplace_back(form, string, SubrecordType, editorid);
 	}
 
 	void RunConstTranslation();
@@ -28,7 +28,7 @@ private:
 	{
 		RE::TESForm* Form;
 		std::string ReplacerText = "";
-		Config::SubrecordTypes SubrecordType;
+		Config::SubrecordType SubrecordType;
 		std::string EditorID = "";
 	};
 
