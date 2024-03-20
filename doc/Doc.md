@@ -103,7 +103,7 @@ Use this scheme for ACTI RNAM, FLOR RNAM, REGN RDMP, PERK EPFD, QUST CNAM, MESG 
 [
     {
         "type": "Record type",
-        "original": "replacement/translation string",
+        "original": "original string",
         "string": "replacement/translation string"
     }
 ]
