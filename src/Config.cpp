@@ -420,6 +420,10 @@ void Config::ParseTranslationFiles()
 
 					RecordType RecordType = GetRecordType_map(types);
 
+					const std::string& plugin = std::filesystem::path(files).parent_path().string();
+
+					SKSE::log::info("Plugin: {}", plugin);
+
 					switch (RecordType)
 					{
 					case RecordType::kPERK_EPFD:
@@ -433,19 +437,23 @@ void Config::ParseTranslationFiles()
 					case RecordType::kREFR_FULL:
 					{
 						const std::string& stringFormID = ExtractContentInBrackets(entry["form_id"]);
-						Hook::g_REFR_FULL_Map.insert_or_assign(ConvertToFormID(stringFormID), stringValue);
+						size_t key = Utils::combineHash_2(ConvertToFormID(stringFormID), plugin);
+
+						Hook::g_REFR_FULL_Map.insert_or_assign(key, stringValue);
 					}
 					break;
 					case RecordType::kDIAL_FULL:
 					{
 						const std::string& stringFormID = ExtractContentInBrackets(entry["form_id"]);
-						Hook::g_DIAL_FULL_Map.insert_or_assign(ConvertToFormID(stringFormID), stringValue);
+						size_t key = Utils::combineHash_2(ConvertToFormID(stringFormID), plugin);
+						Hook::g_DIAL_FULL_Map.insert_or_assign(key, stringValue);
 					}
 					break;
 					case RecordType::kINFO_RNAM:
 					{
 						const std::string& stringFormID = ExtractContentInBrackets(entry["form_id"]);
-						Hook::g_INFO_RNAM_Map.insert_or_assign(ConvertToFormID(stringFormID), stringValue);
+						size_t key = Utils::combineHash_2(ConvertToFormID(stringFormID), plugin);
+						Hook::g_INFO_RNAM_Map.insert_or_assign(key, stringValue);
 					}
 					break;
 					case RecordType::kQUST_CNAM:
@@ -456,7 +464,7 @@ void Config::ParseTranslationFiles()
 					case RecordType::kQUST_NNAM:
 					{
 						const std::string& stringFormID = ExtractContentInBrackets(entry["form_id"]);
-						size_t key = Utils::combineHash(ConvertToFormID(stringFormID), entry["index"].get<int>());
+						size_t key = Utils::combineHash_1(ConvertToFormID(stringFormID), entry["index"].get<int>(), plugin);
 
 						Hook::g_QUST_NNAM_Map.insert_or_assign(key, stringValue);
 					}
@@ -469,7 +477,7 @@ void Config::ParseTranslationFiles()
 					case RecordType::kINFO_NAM1:
 					{
 						const std::string& stringFormID = ExtractContentInBrackets(entry["form_id"]);
-						size_t key = Utils::combineHash(ConvertToFormID(stringFormID), entry["index"].get<int>());
+						size_t key = Utils::combineHash_1(ConvertToFormID(stringFormID), entry["index"].get<int>(), plugin);
 
 						Hook::g_INFO_NAM1_Map.insert_or_assign(key, stringValue);
 					}
