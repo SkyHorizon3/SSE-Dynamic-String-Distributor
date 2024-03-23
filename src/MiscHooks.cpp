@@ -27,7 +27,7 @@ namespace Hook
 				{
 					if (mapMarker && mapMarker->mapData)
 					{
-						size_t key = Utils::combineHash(marker->formID, marker->GetFile()->fileName);
+						size_t key = Utils::combineHash(marker->formID, Utils::GetModName(marker));
 
 						auto it = g_REFR_FULL_Map.find(key);
 

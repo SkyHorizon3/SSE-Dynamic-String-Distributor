@@ -274,6 +274,10 @@ std::tuple<RE::TESForm*, std::string> Config::ExtractFormIDAndPlugin(const std::
 
 	RE::TESForm* form = RE::TESDataHandler::GetSingleton()->LookupForm(formID, plugin);
 
+	if (form == nullptr)
+		form = RE::TESForm::LookupByID(std::stoul(formIDWithPlugin.substr(0, separatorPos), nullptr, 16)); //For injected records.
+
+
 	return std::make_tuple(form, plugin);
 }
 

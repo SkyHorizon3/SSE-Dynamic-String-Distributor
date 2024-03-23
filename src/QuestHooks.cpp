@@ -17,7 +17,7 @@ namespace Hook
 			func(a_objective, a_out);
 
 			auto objective = a_objective->Objective;
-			size_t key = Utils::combineHashWithIndex(objective->ownerQuest->formID, objective->index, objective->ownerQuest->GetFile()->fileName);
+			size_t key = Utils::combineHashWithIndex(objective->ownerQuest->formID, objective->index, Utils::GetModName(objective->ownerQuest));
 
 			auto it = g_QUST_NNAM_Map.find(key);
 			if (it != g_QUST_NNAM_Map.end())
@@ -146,7 +146,7 @@ namespace Hook
 
 			for (const auto& objective : a_quest->objectives)
 			{
-				size_t key = Utils::combineHashWithIndex(objective->ownerQuest->formID, objective->index, objective->ownerQuest->GetFile()->fileName);
+				size_t key = Utils::combineHashWithIndex(objective->ownerQuest->formID, objective->index, Utils::GetModName(objective->ownerQuest));
 
 				auto it = g_QUST_NNAM_Map.find(key);
 				if (it != g_QUST_NNAM_Map.end())

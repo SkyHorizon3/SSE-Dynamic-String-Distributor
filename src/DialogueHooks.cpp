@@ -12,7 +12,7 @@ namespace Hook
 		{
 			func(a_response, a_voiceFilePath, a_voiceType, a_topic, a_topicInfo);
 
-			size_t key = Utils::combineHashWithIndex(a_topicInfo->formID, a_response->responseNumber, a_topicInfo->GetFile()->fileName);
+			size_t key = Utils::combineHashWithIndex(a_topicInfo->formID, a_response->responseNumber, Utils::GetModName(a_topicInfo));
 
 			auto it = g_INFO_NAM1_Map.find(key);
 			if (it != g_INFO_NAM1_Map.end())
@@ -65,7 +65,7 @@ namespace Hook
 		{
 			func(a_out, a2, a3);
 
-			size_t key1 = Utils::combineHash(a_out.parentTopic->formID, a_out.parentTopic->GetFile()->fileName);
+			size_t key1 = Utils::combineHash(a_out.parentTopic->formID, Utils::GetModName(a_out.parentTopic));
 			auto it1 = g_DIAL_FULL_Map.find(key1);
 
 			if (it1 != g_DIAL_FULL_Map.end())
@@ -73,7 +73,7 @@ namespace Hook
 				a_out.topicText = it1->second;
 			}
 
-			size_t key2 = Utils::combineHash(a_out.parentTopicInfo->formID, a_out.parentTopicInfo->GetFile()->fileName);
+			size_t key2 = Utils::combineHash(a_out.parentTopicInfo->formID, Utils::GetModName(a_out.parentTopicInfo));
 			auto it2 = g_INFO_RNAM_Map.find(key2); //INFO RNAM always overwrites DIAL FULL of parenttopic
 
 			if (it2 != g_INFO_RNAM_Map.end())
