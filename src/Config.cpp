@@ -329,7 +329,7 @@ Config::RecordType Config::GetRecordType_map(const std::string& type)
 		{"FLOR FULL", RecordType::kConst_Translation},
 		{"FLOR RNAM", RecordType::kFLOR_RNAM},
 		{"FURN FULL", RecordType::kConst_Translation},
-		{"GMST DATA", RecordType::kConst_Translation},
+		{"GMST DATA", RecordType::kGMST_DATA},
 		{"HAZD FULL", RecordType::kConst_Translation},
 		{"HDPT FULL", RecordType::kNotVisible},
 		{"INFO RNAM", RecordType::kINFO_RNAM},
@@ -411,7 +411,7 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 	auto [form, plugin] = ExtractFormIDAndPlugin(entry["form_id"].get<std::string>());
 	const std::string& stringValue = entry["string"];
 
-	if (form == nullptr)
+	if (form == nullptr && entry["type"] != "GMST DATA")
 	{
 		SKSE::log::error("Couldn't find a FormID in the entry with string {} in file: {}", stringValue, files);
 		return;
@@ -466,6 +466,9 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 		break;
 	case RecordType::kConst_Translation:
 		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), form->GetFormEditorID());
+		break;
+	case RecordType::kGMST_DATA:
+		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), entry["editor_id"]);
 		break;
 	case RecordType::kNormal_Translation:
 		Hook::g_ConfigurationInformationStruct.emplace_back(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])));

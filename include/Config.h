@@ -29,6 +29,7 @@ public:
 		kACTI_RNAM,
 		kPERK_EPFD,
 		kREFR_FULL,
+		kGMST_DATA,
 
 		kNotVisible,
 		kUnknown

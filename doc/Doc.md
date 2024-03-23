@@ -4,9 +4,9 @@ If you're not trying to do an english to english replacement I also recommend us
 
 The replacement string needs to follow the json format. The best way to do this is to write the text as it should look and convert it with [freeformatter](https://www.freeformatter.com/json-escape.html#before-output).
 
-## Replace XXXX FULL, XXXX DESC, NPC_ SHRT, WOOP TNAM, GMST DATA, INFO RNAM, BOOK CNAM, MGEF DNAM
+## Replace XXXX FULL, XXXX DESC, NPC_ SHRT, WOOP TNAM, INFO RNAM, BOOK CNAM, MGEF DNAM
 
-Use this scheme for any full name, any DESC, NPC_ SHRT, WOOP TNAM, GMST DATA, INFO RNAM, BOOK CNAM, MGEF DNAM.
+Use this scheme for any full name, any DESC, NPC_ SHRT, WOOP TNAM, INFO RNAM, BOOK CNAM, MGEF DNAM.
 
 ```json
 [
@@ -125,5 +125,30 @@ Example:
 ]
 ```
 
+## Replace GMST DATA
+Use this scheme for GMST DATA. Due to how gamesettings work the editorID is always required.
+
+```json
+[
+    {
+        "form_id": "FormID|BaseRecordPlugin",
+        "editor_id": "EditorID",
+        "type": "Record type",
+        "string": "replacement/translation string"
+    }
+]
+```
+
+Example:
+```json
+[
+ 	{
+        "form_id": "000D48B7|Skyrim.esm",
+        "editor_id": "sCurrentLocation",
+        "type": "GMST DATA",
+        "string": "New string"
+    }
+]
+```
 
 
