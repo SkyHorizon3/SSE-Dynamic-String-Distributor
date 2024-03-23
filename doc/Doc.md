@@ -52,8 +52,6 @@ Example:
         "string": "<mag>-prozentige Krankheitsresistenz."
     }
 ]
-    
-]
 ```
 
 ## Replace ACTI RNAM, FLOR RNAM, REGN RDMP, PERK EPFD, QUST CNAM
