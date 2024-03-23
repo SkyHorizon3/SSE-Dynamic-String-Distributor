@@ -121,7 +121,7 @@ Example:
 ```
 
 ## Replace QUST NNAM, INFO NAM1
-Use this scheme for QUST NNAM, INFO NAM1, MESG ITXT, PERK EPF2 replacements.
+Use this scheme for QUST NNAM, INFO NAM1 replacements.
 
 
 ```json
