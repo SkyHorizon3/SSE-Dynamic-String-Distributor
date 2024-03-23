@@ -39,6 +39,8 @@ void Processor::RunConstTranslation()
 	}
 	m_ConstConfigurationInformationStruct.clear(); //Structs only used once, so no need to keep them for fun
 	m_ConstConfigurationInformationStruct.shrink_to_fit();
+
+	SetMessageBoxButtonStrings();
 }
 
 template <typename T>
@@ -86,4 +88,72 @@ void Processor::SetGameSettingString(const std::string& a_name, const std::strin
 
 		setting->data.s = NewChar;
 	}
+}
+
+
+void Processor::SetMessageBoxButtonStrings()
+{
+	if (m_MESGITXTInformationStruct.empty())
+	{
+		return;
+	}
+
+	for (const auto& Information : m_MESGITXTInformationStruct)
+	{
+
+		RE::BGSMessage* message = skyrim_cast<RE::BGSMessage*>(Information.Form); //MESG ITXT
+		if (message)
+		{
+			int pos = 0;
+			for (auto& button : message->menuButtons)
+			{
+				//SKSE::log::info("Pos: {} - String: {}", pos, text->text.c_str());
+
+				if (pos == Information.pos)
+				{
+					button->text = std::move(Information.ReplacerText);
+				}
+
+				pos++;
+			}
+
+		}
+		else
+		{
+			RE::BGSPerk* perk = skyrim_cast<RE::BGSPerk*>(Information.Form); //PERK EPF2
+
+			if (perk)
+			{
+				for (auto& entry : perk->perkEntries)
+				{
+					if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
+					{
+						RE::BGSEntryPointPerkEntry* entryPoint = static_cast<RE::BGSEntryPointPerkEntry*>(entry); //This is cruel, but it's working
+
+						if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kAddActivateChoice)
+						{
+							RE::BGSEntryPointFunctionDataActivateChoice* func = static_cast<RE::BGSEntryPointFunctionDataActivateChoice*>(entryPoint->functionData);
+
+							//SKSE::log::info("ID: {} - String: {}", func->id, func->label);
+
+							if (func->id == Information.pos)
+							{
+								func->label = std::move(Information.ReplacerText);
+							}
+
+						}
+					}
+
+				}
+
+			}
+			else
+			{
+				SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}.", Information.Form->formID);
+			}
+		}
+
+	}
+	m_MESGITXTInformationStruct.clear();
+	m_MESGITXTInformationStruct.shrink_to_fit();
 }

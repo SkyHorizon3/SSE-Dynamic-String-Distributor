@@ -6,8 +6,6 @@
 #include "Processor.h"
 #include "Utils.h"
 
-#include <detours/detours.h>
-
 
 namespace Hook
 {
@@ -52,30 +50,6 @@ namespace Hook
 		}
 
 	};
-
-
-	typedef void(WINAPI* MessageBoxDataHook_pFunc)(RE::MessageBoxData* Menu);
-	MessageBoxDataHook_pFunc originalFunction01;
-	void MessageBoxFunc(RE::MessageBoxData* Menu) //MESG ITXT, PERK EPF2
-	{
-		if (!Menu && !Menu->buttonText.size())
-		{
-			return originalFunction01(Menu);
-		}
-
-		for (auto& text : Menu->buttonText)
-		{
-			auto it = g_MESG_ITXT_Map.find(text.c_str());
-
-			if (it != g_MESG_ITXT_Map.end())
-			{
-				text = it->second;
-			}
-		}
-
-
-		return originalFunction01(Menu);
-	}
 
 	//Credits to po3 https://github.com/powerof3/SimpleActivateSKSE released under MIT
 	//Still compatible
@@ -205,27 +179,5 @@ namespace Hook
 		Hook::CrosshairTextHook::Install();
 		Hook::AutoExitDoorTextHook::Install();
 
-		//MessageBoxData Hook
-		const auto MessageBoxDataFunc = RELOCATION_ID(51422, 52271).address();
-
-
-		originalFunction01 = (MessageBoxDataHook_pFunc)MessageBoxDataFunc;
-
-
-		DetourTransactionBegin();
-		DetourUpdateThread(GetCurrentThread());
-		DetourAttach(reinterpret_cast<PVOID*>(&originalFunction01), static_cast<PVOID>(&MessageBoxFunc));
-
-
-		const auto err = DetourTransactionCommit();
-		if (err == NO_ERROR)
-		{
-			SKSE::log::info("Installed MessageBoxDataFunc hook at {0:x}", MessageBoxDataFunc);
-
-		}
-		else
-		{
-			SKSE::log::error("DetourTransactionCommit failed with error code: {}", err);
-		}
 	}
 }

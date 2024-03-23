@@ -95,8 +95,8 @@ Example:
 ]
 ```
 
-## Replace ACTI RNAM, FLOR RNAM, REGN RDMP, PERK EPFD, QUST CNAM, MESG ITXT, PERK EPF2
-Use this scheme for ACTI RNAM, FLOR RNAM, REGN RDMP, PERK EPFD, QUST CNAM, MESG ITXT, PERK EPF2 replacements.
+## Replace ACTI RNAM, FLOR RNAM, REGN RDMP, PERK EPFD, QUST CNAM
+Use this scheme for ACTI RNAM, FLOR RNAM, REGN RDMP, PERK EPFD, QUST CNAM replacements.
 
 
 ```json
@@ -121,7 +121,7 @@ Example:
 ```
 
 ## Replace QUST NNAM, INFO NAM1
-Use this scheme for QUST NNAM, INFO NAM1 replacements.
+Use this scheme for QUST NNAM, INFO NAM1, MESG ITXT, PERK EPF2 replacements.
 
 
 ```json
@@ -152,6 +152,36 @@ Example:
         "type": "QUST NNAM",
         "index": 60,
         "string": "new objective sentence"
+    }
+]
+```
+
+## Replace MESG ITXT, PERK EPF2
+Use this scheme for MESG ITXT, PERK EPF2 replacements.
+
+
+```json
+[
+    {
+        "editor_id": "EditorID",
+        "type": "Record type",
+        "index": Number,
+        "string": "replacement/translation string"
+    }
+]
+```
+
+For MESG ITXT the index is the position in the order in which you can see them in SSEEdit.\
+For PERK EPF2 the index is the Fragment Index in EPF3.
+
+Example:
+```json
+[
+    {
+        "editor_id": "doomLadyMSG",
+        "type": "MESG ITXT",
+        "index": 0,
+        "string": "Replaces Accept Sign"
     }
 ]
 ```

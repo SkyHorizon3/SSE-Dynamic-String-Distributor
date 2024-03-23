@@ -10,7 +10,6 @@
     "directxtk",
     "catch2",
     "rapidcsv",
-    "detours",
     "unordered-dense"
   ],
   "builtin-baseline": "62aa44929954469878eb8fc562af706a8f5615a5"

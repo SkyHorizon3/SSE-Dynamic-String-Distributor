@@ -39,7 +39,7 @@ namespace Hook
 			stl::write_thunk_call<QuestObjectiveHook>(target1.address());
 			SKSE::log::info("QuestObjectiveHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 
-			REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(52181, 53073), REL::VariantOffset(0xD9, 0xD3, 0xD9) };
+			REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(52181, 53073), REL::VariantOffset(0xD9, 0xD3, 0xE6) };
 			stl::write_thunk_call<QuestObjectiveHook>(target2.address());
 			SKSE::log::info("QuestObjectiveHook hooked at address: {:x} and offset: {:x}", target2.address(), target2.offset());
 

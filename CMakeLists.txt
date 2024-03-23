@@ -5,8 +5,6 @@ project(DynamicStringDistributor VERSION 1.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(ENABLE_SKYRIM_VR OFF)
-
 # Hide useless warnings...
 add_definitions(-D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 

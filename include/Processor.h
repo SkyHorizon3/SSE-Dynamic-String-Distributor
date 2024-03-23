@@ -15,6 +15,11 @@ public:
 		m_ConstConfigurationInformationStruct.emplace_back(form, string, SubrecordType, editorid);
 	}
 
+	static void AddToMESGITXTTranslationStruct(RE::TESForm* form, const std::string& string, int pos)
+	{
+		m_MESGITXTInformationStruct.emplace_back(form, string, pos);
+	}
+
 	void RunConstTranslation();
 
 private:
@@ -23,6 +28,8 @@ private:
 	void SetConstStrings(RE::TESForm* Form, RE::BSFixedString NewString, RE::BSFixedString T::* memberPtr);
 
 	void SetGameSettingString(const std::string& a_name, const std::string& a_NewString);
+
+	void SetMessageBoxButtonStrings();
 
 	struct ConstConfigurationInformation
 	{
@@ -33,6 +40,15 @@ private:
 	};
 
 	static inline std::vector<ConstConfigurationInformation> m_ConstConfigurationInformationStruct; //Used for const translations
+
+	struct MESGITXTInformation
+	{
+		RE::TESForm* Form;
+		std::string ReplacerText = "";
+		int pos;
+	};
+
+	static inline std::vector<MESGITXTInformation> m_MESGITXTInformationStruct; //Used for MESG ITXT translations
 
 	Processor() = default;
 	~Processor() = default;

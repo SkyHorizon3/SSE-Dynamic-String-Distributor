@@ -463,7 +463,15 @@ void Config::ParseTranslationFiles()
 					break;
 					case RecordType::kMESG_ITXT:
 					{
-						Hook::g_MESG_ITXT_Map.insert_or_assign(entry["original"], stringValue);
+						const std::string& editorId = entry["editor_id"];
+						RE::TESForm* form = RE::TESForm::LookupByEditorID(editorId);
+						if (!form)
+						{
+							SKSE::log::error("Couldn't find Editor ID {} out of file {}", editorId, files);
+							continue;
+						}
+
+						Processor::AddToMESGITXTTranslationStruct(form, stringValue, entry["index"].get<int>());
 					}
 					break;
 					case RecordType::kINFO_NAM1:
@@ -476,9 +484,8 @@ void Config::ParseTranslationFiles()
 					break;
 					case RecordType::kConst_Translation:
 					{
-						const std::string& editorId = entry["editor_id"];
-
 						const std::string& subrecord = GetSubrecordType(types);
+						const std::string& editorId = entry["editor_id"];
 
 						RE::TESForm* form = RE::TESForm::LookupByEditorID(editorId);
 						if (!form && subrecord != "DATA")
@@ -496,7 +503,6 @@ void Config::ParseTranslationFiles()
 					case RecordType::kNormal_Translation:
 					{
 						const std::string& editorId = entry["editor_id"];
-
 						RE::TESForm* form = RE::TESForm::LookupByEditorID(editorId);
 						if (!form)
 						{
