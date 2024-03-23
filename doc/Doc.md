@@ -4,14 +4,14 @@ If you're not trying to do an english to english replacement I also recommend us
 
 The replacement string needs to follow the json format. The best way to do this is to write the text as it should look and convert it with [freeformatter](https://www.freeformatter.com/json-escape.html#before-output).
 
-## Replace XXXX FULL, NPC_ SHRT, WOOP TNAM, GMST DATA
+## Replace XXXX FULL, XXXX DESC, NPC_ SHRT, WOOP TNAM, GMST DATA, INFO RNAM, BOOK CNAM, MGEF DNAM
 
-Use this scheme for any full name, NPC_ SHRT, WOOP TNAM, GMST DATA replacements except REFR FULL and DIAL FULL.
+Use this scheme for any full name, any DESC, NPC_ SHRT, WOOP TNAM, GMST DATA, INFO RNAM, BOOK CNAM, MGEF DNAM.
 
 ```json
 [
     {
-        "editor_id": "EditorID",
+        "form_id": "FormID|BaseRecordPlugin",
         "type": "Record type",
         "string": "replacement/translation string"
     }
@@ -22,76 +22,37 @@ Example:
 ```json
 [
     {
-        "editor_id": "WhiterunDrunkenHuntsman",
+        "form_id": "000133C6|Skyrim.esm",
         "type": "CELL FULL",
         "string": "New full name"
     },
     {
-        "editor_id": "EnchDwarvenSwordFire02",
+        "form_id": "000ACC37|Skyrim.esm",
         "type": "WEAP FULL",
         "string": "New full name"
-    }
-]
-```
-
-
-## Replace REFR FULL, DIAL FULL, INFO RNAM
-
-Use this scheme for REFR FULL, DIAL FULL, INFO RNAM replacements.
-
-```json
-[
+    },
     {
-        "form_id": "[FormID]",
-        "type": "Record type",
-        "string": "replacement/translation string"
-    }
-]
-```
-
-Example:
-```json
-[
-    {
-        "form_id": "[0004D0F4]",
+        "form_id": "0004D0F4|Skyrim.esm",
         "type": "REFR FULL",
         "string": "New full name"
     },
     {
-        "form_id": "[0003FA35]",
+        "form_id": "0003FA35|Skyrim.esm",
         "type": "DIAL FULL",
         "string": "New sentence"
-    }
-]
-```
-
-
-## Replace XXXX DESC, BOOK CNAM, MGEF DNAM
-Use this scheme for description (DESC) or BOOK CNAM, MGEF DNAM replacements.
-
-```json
-[
+    },
     {
-        "editor_id": "EditorID",
-        "type": "Record type",
-        "string": "replacement/translation string"
-    }
-]
-```
-
-Example:
-```json
-[
-    {
-        "editor_id": "DLC2TGFormula",
+        "form_id": "0001AD07|Skyrim.esm",
         "type": "BOOK DESC",
         "string": "<font face='$HandwrittenFont'>\r\nDelvin,\r\nhier ist die Rezeptur für die Verbesserte Knochenrüstung, die ich in meinem letzten Brief erwähnt habe. Behaltet das Gold, das Ihr durch den Verkauf einnehmt, und stellt sicher, dass es unserer kleinen Schwester an nichts mangelt.\r\n\r\nZutaten:\r\n- 4 Tassen Knochenstaub\r\n- 1 Tasse Salz\r\n- 1 Flasche Netchgelee\r\n- 1 Tasse gemahlenen Mammutstoßzahn\r\n- 1 Eimer frisches Wasser\r\n\r\nGebt den Knochenstaub und das Salz ins Wasser und lasst sie dort mindestens einen Tag lang einweichen. Dann gebt das Netchgelee und den Mammutstoßzahn hinzu. Rührt alles über einer heißen Flamme um, bis die Mischung sich langsam erhärtet. Gießt sie anschließend in die gewünschte Form und platziert die Form in der Mitte Eurer Schmiede. Erhitzt die Mischung mindestens einen halben Tag lang, dann lasst sie auskühlen und entfernt sie aus der Form.\r\n\r\n- Glover Mallory"
     },
     {
-        "editor_id": "AbResistDisease",
+        "form_id": "000E40D3|Skyrim.esm",
         "type": "MGEF DNAM",
         "string": "<mag>-prozentige Krankheitsresistenz."
     }
+]
+    
 ]
 ```
 
@@ -102,6 +63,7 @@ Use this scheme for ACTI RNAM, FLOR RNAM, REGN RDMP, PERK EPFD, QUST CNAM replac
 ```json
 [
     {
+        "form_id": "FormID|BaseRecordPlugin",
         "type": "Record type",
         "original": "original string",
         "string": "replacement/translation string"
@@ -113,6 +75,7 @@ Example:
 ```json
 [
     {
+        "form_id": "0010DCB5|Skyrim.esm",
         "type": "ACTI RNAM",
         "original": "Mine",
         "string": "new string"
@@ -120,14 +83,14 @@ Example:
 ]
 ```
 
-## Replace QUST NNAM, INFO NAM1
-Use this scheme for QUST NNAM, INFO NAM1 replacements.
+## Replace QUST NNAM, INFO NAM1, MESG ITXT, PERK EPF2
+Use this scheme for QUST NNAM, INFO NAM1, MESG ITXT, PERK EPF2 replacements.
 
 
 ```json
 [
     {
-        "form_id": "[FormID]",
+        "form_id": "FormID|BaseRecordPlugin",
         "type": "Record type",
         "index": Number,
         "string": "replacement/translation string"
@@ -136,49 +99,27 @@ Use this scheme for QUST NNAM, INFO NAM1 replacements.
 ```
 
 For INFO NAM1 the index is the reponse number of the response.\
-For QUST NNAM the index is the objective index (QOBJ) of the objective.
+For QUST NNAM the index is the objective index (QOBJ) of the objective.\
+For MESG ITXT the index is the position in the order in which you can see them in SSEEdit.\
+For PERK EPF2 the index is the Fragment Index in EPF3.\
 
 Example:
 ```json
 [
     {
-        "form_id": "[000E6C43]",
+        "form_id": "000E6C43|Skyrim.esm",
         "type": "INFO NAM1",
         "index": 2,
         "string": "new sentence"
     },
     {
-        "form_id": "[0004B2A1]",
+        "form_id": "0004B2A1|Skyrim.esm",
         "type": "QUST NNAM",
         "index": 60,
         "string": "new objective sentence"
-    }
-]
-```
-
-## Replace MESG ITXT, PERK EPF2
-Use this scheme for MESG ITXT, PERK EPF2 replacements.
-
-
-```json
-[
+    },
     {
-        "editor_id": "EditorID",
-        "type": "Record type",
-        "index": Number,
-        "string": "replacement/translation string"
-    }
-]
-```
-
-For MESG ITXT the index is the position in the order in which you can see them in SSEEdit.\
-For PERK EPF2 the index is the Fragment Index in EPF3.
-
-Example:
-```json
-[
-    {
-        "editor_id": "doomLadyMSG",
+        "form_id": "00016837|Skyrim.esm",
         "type": "MESG ITXT",
         "index": 0,
         "string": "Replaces Accept Sign"

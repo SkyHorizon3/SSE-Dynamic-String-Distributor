@@ -409,7 +409,7 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 
 	if (form == nullptr)
 	{
-		SKSE::log::error("Couldn't find a FormID in the entry with the string {} in file: {}", stringValue, files);
+		SKSE::log::error("Couldn't find a FormID in the entry with string {} in file: {}", stringValue, files);
 		return;
 	}
 
