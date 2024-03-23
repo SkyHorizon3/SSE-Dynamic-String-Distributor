@@ -4,6 +4,7 @@
 
 #include <unordered_map>
 #include <ShlObj.h>
+#include <tuple>
 
 #include <spdlog/sinks/basic_file_sink.h>
 #include <xbyak/xbyak.h>

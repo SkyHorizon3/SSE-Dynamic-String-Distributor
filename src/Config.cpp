@@ -4,6 +4,7 @@
 #include "QuestHooks.h"
 #include "Processor.h"
 #include "Utils.h"
+#include "MergeMapperPluginAPI.h"
 
 //I don't like the way it looks, but it fulfils its purpose...
 
@@ -252,17 +253,28 @@ std::string Config::GetSubrecordType(const std::string& types) const
 	return "";
 }
 
-std::string Config::ExtractContentInBrackets(const std::string& input)
+std::tuple<RE::TESForm*, std::string> Config::ExtractFormIDAndPlugin(const std::string& formIDWithPlugin)
 {
-	size_t startPos = input.find('[');
-	size_t endPos = input.find(']');
-
-	if (startPos != std::string::npos && endPos != std::string::npos && startPos < endPos)
+	size_t separatorPos = formIDWithPlugin.find('|');
+	if (separatorPos == std::string::npos)
 	{
-		return input.substr(startPos + 1, endPos - startPos - 1);
+		// if | is not found
+		return std::make_tuple(nullptr, "");
 	}
 
-	return "";
+	RE::FormID formID = ConvertToFormID(formIDWithPlugin.substr(0, separatorPos));
+	std::string plugin = formIDWithPlugin.substr(separatorPos + 1);
+
+	if (g_mergeMapperInterface)
+	{
+		auto mergeForm = g_mergeMapperInterface->GetNewFormID(plugin.c_str(), formID);
+		plugin = mergeForm.first;
+		formID = mergeForm.second;
+	}
+
+	RE::TESForm* form = RE::TESDataHandler::GetSingleton()->LookupForm(formID, plugin);
+
+	return std::make_tuple(form, plugin);
 }
 
 RE::FormID Config::ConvertToFormID(std::string input)
@@ -390,6 +402,79 @@ Config::SubrecordType Config::GetSubrecordType_map(const std::string& type)
 	return (it != typeMap.end()) ? it->second : SubrecordType::kUnknown;
 }
 
+void Config::ProcessEntry(const std::string& files, const json& entry, RecordType recordType)
+{
+	auto [form, plugin] = ExtractFormIDAndPlugin(entry["form_id"].get<std::string>());
+	const std::string& stringValue = entry["string"];
+
+	if (form == nullptr)
+	{
+		SKSE::log::error("Couldn't find a FormID in the entry with the string {} in file: {}", stringValue, files);
+		return;
+	}
+
+	switch (recordType)
+	{
+	case RecordType::kPERK_EPFD:
+	case RecordType::kACTI_RNAM:
+	case RecordType::kFLOR_RNAM:
+	case RecordType::kREGN_RDMP:
+		Hook::g_FLOR_RNAM_RDMP_Map.insert_or_assign(entry["original"], stringValue);
+		break;
+	case RecordType::kREFR_FULL:
+	case RecordType::kDIAL_FULL:
+	case RecordType::kINFO_RNAM:
+	{
+		size_t key = Utils::combineHash(form->formID, plugin);
+		if (recordType == RecordType::kREFR_FULL)
+		{
+			Hook::g_REFR_FULL_Map.insert_or_assign(key, stringValue);
+		}
+		else if (recordType == RecordType::kDIAL_FULL)
+		{
+			Hook::g_DIAL_FULL_Map.insert_or_assign(key, stringValue);
+		}
+		else if (recordType == RecordType::kINFO_RNAM)
+		{
+			Hook::g_INFO_RNAM_Map.insert_or_assign(key, stringValue);
+		}
+	}
+	break;
+	case RecordType::kQUST_NNAM:
+	case RecordType::kINFO_NAM1:
+	{
+		size_t key = Utils::combineHashWithIndex(form->formID, entry["index"].get<int>(), plugin);
+		if (recordType == RecordType::kQUST_NNAM)
+		{
+			Hook::g_QUST_NNAM_Map.insert_or_assign(key, stringValue);
+		}
+		else if (recordType == RecordType::kINFO_NAM1)
+		{
+			Hook::g_INFO_NAM1_Map.insert_or_assign(key, stringValue);
+		}
+	}
+	break;
+	case RecordType::kQUST_CNAM:
+		Hook::g_QUST_CNAM_Map.insert_or_assign(entry["original"], stringValue);
+		break;
+	case RecordType::kMESG_ITXT:
+		Processor::AddToMESGITXTTranslationStruct(form, stringValue, entry["index"].get<int>());
+		break;
+	case RecordType::kConst_Translation:
+		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), form->GetFormEditorID());
+		break;
+	case RecordType::kNormal_Translation:
+		Hook::g_ConfigurationInformationStruct.emplace_back(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])));
+		break;
+	case RecordType::kNotVisible:
+		SKSE::log::info("File {} contains not visible type: {}", files, entry["type"].get<std::string>());
+		break;
+	case RecordType::kUnknown:
+		SKSE::log::info("File {} contains unknown type: {}", files, entry["type"].get<std::string>());
+		break;
+	}
+}
+
 void Config::ParseTranslationFiles()
 {
 	for (const auto& files : m_FilesInPluginFolder)
@@ -416,120 +501,8 @@ void Config::ParseTranslationFiles()
 				try
 				{
 					const std::string& types = entry["type"];
-					const std::string& stringValue = entry["string"];
-
-					RecordType RecordType = GetRecordType_map(types);
-
-					switch (RecordType)
-					{
-					case RecordType::kPERK_EPFD:
-					case RecordType::kACTI_RNAM:
-					case RecordType::kFLOR_RNAM:
-					case RecordType::kREGN_RDMP:
-					{
-						Hook::g_FLOR_RNAM_RDMP_Map.insert_or_assign(entry["original"], stringValue); //update if key already exists. This simulates the esp load order
-					}
-					break;
-					case RecordType::kREFR_FULL:
-					{
-						const std::string& stringFormID = ExtractContentInBrackets(entry["form_id"]);
-						Hook::g_REFR_FULL_Map.insert_or_assign(ConvertToFormID(stringFormID), stringValue);
-					}
-					break;
-					case RecordType::kDIAL_FULL:
-					{
-						const std::string& stringFormID = ExtractContentInBrackets(entry["form_id"]);
-						Hook::g_DIAL_FULL_Map.insert_or_assign(ConvertToFormID(stringFormID), stringValue);
-					}
-					break;
-					case RecordType::kINFO_RNAM:
-					{
-						const std::string& stringFormID = ExtractContentInBrackets(entry["form_id"]);
-						Hook::g_INFO_RNAM_Map.insert_or_assign(ConvertToFormID(stringFormID), stringValue);
-					}
-					break;
-					case RecordType::kQUST_CNAM:
-					{
-						Hook::g_QUST_CNAM_Map.insert_or_assign(entry["original"], stringValue);
-					}
-					break;
-					case RecordType::kQUST_NNAM:
-					{
-						const std::string& stringFormID = ExtractContentInBrackets(entry["form_id"]);
-						size_t key = Utils::combineHash(ConvertToFormID(stringFormID), entry["index"].get<int>());
-
-						Hook::g_QUST_NNAM_Map.insert_or_assign(key, stringValue);
-					}
-					break;
-					case RecordType::kMESG_ITXT:
-					{
-						const std::string& editorId = entry["editor_id"];
-						RE::TESForm* form = RE::TESForm::LookupByEditorID(editorId);
-						if (!form)
-						{
-							SKSE::log::error("Couldn't find Editor ID {} out of file {}", editorId, files);
-							continue;
-						}
-
-						Processor::AddToMESGITXTTranslationStruct(form, stringValue, entry["index"].get<int>());
-					}
-					break;
-					case RecordType::kINFO_NAM1:
-					{
-						const std::string& stringFormID = ExtractContentInBrackets(entry["form_id"]);
-						size_t key = Utils::combineHash(ConvertToFormID(stringFormID), entry["index"].get<int>());
-
-						Hook::g_INFO_NAM1_Map.insert_or_assign(key, stringValue);
-					}
-					break;
-					case RecordType::kConst_Translation:
-					{
-						const std::string& subrecord = GetSubrecordType(types);
-						const std::string& editorId = entry["editor_id"];
-
-						RE::TESForm* form = RE::TESForm::LookupByEditorID(editorId);
-						if (!form && subrecord != "DATA")
-						{
-							SKSE::log::error("Couldn't find Editor ID {} out of file {}", editorId, files);
-							continue;
-						}
-
-						SubrecordType ConstSubrecordType = GetSubrecordType_map(subrecord);
-
-
-						Processor::AddToConstTranslationStruct(form, stringValue, ConstSubrecordType, editorId);
-					}
-					break;
-					case RecordType::kNormal_Translation:
-					{
-						const std::string& editorId = entry["editor_id"];
-						RE::TESForm* form = RE::TESForm::LookupByEditorID(editorId);
-						if (!form)
-						{
-							SKSE::log::error("Couldn't find Editor ID {} out of file {}", editorId, files);
-							continue;
-						}
-
-						SubrecordType SubrecordType = GetSubrecordType_map(GetSubrecordType(types));
-
-						Hook::g_ConfigurationInformationStruct.emplace_back(form, stringValue, SubrecordType);
-					}
-					break;
-					case RecordType::kNotVisible:
-					{
-						SKSE::log::info("File {} contains not visible type: {}", files, types);
-					}
-					break;
-					case RecordType::kUnknown:
-					{
-						SKSE::log::info("File {} contains unkown type: {}", files, types);
-					}
-					break;
-
-
-
-					default: break;
-					}
+					RecordType recordType = GetRecordType_map(types);
+					ProcessEntry(files, entry, recordType);
 				}
 				catch (const std::exception& e)
 				{

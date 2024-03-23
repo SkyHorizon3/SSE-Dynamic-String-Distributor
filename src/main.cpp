@@ -1,6 +1,7 @@
 ﻿#include "Config.h"
 #include "MiscHooks.h"
 #include "Processor.h"
+#include "MergeMapperPluginAPI.h"
 
 // Setup logger for plugin
 void SetupLog()
@@ -32,6 +33,16 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 		if (!GetModuleHandle(L"po3_Tweaks"))
 		{
 			SKSE::log::critical("po3_Tweaks not found, mod won't work!");
+		}
+
+		MergeMapperPluginAPI::GetMergeMapperInterface001();
+		if (g_mergeMapperInterface)
+		{
+			SKSE::log::info("Got MergeMapper interface buildnumber {}", g_mergeMapperInterface->GetBuildNumber());
+		}
+		else
+		{
+			SKSE::log::info("MergeMapper not detected");
 		}
 
 		Config::GetSingleton()->EnumerateFolder();
