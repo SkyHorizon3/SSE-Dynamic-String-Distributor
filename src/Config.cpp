@@ -413,7 +413,7 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 
 	if (form == nullptr && entry["type"] != "GMST DATA")
 	{
-		SKSE::log::error("Couldn't find a FormID in the entry with string {} in file: {}", stringValue, files);
+		SKSE::log::error("Couldn't find FormID {} in file: {}", entry["form_id"].get<std::string>(), files);
 		return;
 	}
 

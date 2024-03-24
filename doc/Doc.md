@@ -99,7 +99,7 @@ Use this scheme for QUST NNAM, INFO NAM1, MESG ITXT, PERK EPF2 replacements.
 For INFO NAM1 the index is the reponse number of the response.\
 For QUST NNAM the index is the objective index (QOBJ) of the objective.\
 For MESG ITXT the index is the position in the order in which you can see them in SSEEdit.\
-For PERK EPF2 the index is the Fragment Index in EPF3.\
+For PERK EPF2 the index is the Fragment Index in EPF3.
 
 Example:
 ```json
