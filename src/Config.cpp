@@ -340,7 +340,7 @@ Config::RecordType Config::GetRecordType_map(const std::string& type)
 		{"LSCR DESC", RecordType::kNormal_Translation},
 		{"MESG FULL", RecordType::kConst_Translation},
 		{"MESG ITXT", RecordType::kMESG_ITXT},
-		{"MGEF DNAM", RecordType::kNormal_Translation},
+		{"MGEF DNAM", RecordType::kConst_Translation},
 		{"MGEF FULL", RecordType::kConst_Translation},
 		{"MISC FULL", RecordType::kConst_Translation},
 		{"NPC_ FULL", RecordType::kConst_Translation},

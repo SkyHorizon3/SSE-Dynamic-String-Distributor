@@ -13,6 +13,11 @@ void Processor::RunConstTranslation()
 			SetConstStrings<RE::TESFullName>(Information.Form, Information.ReplacerText, &RE::TESFullName::fullName);
 		}
 		break;
+		case Config::SubrecordType::kDNAM:
+		{
+			SetConstStrings <RE::EffectSetting>(Information.Form, Information.ReplacerText, &RE::EffectSetting::magicItemDescription);
+		}
+		break;
 		case Config::SubrecordType::kSHRT:
 		{
 			SetConstStrings<RE::TESNPC>(Information.Form, Information.ReplacerText, &RE::TESNPC::shortName);
@@ -30,7 +35,7 @@ void Processor::RunConstTranslation()
 		break;
 		case Config::SubrecordType::kUnknown:
 		{
-			SKSE::log::info("Unknown type {} in ConstTranslation", Information.EditorID);
+			SKSE::log::info("Unknown record {0:08X} in ConstTranslation", Information.Form->formID);
 		}
 		break;
 
