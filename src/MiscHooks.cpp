@@ -66,8 +66,7 @@ namespace Hook
 			{
 				switch (crosshairRef->GetFormType())
 				{
-				case RE::FormType::ActorCharacter: //PERK EPFD
-				case RE::FormType::Reference: //ACTI RNAM, FLOR RNAM, REGN RDMP for doors
+				case RE::FormType::Reference: //ACTI RNAM, FLOR RNAM
 				{
 					//SKSE::log::info("String: {}", messagedata->text.c_str());
 
@@ -76,15 +75,11 @@ namespace Hook
 
 					if (std::getline(iss, line1) && std::getline(iss, line2))
 					{
-						HandleFormTypeHelper(messagedata, line1, line2);
-					}
-					else
-					{
 						auto it1 = g_FLOR_RNAM_RDMP_Map.find(line1);
 
 						if (it1 != g_FLOR_RNAM_RDMP_Map.end())
 						{
-							messagedata->text = it1->second;
+							messagedata->text = it1->second + "\n" + line2;
 						}
 					}
 				}
@@ -97,25 +92,6 @@ namespace Hook
 
 			func(queue_this, menuName, type, data);
 		};
-
-		static void HandleFormTypeHelper(RE::HUDData* messagedata, std::string& line1, std::string& line2)
-		{
-			auto it1 = g_FLOR_RNAM_RDMP_Map.find(line1);
-			auto it2 = g_FLOR_RNAM_RDMP_Map.find(line2);
-
-			if (it1 != g_FLOR_RNAM_RDMP_Map.end())
-			{
-				line1 = it1->second;
-			}
-
-			if (it2 != g_FLOR_RNAM_RDMP_Map.end())
-			{
-				line2 = it2->second;
-			}
-
-			messagedata->text = line1 + "\n" + line2;
-		}
-
 		static inline REL::Relocation<decltype(thunk)> func;
 
 
@@ -124,49 +100,6 @@ namespace Hook
 			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(39535, 40621), REL::VariantOffset(0x289, 0x280, 0x22E) };
 			stl::write_thunk_call<CrosshairTextHook>(target1.address());
 			SKSE::log::info("CrosshairTextHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
-		}
-	};
-
-	struct AutoExitDoorTextHook
-	{
-		static void thunk(RE::UIMessageQueue* queue_this, const RE::BSFixedString& menuName, RE::UI_MESSAGE_TYPE type, RE::IUIMessageData* data)
-		{
-			//REGN RDMP if you're leaving a cave or something like that
-			const auto messagedata = data ? static_cast<RE::HUDData*>(data) : nullptr;
-			const auto player = RE::PlayerCharacter::GetSingleton();
-
-			if (!messagedata->text.empty() && player && player->GetParentCell() && player->GetParentCell()->IsInteriorCell()) //Exterior is already covered by CELL FULL
-			{
-				//SKSE::log::info("String: {}", messagedata->text.c_str());
-
-				// Extract text before and after the first space
-				std::string text = messagedata->text.c_str();
-				size_t spacePos = text.find(' ');
-				if (spacePos != std::string::npos)
-				{
-					std::string before = text.substr(0, spacePos);
-					std::string after = text.substr(spacePos + 1);
-
-					auto it = g_FLOR_RNAM_RDMP_Map.find(after);
-					if (it != g_FLOR_RNAM_RDMP_Map.end())
-					{
-						messagedata->text = before + " " + it->second;
-					}
-
-				}
-			}
-
-			func(queue_this, menuName, type, data);
-		};
-
-		static inline REL::Relocation<decltype(thunk)> func;
-
-
-		static void Install()
-		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(50727, 51622), REL::VariantOffset(0xD7, 0x255, 0x101) };//VR: 1408AC8A0
-			stl::write_thunk_call<AutoExitDoorTextHook>(target1.address());
-			SKSE::log::info("AutoExitDoorTextHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 		}
 	};
 
@@ -179,7 +112,5 @@ namespace Hook
 
 		Hook::MapMarkerDataHook::Install();
 		Hook::CrosshairTextHook::Install();
-		Hook::AutoExitDoorTextHook::Install();
-
 	}
 }

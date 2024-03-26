@@ -35,15 +35,15 @@ namespace Hook
 
 	struct DialogueStreamHook //INFO NAM1
 	{
-		static void thunk(RE::BSString* a_out, std::uint64_t a2, std::uint64_t a3)
+		static void thunk(RE::BSString& a_out, char* a_buffer, std::uint64_t a3)
 		{
-			func(a_out, a2, a3);
+			func(a_out, a_buffer, a3);
 
-			auto it = g_INFO_NAM1_TEMP_Map.find(a_out->c_str());
+			auto it = g_INFO_NAM1_TEMP_Map.find(a_out.c_str());
 
 			if (it != g_INFO_NAM1_TEMP_Map.end())
 			{
-				*a_out = it->second;
+				a_out = it->second;
 			}
 
 		}

@@ -8,7 +8,7 @@ namespace Hook
 	//HUGE Credits to Nightfallstorm for some of the hooks!!
 	//https://github.com/Nightfallstorm/DescriptionFramework released under GPL-3.0
 	//https://github.com/Nightfallstorm/Recipes released under GPL-3.0
-	struct ItemCardPopulateHook //BOOK CNAM, MGEF DNAM
+	struct ItemCardPopulateHook //BOOK CNAM
 	{
 		static void thunk(RE::ItemCard* itemCard, RE::TESBoundObject** a_item, char a3)
 		{

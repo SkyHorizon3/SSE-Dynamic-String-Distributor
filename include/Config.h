@@ -24,10 +24,8 @@ public:
 		kQUST_CNAM,
 		kINFO_RNAM,
 		kDIAL_FULL,
-		kREGN_RDMP,
 		kFLOR_RNAM,
 		kACTI_RNAM,
-		kPERK_EPFD,
 		kREFR_FULL,
 		kGMST_DATA,
 
@@ -42,6 +40,8 @@ public:
 		kSHRT,
 		kTNAM,
 		kDATA,
+		kRDMP,
+		kEPFD,
 
 		kDESC, //Used in hooks
 		kCNAM,

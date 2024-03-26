@@ -33,6 +33,16 @@ void Processor::RunConstTranslation()
 			SetGameSettingString(Information.EditorID, Information.ReplacerText);
 		}
 		break;
+		case Config::SubrecordType::kRDMP:
+		{
+			SetRegionDataStrings(Information.Form, Information.ReplacerText);
+		}
+		break;
+		case Config::SubrecordType::kEPFD:
+		{
+			SetEntryPointStrings(Information.Form, Information.ReplacerText);
+		}
+		break;
 		case Config::SubrecordType::kUnknown:
 		{
 			SKSE::log::info("Unknown record {0:08X} in ConstTranslation", Information.Form->formID);
@@ -133,11 +143,11 @@ void Processor::SetMessageBoxButtonStrings()
 				{
 					if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
 					{
-						RE::BGSEntryPointPerkEntry* entryPoint = static_cast<RE::BGSEntryPointPerkEntry*>(entry); //This is cruel, but it's working
+						RE::BGSEntryPointPerkEntry* entryPoint = skyrim_cast<RE::BGSEntryPointPerkEntry*>(entry);
 
 						if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kAddActivateChoice)
 						{
-							RE::BGSEntryPointFunctionDataActivateChoice* func = static_cast<RE::BGSEntryPointFunctionDataActivateChoice*>(entryPoint->functionData);
+							RE::BGSEntryPointFunctionDataActivateChoice* func = skyrim_cast<RE::BGSEntryPointFunctionDataActivateChoice*>(entryPoint->functionData);
 
 							//SKSE::log::info("ID: {} - String: {}", func->id, func->label);
 
@@ -161,4 +171,52 @@ void Processor::SetMessageBoxButtonStrings()
 	}
 	m_MESGITXTInformationStruct.clear();
 	m_MESGITXTInformationStruct.shrink_to_fit();
+}
+
+void Processor::SetRegionDataStrings(RE::TESForm* Form, RE::BSFixedString NewString) //REGN RDMP
+{
+	RE::TESRegion* regionData = skyrim_cast<RE::TESRegion*>(Form);
+
+	if (regionData && regionData->dataList)
+	{
+		for (const auto& region : regionData->dataList->regionDataList)
+		{
+			if (region->GetType() == RE::TESRegionData::Type::kMap)
+			{
+				RE::TESRegionDataMap* mapData = skyrim_cast<RE::TESRegionDataMap*>(region);
+				mapData->mapName = NewString;
+			}
+		}
+	}
+	else
+	{
+		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}.", Form->formID);
+	}
+}
+
+void Processor::SetEntryPointStrings(RE::TESForm* Form, RE::BSFixedString NewString) //PERK EPFD
+{
+	RE::BGSPerk* perk = skyrim_cast<RE::BGSPerk*>(Form);
+
+	if (perk)
+	{
+		for (auto& entry : perk->perkEntries)
+		{
+			if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
+			{
+				RE::BGSEntryPointPerkEntry* entryPoint = skyrim_cast<RE::BGSEntryPointPerkEntry*>(entry);
+
+				if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kSetText)
+				{
+					RE::BGSEntryPointFunctionDataText* func = skyrim_cast<RE::BGSEntryPointFunctionDataText*>(entryPoint->functionData);
+					func->text = NewString;
+				}
+			}
+
+		}
+	}
+	else
+	{
+		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}.", Form->formID);
+	}
 }

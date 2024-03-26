@@ -4,9 +4,9 @@ If you're not trying to do an english to english replacement I also recommend us
 
 The replacement string needs to follow the json format. The best way to do this is to write the text as it should look and convert it with [freeformatter](https://www.freeformatter.com/json-escape.html#before-output).
 
-## Replace XXXX FULL, XXXX DESC, NPC_ SHRT, WOOP TNAM, INFO RNAM, BOOK CNAM, MGEF DNAM
+## Replace XXXX FULL, XXXX DESC, NPC_ SHRT, WOOP TNAM, INFO RNAM, BOOK CNAM, MGEF DNAM, REGN RDMP,PERK EPFD
 
-Use this scheme for any full name, any DESC, NPC_ SHRT, WOOP TNAM, INFO RNAM, BOOK CNAM, MGEF DNAM.
+Use this scheme for any full name, any DESC, NPC_ SHRT, WOOP TNAM, INFO RNAM, BOOK CNAM, MGEF DNAM, REGN RDMP, PERK EPFD.
 
 ```json
 [
@@ -54,8 +54,8 @@ Example:
 ]
 ```
 
-## Replace ACTI RNAM, FLOR RNAM, REGN RDMP, PERK EPFD, QUST CNAM
-Use this scheme for ACTI RNAM, FLOR RNAM, REGN RDMP, PERK EPFD, QUST CNAM replacements.
+## Replace ACTI RNAM, FLOR RNAM, QUST CNAM
+Use this scheme for ACTI RNAM, FLOR RNAM, QUST CNAM replacements.
 
 
 ```json

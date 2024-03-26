@@ -31,6 +31,10 @@ private:
 
 	void SetMessageBoxButtonStrings();
 
+	void SetRegionDataStrings(RE::TESForm* Form, RE::BSFixedString NewString);
+
+	void SetEntryPointStrings(RE::TESForm* Form, RE::BSFixedString NewString);
+
 	struct ConstConfigurationInformation
 	{
 		RE::TESForm* Form;

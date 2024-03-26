@@ -50,17 +50,17 @@ namespace Hook
 	};
 
 	/*
-	RE::BSString GetInstanceQuestDescription(RE::TESQuest* a_quest, std::uint32_t a_instanceID)
-	{
-		using func_t = void (RE::TESQuest::*)(RE::BSString&, std::uint32_t) const;
-		REL::Relocation<func_t> func{ RELOCATION_ID(24549, 25078) };
-		RE::BSString CNAM;
-		func(a_quest, CNAM, a_instanceID);
-		return CNAM;
-	}
-
 	struct QuestDescriptionHook //QUST CNAM text hook for Journal menu
 	{
+		static RE::BSString GetInstanceQuestDescription(RE::TESQuest* a_quest, std::uint32_t a_instanceID)
+		{
+			using func_t = void (RE::TESQuest::*)(RE::BSString&, std::uint32_t) const;
+			REL::Relocation<func_t> funct{ RELOCATION_ID(24549, 25078) };
+			RE::BSString CNAM;
+			funct(a_quest, CNAM, a_instanceID);
+			return CNAM;
+		}
+
 		static void thunk(RE::TESQuest* a_quest, RE::BSString& a_out, std::uint32_t a_instanceID)
 		{
 			if (!a_quest)
@@ -69,31 +69,31 @@ namespace Hook
 			}
 			func(a_quest, a_out, a_instanceID);
 
-			//			auto stage = a_quest->GetCurrentStageID();
 
+			SKSE::log::info("Quest: {} - InstanceID: {} - String: {}", a_quest->fullName.c_str(), a_instanceID, a_out.c_str());
 
-			SKSE::log::info("InstanceID: {}", a_instanceID);
+			SKSE::log::info("LOOKUP- String:\n {}", GetInstanceQuestDescription(a_quest, a_instanceID).c_str());
 
-
-			if (a_quest->objConditions)
+			for (auto& text : a_quest->instanceData)
 			{
-				auto head = a_quest->objConditions.head;
-				if (head->data.flags.global)
-				{
-					head->data.comparisonValue.g->formEditorID;
+				SKSE::log::info("ID: {} - JournalStage: {} - JournalStageItem: {}", text->id, text->journalStage, text->journalStageItem);
 
-				}
-				else
+				for (auto& stringData : text->stringData)
 				{
-					head->data.comparisonValue.f;
+					SKSE::log::info("AliasID: {}", stringData.aliasID);
 
+					if (stringData.aliasID == a_instanceID)
+					{
+						SKSE::log::info("Match!- String:\n {}", GetInstanceQuestDescription(a_quest, stringData.aliasID).c_str());
+					}
+					else
+					{
+						SKSE::log::info("No Match!");
+					}
 				}
 
 			}
 
-
-			//a_out = "test";
-			//SKSE::log::info("String: {}", a_out.c_str());
 		};
 
 		static inline REL::Relocation<decltype(thunk)> func;
@@ -110,15 +110,15 @@ namespace Hook
 
 	struct QuestCNAMTextHook //QUST CNAM
 	{
-		static void thunk(RE::BSString* a_out, std::uint64_t a2, std::uint64_t a3)
+		static void thunk(RE::BSString& a_out, char* a_buffer, std::uint64_t a3)
 		{
-			func(a_out, a2, a3);
+			func(a_out, a_buffer, a3);
 
-			auto it = g_QUST_CNAM_Map.find(a_out->c_str()); //using original language as key since I couldn't find a way to match the strings without the QuestInstanceID
+			auto it = g_QUST_CNAM_Map.find(a_out.c_str()); //using original language as key since I couldn't find a way to match the strings without the QuestInstanceID
 
 			if (it != g_QUST_CNAM_Map.end())
 			{
-				*a_out = it->second;
+				a_out = it->second;
 			}
 
 		}
@@ -137,30 +137,29 @@ namespace Hook
 
 	struct HudMenuQuestObjectiveHook //QUST NNAM text hook for Hudmenu
 	{
-		static void thunk(std::uint32_t a1, char* a_out, RE::TESQuest* a_quest, std::uint64_t a4)
+		static void thunk(std::uint32_t a_HUDDataType, char* a_out, RE::TESQuest* a_quest, std::uint64_t a4)
 		{
 			if (!a_quest || !a_out)
 			{
-				return func(a1, a_out, a_quest, a4);
+				return func(a_HUDDataType, a_out, a_quest, a4);
 			}
 
-			for (const auto& objective : a_quest->objectives)
+			if (a_HUDDataType != 14 && a_HUDDataType != 15 && a_HUDDataType != 16) // kQuestStarted = 14, kQuestComplete = 15, kQuestFailed = 16,
 			{
-				size_t key = Utils::combineHashWithIndex(objective->ownerQuest->formID, objective->index, Utils::GetModName(objective->ownerQuest));
-
-				auto it = g_QUST_NNAM_Map.find(key);
-				if (it != g_QUST_NNAM_Map.end())
+				for (const auto& objective : a_quest->objectives)
 				{
-					const std::string& orig(a_out);
-					if (objective->displayText.c_str() == orig)
+					size_t key = Utils::combineHashWithIndex(objective->ownerQuest->formID, objective->index, Utils::GetModName(objective->ownerQuest));
+
+					auto it = g_QUST_NNAM_Map.find(key);
+					if (it != g_QUST_NNAM_Map.end())
 					{
 						char* newtext = const_cast<char*>(it->second.c_str());
-						return func(a1, newtext, a_quest, a4);
+						return func(a_HUDDataType, newtext, a_quest, a4);
 					}
 				}
 			}
 
-			return func(a1, a_out, a_quest, a4);
+			return func(a_HUDDataType, a_out, a_quest, a4);
 
 		};
 

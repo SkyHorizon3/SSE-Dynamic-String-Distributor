@@ -345,15 +345,15 @@ Config::RecordType Config::GetRecordType_map(const std::string& type)
 		{"MISC FULL", RecordType::kConst_Translation},
 		{"NPC_ FULL", RecordType::kConst_Translation},
 		{"NPC_ SHRT", RecordType::kConst_Translation},
-		{"PERK EPF2", RecordType::kMESG_ITXT}, //BGSEntryPoint.h
-		{"PERK EPFD", RecordType::kPERK_EPFD},
+		{"PERK EPF2", RecordType::kMESG_ITXT},
+		{"PERK EPFD", RecordType::kConst_Translation},
 		{"PERK FULL", RecordType::kConst_Translation},
 		{"PROJ FULL", RecordType::kConst_Translation},
 		{"QUST FULL", RecordType::kConst_Translation},
 		{"QUST NNAM", RecordType::kQUST_NNAM},
 		{"RACE FULL", RecordType::kConst_Translation},
 		{"REFR FULL", RecordType::kREFR_FULL},
-		{"REGN RDMP", RecordType::kREGN_RDMP},
+		{"REGN RDMP", RecordType::kConst_Translation},
 		{"SCRL FULL", RecordType::kConst_Translation},
 		{"SHOU FULL", RecordType::kConst_Translation},
 		{"SLGM FULL", RecordType::kConst_Translation},
@@ -396,6 +396,8 @@ Config::SubrecordType Config::GetSubrecordType_map(const std::string& type)
 		{"SHRT", SubrecordType::kSHRT},
 		{"DATA", SubrecordType::kDATA},
 		{"TNAM", SubrecordType::kTNAM},
+		{"RDMP", SubrecordType::kRDMP},
+		{"EPFD", SubrecordType::kEPFD},
 
 		{"DESC", SubrecordType::kDESC},
 		{"CNAM", SubrecordType::kCNAM},
@@ -419,10 +421,8 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 
 	switch (recordType)
 	{
-	case RecordType::kPERK_EPFD:
 	case RecordType::kACTI_RNAM:
 	case RecordType::kFLOR_RNAM:
-	case RecordType::kREGN_RDMP:
 		Hook::g_FLOR_RNAM_RDMP_Map.insert_or_assign(entry["original"], stringValue);
 		break;
 	case RecordType::kREFR_FULL:
