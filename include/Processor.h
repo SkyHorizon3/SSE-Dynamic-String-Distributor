@@ -20,6 +20,11 @@ public:
 		m_MESGITXTInformationStruct.emplace_back(form, string, pos);
 	}
 
+	static void AddToPERKEPFDTranslationStruct(RE::TESForm* form, const std::string& string, int pos)
+	{
+		m_PERKEPFDInformationStruct.emplace_back(form, string, pos);
+	}
+
 	void RunConstTranslation();
 
 private:
@@ -33,7 +38,7 @@ private:
 
 	void SetRegionDataStrings(RE::TESForm* Form, RE::BSFixedString NewString);
 
-	void SetEntryPointStrings(RE::TESForm* Form, RE::BSFixedString NewString);
+	void SetEntryPointStrings();
 
 	struct ConstConfigurationInformation
 	{
@@ -53,6 +58,8 @@ private:
 	};
 
 	static inline std::vector<MESGITXTInformation> m_MESGITXTInformationStruct; //Used for MESG ITXT translations
+
+	static inline std::vector<MESGITXTInformation> m_PERKEPFDInformationStruct; //Used for PERK EPFD translations
 
 	Processor() = default;
 	~Processor() = default;

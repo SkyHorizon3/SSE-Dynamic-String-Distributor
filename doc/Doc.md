@@ -4,9 +4,9 @@ If you're not trying to do an english to english replacement I also recommend us
 
 The replacement string needs to follow the json format. The best way to do this is to write the text as it should look and convert it with [freeformatter](https://www.freeformatter.com/json-escape.html#before-output).
 
-## Replace XXXX FULL, XXXX DESC, NPC_ SHRT, WOOP TNAM, INFO RNAM, BOOK CNAM, MGEF DNAM, REGN RDMP,PERK EPFD
+## Replace XXXX FULL, XXXX DESC, NPC_ SHRT, WOOP TNAM, INFO RNAM, BOOK CNAM, MGEF DNAM, REGN RDMP
 
-Use this scheme for any full name, any DESC, NPC_ SHRT, WOOP TNAM, INFO RNAM, BOOK CNAM, MGEF DNAM, REGN RDMP, PERK EPFD.
+Use this scheme for any full name, any DESC, NPC_ SHRT, WOOP TNAM, INFO RNAM, BOOK CNAM, MGEF DNAM, REGN RDMP.
 
 ```json
 [
@@ -81,8 +81,8 @@ Example:
 ]
 ```
 
-## Replace QUST NNAM, INFO NAM1, MESG ITXT, PERK EPF2
-Use this scheme for QUST NNAM, INFO NAM1, MESG ITXT, PERK EPF2 replacements.
+## Replace QUST NNAM, INFO NAM1, MESG ITXT, PERK EPF2, PERK EPFD
+Use this scheme for QUST NNAM, INFO NAM1, MESG ITXT, PERK EPF2, PERK EPFD replacements.
 
 
 ```json
@@ -98,8 +98,9 @@ Use this scheme for QUST NNAM, INFO NAM1, MESG ITXT, PERK EPF2 replacements.
 
 For INFO NAM1 the index is the reponse number of the response.\
 For QUST NNAM the index is the objective index (QOBJ) of the objective.\
-For MESG ITXT the index is the position in the order in which you can see them in SSEEdit.\
-For PERK EPF2 the index is the Fragment Index in EPF3.
+For MESG ITXT the index is the position in the order in which you can see them in SSEEdit. Starting with 0.\
+For PERK EPF2 the index is the Fragment Index in EPF3.\
+For PERK EPFD the index is the position in the order in which you can see them in SSEEdit. Starting with 0 and only PERK EPFD strings count to this order.
 
 Example:
 ```json

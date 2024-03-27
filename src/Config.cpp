@@ -272,6 +272,8 @@ std::tuple<RE::TESForm*, std::string> Config::ExtractFormIDAndPlugin(const std::
 		formID = mergeForm.second;
 	}
 
+	//SKSE::log::info("FormID: {0:08X}.", formID);
+
 	RE::TESForm* form = RE::TESDataHandler::GetSingleton()->LookupForm(formID, plugin);
 
 	if (form == nullptr)
@@ -283,21 +285,35 @@ std::tuple<RE::TESForm*, std::string> Config::ExtractFormIDAndPlugin(const std::
 
 RE::FormID Config::ConvertToFormID(std::string input)
 {
-	if (input.substr(0, 2) == "FE")
+
+	if (input.find('x') == std::string::npos) // If it contains x do nothing. Assume FormID is correct.
 	{
-		if (input.length() >= 5)
+		switch (input.length())
 		{
-			input[3] = 'x';
-			input.erase(0, 2);
+		case 8:
+		{
+			if (input.substr(0, 2) == "FE")
+			{
+				input[4] = 'x';
+				input.erase(0, 3);
+			}
+			else
+			{
+				input[1] = 'x';
+			}
+		}
+		break;
+
+		default:
+		{
+			input = "0x" + input;
+		}
+		break;
+
 		}
 	}
-	else
-	{
-		if (input.length() >= 3)
-		{
-			input[1] = 'x';
-		}
-	}
+
+	//SKSE::log::info("FormID: {}.", input);
 
 	return std::stoul(input, nullptr, 16);
 }
@@ -346,7 +362,7 @@ Config::RecordType Config::GetRecordType_map(const std::string& type)
 		{"NPC_ FULL", RecordType::kConst_Translation},
 		{"NPC_ SHRT", RecordType::kConst_Translation},
 		{"PERK EPF2", RecordType::kMESG_ITXT},
-		{"PERK EPFD", RecordType::kConst_Translation},
+		{"PERK EPFD", RecordType::kPERK_EPFD},
 		{"PERK FULL", RecordType::kConst_Translation},
 		{"PROJ FULL", RecordType::kConst_Translation},
 		{"QUST FULL", RecordType::kConst_Translation},
@@ -397,7 +413,6 @@ Config::SubrecordType Config::GetSubrecordType_map(const std::string& type)
 		{"DATA", SubrecordType::kDATA},
 		{"TNAM", SubrecordType::kTNAM},
 		{"RDMP", SubrecordType::kRDMP},
-		{"EPFD", SubrecordType::kEPFD},
 
 		{"DESC", SubrecordType::kDESC},
 		{"CNAM", SubrecordType::kCNAM},
@@ -464,8 +479,11 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 	case RecordType::kMESG_ITXT:
 		Processor::AddToMESGITXTTranslationStruct(form, stringValue, entry["index"].get<int>());
 		break;
+	case RecordType::kPERK_EPFD:
+		Processor::AddToPERKEPFDTranslationStruct(form, stringValue, entry["index"].get<int>());
+		break;
 	case RecordType::kConst_Translation:
-		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), form->GetFormEditorID());
+		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), "");
 		break;
 	case RecordType::kGMST_DATA:
 		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), entry["editor_id"]);

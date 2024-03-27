@@ -28,6 +28,7 @@ public:
 		kACTI_RNAM,
 		kREFR_FULL,
 		kGMST_DATA,
+		kPERK_EPFD,
 
 		kNotVisible,
 		kUnknown
@@ -41,7 +42,6 @@ public:
 		kTNAM,
 		kDATA,
 		kRDMP,
-		kEPFD,
 
 		kDESC, //Used in hooks
 		kCNAM,

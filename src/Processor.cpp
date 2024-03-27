@@ -38,11 +38,6 @@ void Processor::RunConstTranslation()
 			SetRegionDataStrings(Information.Form, Information.ReplacerText);
 		}
 		break;
-		case Config::SubrecordType::kEPFD:
-		{
-			SetEntryPointStrings(Information.Form, Information.ReplacerText);
-		}
-		break;
 		case Config::SubrecordType::kUnknown:
 		{
 			SKSE::log::info("Unknown record {0:08X} in ConstTranslation", Information.Form->formID);
@@ -56,6 +51,7 @@ void Processor::RunConstTranslation()
 	m_ConstConfigurationInformationStruct.shrink_to_fit();
 
 	SetMessageBoxButtonStrings();
+	SetEntryPointStrings();
 }
 
 template <typename T>
@@ -194,29 +190,48 @@ void Processor::SetRegionDataStrings(RE::TESForm* Form, RE::BSFixedString NewStr
 	}
 }
 
-void Processor::SetEntryPointStrings(RE::TESForm* Form, RE::BSFixedString NewString) //PERK EPFD
+void Processor::SetEntryPointStrings() //PERK EPFD
 {
-	RE::BGSPerk* perk = skyrim_cast<RE::BGSPerk*>(Form);
-
-	if (perk)
+	if (m_PERKEPFDInformationStruct.empty())
 	{
-		for (auto& entry : perk->perkEntries)
+		return;
+	}
+
+	for (const auto& Information : m_PERKEPFDInformationStruct)
+	{
+
+		RE::BGSPerk* perk = skyrim_cast<RE::BGSPerk*>(Information.Form);
+
+		if (perk)
 		{
-			if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
+			int pos = 0;
+			for (auto& entry : perk->perkEntries)
 			{
-				RE::BGSEntryPointPerkEntry* entryPoint = skyrim_cast<RE::BGSEntryPointPerkEntry*>(entry);
-
-				if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kSetText)
+				if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
 				{
-					RE::BGSEntryPointFunctionDataText* func = skyrim_cast<RE::BGSEntryPointFunctionDataText*>(entryPoint->functionData);
-					func->text = NewString;
-				}
-			}
+					RE::BGSEntryPointPerkEntry* entryPoint = skyrim_cast<RE::BGSEntryPointPerkEntry*>(entry);
 
+					if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kSetText)
+					{
+						RE::BGSEntryPointFunctionDataText* func = skyrim_cast<RE::BGSEntryPointFunctionDataText*>(entryPoint->functionData);
+
+						if (pos == Information.pos)
+						{
+							func->text = Information.ReplacerText;
+						}
+
+						pos++;
+					}
+				}
+
+			}
+		}
+		else
+		{
+			SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}.", Information.Form->formID);
 		}
 	}
-	else
-	{
-		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}.", Form->formID);
-	}
+	m_PERKEPFDInformationStruct.clear();
+	m_PERKEPFDInformationStruct.shrink_to_fit();
 }
+
