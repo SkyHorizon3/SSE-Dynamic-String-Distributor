@@ -71,15 +71,20 @@ namespace Hook
 					//SKSE::log::info("String: {}", messagedata->text.c_str());
 
 					std::istringstream iss(messagedata->text.c_str());
-					std::string line1, line2;
+					std::string line1;
 
-					if (std::getline(iss, line1) && std::getline(iss, line2))
+					if (std::getline(iss, line1))
 					{
 						auto it1 = g_FLOR_RNAM_RDMP_Map.find(line1);
-
 						if (it1 != g_FLOR_RNAM_RDMP_Map.end())
 						{
-							messagedata->text = it1->second + "\n" + line2;
+							std::string restOfText, line;
+							while (std::getline(iss, line))
+							{
+								restOfText += line + "\n";
+							}
+
+							messagedata->text = it1->second + "\n" + restOfText;
 						}
 					}
 				}
