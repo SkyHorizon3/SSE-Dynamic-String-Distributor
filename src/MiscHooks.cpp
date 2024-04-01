@@ -84,6 +84,11 @@ namespace Hook
 								restOfText += line + "\n";
 							}
 
+							if (!restOfText.empty())
+							{
+								restOfText.pop_back(); // remove useless \n
+							}
+
 							messagedata->text = it1->second + "\n" + restOfText;
 						}
 					}
