@@ -502,6 +502,9 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 
 void Config::ParseTranslationFiles()
 {
+	if (m_FilesInPluginFolder.empty())
+		return;
+
 	for (const auto& files : m_FilesInPluginFolder)
 	{
 #ifndef NDEBUG
@@ -545,6 +548,9 @@ void Config::ParseTranslationFiles()
 
 void Config::LoadFiles()
 {
+	if (m_Folders.empty())
+		return;
+
 	for (const auto& folders : m_Folders)
 	{
 

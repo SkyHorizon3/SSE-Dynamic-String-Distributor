@@ -3,52 +3,55 @@
 
 void Processor::RunConstTranslation()
 {
-	for (const auto& Information : m_ConstConfigurationInformationStruct)
+	if (!m_ConstConfigurationInformationStruct.empty())
 	{
+		for (const auto& Information : m_ConstConfigurationInformationStruct)
+		{
 
-		switch (Information.SubrecordType)
-		{
-		case Config::SubrecordType::kFULL: //DIAL FULL, REFR FULL aren't working like this.
-		{
-			SetConstStrings<RE::TESFullName>(Information.Form, Information.ReplacerText, &RE::TESFullName::fullName);
-		}
-		break;
-		case Config::SubrecordType::kDNAM:
-		{
-			SetConstStrings <RE::EffectSetting>(Information.Form, Information.ReplacerText, &RE::EffectSetting::magicItemDescription);
-		}
-		break;
-		case Config::SubrecordType::kSHRT:
-		{
-			SetConstStrings<RE::TESNPC>(Information.Form, Information.ReplacerText, &RE::TESNPC::shortName);
-		}
-		break;
-		case Config::SubrecordType::kTNAM:
-		{
-			SetConstStrings<RE::TESWordOfPower>(Information.Form, Information.ReplacerText, &RE::TESWordOfPower::translation);
-		}
-		break;
-		case Config::SubrecordType::kDATA:
-		{
-			SetGameSettingString(Information.EditorID, Information.ReplacerText);
-		}
-		break;
-		case Config::SubrecordType::kRDMP:
-		{
-			SetRegionDataStrings(Information.Form, Information.ReplacerText);
-		}
-		break;
-		case Config::SubrecordType::kUnknown:
-		{
-			SKSE::log::info("Unknown record {0:08X} in ConstTranslation", Information.Form->formID);
-		}
-		break;
+			switch (Information.SubrecordType)
+			{
+			case Config::SubrecordType::kFULL: //DIAL FULL, REFR FULL aren't working like this.
+			{
+				SetConstStrings<RE::TESFullName>(Information.Form, Information.ReplacerText, &RE::TESFullName::fullName);
+			}
+			break;
+			case Config::SubrecordType::kDNAM:
+			{
+				SetConstStrings <RE::EffectSetting>(Information.Form, Information.ReplacerText, &RE::EffectSetting::magicItemDescription);
+			}
+			break;
+			case Config::SubrecordType::kSHRT:
+			{
+				SetConstStrings<RE::TESNPC>(Information.Form, Information.ReplacerText, &RE::TESNPC::shortName);
+			}
+			break;
+			case Config::SubrecordType::kTNAM:
+			{
+				SetConstStrings<RE::TESWordOfPower>(Information.Form, Information.ReplacerText, &RE::TESWordOfPower::translation);
+			}
+			break;
+			case Config::SubrecordType::kDATA:
+			{
+				SetGameSettingString(Information.EditorID, Information.ReplacerText);
+			}
+			break;
+			case Config::SubrecordType::kRDMP:
+			{
+				SetRegionDataStrings(Information.Form, Information.ReplacerText);
+			}
+			break;
+			case Config::SubrecordType::kUnknown:
+			{
+				SKSE::log::info("Unknown record {0:08X} in ConstTranslation", Information.Form->formID);
+			}
+			break;
 
-		default: break;
+			default: break;
+			}
 		}
+		m_ConstConfigurationInformationStruct.clear(); //Structs only used once, so no need to keep them for fun
+		m_ConstConfigurationInformationStruct.shrink_to_fit();
 	}
-	m_ConstConfigurationInformationStruct.clear(); //Structs only used once, so no need to keep them for fun
-	m_ConstConfigurationInformationStruct.shrink_to_fit();
 
 	SetMessageBoxButtonStrings();
 	SetEntryPointStrings();
