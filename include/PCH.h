@@ -11,6 +11,18 @@
 #include <nlohmann/json.hpp>
 #include <ankerl/unordered_dense.h>
 
+template <>
+struct ankerl::unordered_dense::hash<std::string>
+{
+	using is_transparent = void;  // enable heterogeneous overloads
+	using is_avalanching = void;  // mark class as high quality avalanching hash
+
+	[[nodiscard]] auto operator()(std::string_view str) const noexcept -> uint64_t
+	{
+		return ankerl::unordered_dense::hash<std::string_view>{}(str);
+	}
+};
+
 using namespace std::literals;
 
 namespace stl

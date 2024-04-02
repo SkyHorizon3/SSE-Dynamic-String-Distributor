@@ -320,7 +320,7 @@ RE::FormID Config::ConvertToFormID(std::string input)
 
 Config::RecordType Config::GetRecordType_map(const std::string& type)
 {
-	static const std::unordered_map<std::string, RecordType> typeMap = {
+	static const ankerl::unordered_dense::map<std::string, RecordType> typeMap = {
 		{"ACTI FULL", RecordType::kConst_Translation},
 		{"ACTI RNAM", RecordType::kACTI_RNAM},
 		{"ALCH FULL", RecordType::kConst_Translation},
@@ -407,7 +407,7 @@ Config::RecordType Config::GetRecordType_map(const std::string& type)
 
 Config::SubrecordType Config::GetSubrecordType_map(const std::string& type)
 {
-	static const std::unordered_map<std::string, SubrecordType> typeMap = {
+	static const ankerl::unordered_dense::map<std::string, SubrecordType> typeMap = {
 		{"FULL", SubrecordType::kFULL},
 		{"SHRT", SubrecordType::kSHRT},
 		{"DATA", SubrecordType::kDATA},
