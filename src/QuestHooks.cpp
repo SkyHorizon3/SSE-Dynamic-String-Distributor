@@ -5,7 +5,7 @@
 
 namespace Hook
 {
-
+	/*
 	struct QuestObjectiveHook //QUST NNAM text hook for Journal menu
 	{
 		static void thunk(const RE::BGSInstancedQuestObjective* a_objective, RE::BSString& a_out)
@@ -135,6 +135,7 @@ namespace Hook
 
 	};
 
+	/*
 	struct HudMenuQuestObjectiveHook //QUST NNAM text hook for Hudmenu
 	{
 		static void thunk(std::uint32_t a_HUDDataType, char* a_out, RE::TESQuest* a_quest, std::uint64_t a4)
@@ -177,11 +178,11 @@ namespace Hook
 			stl::write_thunk_call<HudMenuQuestObjectiveHook>(target2.address());
 			SKSE::log::info("HudMenuQuestObjectiveHook hooked at address: {:x} and offset: {:x}", target2.address(), target2.offset());
 
-			REL::Relocation<std::uintptr_t> target6{ RELOCATION_ID(23467, 23933), REL::VariantOffset(0xAC, 0x1D5, 0xAC) }; //Multiple objectives 
+			REL::Relocation<std::uintptr_t> target6{ RELOCATION_ID(23467, 23933), REL::VariantOffset(0xAC, 0x1D5, 0xAC) }; //Multiple objectives
 			stl::write_thunk_call<HudMenuQuestObjectiveHook>(target6.address());
 			SKSE::log::info("HudMenuQuestObjectiveHook hooked at address: {:x} and offset: {:x}", target6.address(), target6.offset());
 
-			REL::Relocation<std::uintptr_t> target3{ RELOCATION_ID(23467, 23933), REL::VariantOffset(0x153, 0x221, 0x153) }; //Multiple objectives 
+			REL::Relocation<std::uintptr_t> target3{ RELOCATION_ID(23467, 23933), REL::VariantOffset(0x153, 0x221, 0x153) }; //Multiple objectives
 			stl::write_thunk_call<HudMenuQuestObjectiveHook>(target3.address());
 			SKSE::log::info("HudMenuQuestObjectiveHook hooked at address: {:x} and offset: {:x}", target3.address(), target3.offset());
 
@@ -195,13 +196,14 @@ namespace Hook
 
 		}
 	};
+	*/
 
 	void InstallQuestHooks()
 	{
-		Hook::QuestObjectiveHook::Install();
+		//Hook::QuestObjectiveHook::Install();
 		//Hook::QuestDescriptionHook::Install();
 		Hook::QuestCNAMTextHook::Install();
-		Hook::HudMenuQuestObjectiveHook::Install();
+		//Hook::HudMenuQuestObjectiveHook::Install();
 	}
 
 

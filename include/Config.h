@@ -42,10 +42,12 @@ public:
 		kTNAM,
 		kDATA,
 		kRDMP,
-
-		kDESC, //Used in hooks
+		kDESC,
 		kCNAM,
 		kDNAM,
+		kNNAM,
+		kITXT,
+		kEPFD,
 
 		kUnknown
 	};
@@ -55,7 +57,7 @@ private:
 	std::vector<std::string> GetLoadOrder();
 	void EnumerateFilesInFolders(std::string folders);
 	std::string GetSubrecordType(const std::string& types) const;
-	std::tuple<RE::TESForm*, std::string> ExtractFormIDAndPlugin(const std::string& formIDWithPlugin);
+	std::tuple<RE::FormID, std::string> ExtractFormIDAndPlugin(const std::string& formIDWithPlugin);
 	RE::FormID ConvertToFormID(std::string input);
 	RecordType GetRecordType_map(const std::string& type);
 	SubrecordType GetSubrecordType_map(const std::string& type);

@@ -12,7 +12,16 @@ namespace Hook
 		{
 			func(a_response, a_voiceFilePath, a_voiceType, a_topic, a_topicInfo);
 
-			size_t key = Utils::combineHashWithIndex(a_topicInfo->formID, a_response->responseNumber, Utils::GetModName(a_topicInfo));
+			RE::FormID trimedFormID = a_topicInfo->formID &= 0x00FFFFFF; //Remove the two first load order dependent positions. Since TESTopicInfo is only loaded on runtime we have to hope there isn't a FormID twice in a plugin
+			size_t key = Utils::combineHashWithIndex(trimedFormID, a_response->responseNumber, Utils::GetModName(a_topicInfo));
+
+			/*
+			SKSE::log::info("String: {}", a_response->responseText.c_str());
+			SKSE::log::info("FormID: {0:08X}", a_topicInfo->formID);
+			SKSE::log::info("TrimmedFormID: {0:08X}", trimedFormID);
+			SKSE::log::info("Number: {}", a_response->responseNumber);
+			SKSE::log::info("Plugin: {}", Utils::GetModName(a_topicInfo));
+			*/
 
 			auto it = g_INFO_NAM1_Map.find(key);
 			if (it != g_INFO_NAM1_Map.end())
@@ -22,7 +31,6 @@ namespace Hook
 			}
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
-
 
 		static void Install()
 		{

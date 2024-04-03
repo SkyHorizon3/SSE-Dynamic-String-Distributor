@@ -253,13 +253,13 @@ std::string Config::GetSubrecordType(const std::string& types) const
 	return "";
 }
 
-std::tuple<RE::TESForm*, std::string> Config::ExtractFormIDAndPlugin(const std::string& formIDWithPlugin)
+std::tuple<RE::FormID, std::string> Config::ExtractFormIDAndPlugin(const std::string& formIDWithPlugin)
 {
 	size_t separatorPos = formIDWithPlugin.find('|');
 	if (separatorPos == std::string::npos)
 	{
 		// if | is not found
-		return std::make_tuple(nullptr, "");
+		return std::make_tuple(0, "");
 	}
 
 	RE::FormID formID = ConvertToFormID(formIDWithPlugin.substr(0, separatorPos));
@@ -274,13 +274,8 @@ std::tuple<RE::TESForm*, std::string> Config::ExtractFormIDAndPlugin(const std::
 
 	//SKSE::log::info("FormID: {0:08X}.", formID);
 
-	RE::TESForm* form = RE::TESDataHandler::GetSingleton()->LookupForm(formID, plugin);
 
-	if (form == nullptr)
-		form = RE::TESForm::LookupByID(std::stoul(formIDWithPlugin.substr(0, separatorPos), nullptr, 16)); //For injected records.
-
-
-	return std::make_tuple(form, plugin);
+	return std::make_tuple(formID, plugin);
 }
 
 RE::FormID Config::ConvertToFormID(std::string input)
@@ -417,6 +412,9 @@ Config::SubrecordType Config::GetSubrecordType_map(const std::string& type)
 		{"DESC", SubrecordType::kDESC},
 		{"CNAM", SubrecordType::kCNAM},
 		{"DNAM", SubrecordType::kDNAM},
+		{"NNAM", SubrecordType::kNNAM},
+		{"ITXT", SubrecordType::kITXT},
+		{"EPFD", SubrecordType::kEPFD},
 	};
 
 	auto it = typeMap.find(type);
@@ -425,13 +423,26 @@ Config::SubrecordType Config::GetSubrecordType_map(const std::string& type)
 
 void Config::ProcessEntry(const std::string& files, const json& entry, RecordType recordType)
 {
-	auto [form, plugin] = ExtractFormIDAndPlugin(entry["form_id"].get<std::string>());
+	const std::string& formIDEntry = entry["form_id"].get<std::string>();
+	auto [formID, plugin] = ExtractFormIDAndPlugin(formIDEntry);
 	const std::string& stringValue = entry["string"];
 
-	if (form == nullptr && entry["type"] != "GMST DATA")
+	RE::TESForm* form = nullptr;
+	if (entry["type"] != "GMST DATA" && entry["type"] != "INFO NAM1")
 	{
-		SKSE::log::error("Couldn't find FormID {} in file: {}", entry["form_id"].get<std::string>(), files);
-		return;
+		form = RE::TESDataHandler::GetSingleton()->LookupForm(formID, plugin);
+
+		if (form == nullptr)
+		{
+			size_t separatorPos = formIDEntry.find('|');
+			form = RE::TESForm::LookupByID(std::stoul(formIDEntry.substr(0, separatorPos), nullptr, 16)); //For injected records.
+		}
+
+		if (form == nullptr)
+		{
+			SKSE::log::error("Couldn't find FormID {} in file: {}", formIDEntry, files);
+			return;
+		}
 	}
 
 	switch (recordType)
@@ -459,34 +470,25 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 		}
 	}
 	break;
-	case RecordType::kQUST_NNAM:
 	case RecordType::kINFO_NAM1:
 	{
-		size_t key = Utils::combineHashWithIndex(form->formID, entry["index"].get<int>(), plugin);
-		if (recordType == RecordType::kQUST_NNAM)
-		{
-			Hook::g_QUST_NNAM_Map.insert_or_assign(key, stringValue);
-		}
-		else if (recordType == RecordType::kINFO_NAM1)
-		{
-			Hook::g_INFO_NAM1_Map.insert_or_assign(key, stringValue);
-		}
+		size_t key = Utils::combineHashWithIndex(formID, entry["index"].get<int>(), plugin);
+		Hook::g_INFO_NAM1_Map.insert_or_assign(key, stringValue);
 	}
 	break;
 	case RecordType::kQUST_CNAM:
 		Hook::g_QUST_CNAM_Map.insert_or_assign(entry["original"], stringValue);
 		break;
+	case RecordType::kQUST_NNAM:
 	case RecordType::kMESG_ITXT:
-		Processor::AddToMESGITXTTranslationStruct(form, stringValue, entry["index"].get<int>());
-		break;
 	case RecordType::kPERK_EPFD:
-		Processor::AddToPERKEPFDTranslationStruct(form, stringValue, entry["index"].get<int>());
+		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), entry["index"].get<int>(), "");
 		break;
 	case RecordType::kConst_Translation:
-		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), "");
+		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), 0, "");
 		break;
 	case RecordType::kGMST_DATA:
-		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), entry["editor_id"]);
+		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), 0, entry["editor_id"]);
 		break;
 	case RecordType::kNormal_Translation:
 		Hook::g_ConfigurationInformationStruct.emplace_back(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])));

@@ -1,5 +1,6 @@
 #include "Processor.h"
 #include "Config.h"
+#include "Utils.h"
 
 void Processor::RunConstTranslation()
 {
@@ -35,14 +36,30 @@ void Processor::RunConstTranslation()
 				SetGameSettingString(Information.EditorID, Information.ReplacerText);
 			}
 			break;
+			case Config::SubrecordType::kITXT:
+			{
+				SetMessageBoxButtonStrings(Information.Form, Information.ReplacerText, Information.pos);
+			}
+			break;
 			case Config::SubrecordType::kRDMP:
 			{
 				SetRegionDataStrings(Information.Form, Information.ReplacerText);
 			}
 			break;
+			case Config::SubrecordType::kEPFD:
+			{
+				SetEntryPointStrings(Information.Form, Information.ReplacerText, Information.pos);
+			}
+			break;
+			case Config::SubrecordType::kNNAM:
+			{
+				SetQuestObjectiveStrings(Information.Form, Information.ReplacerText, Information.pos);
+			}
+			break;
 			case Config::SubrecordType::kUnknown:
 			{
 				SKSE::log::info("Unknown record {0:08X} in ConstTranslation", Information.Form->formID);
+				SKSE::log::error("out of plugin {}.", Utils::GetModName(Information.Form));
 			}
 			break;
 
@@ -53,8 +70,6 @@ void Processor::RunConstTranslation()
 		m_ConstConfigurationInformationStruct.shrink_to_fit();
 	}
 
-	SetMessageBoxButtonStrings();
-	SetEntryPointStrings();
 }
 
 template <typename T>
@@ -63,11 +78,12 @@ void Processor::SetConstStrings(RE::TESForm* Form, RE::BSFixedString NewString, 
 	T* OrigString = skyrim_cast<T*>(Form);
 	if (OrigString)
 	{
-		OrigString->*memberPtr = NewString;
+		OrigString->*memberPtr = std::move(NewString);
 	}
 	else
 	{
-		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}.", Form->formID);
+		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", Form->formID);
+		SKSE::log::error("out of plugin {}.", Utils::GetModName(Form));
 	}
 
 }
@@ -105,71 +121,61 @@ void Processor::SetGameSettingString(const std::string& a_name, const std::strin
 }
 
 
-void Processor::SetMessageBoxButtonStrings()
+void Processor::SetMessageBoxButtonStrings(RE::TESForm* Form, RE::BSFixedString NewString, int index)
 {
-	if (m_MESGITXTInformationStruct.empty())
+	RE::BGSMessage* message = skyrim_cast<RE::BGSMessage*>(Form); //MESG ITXT
+	if (message)
 	{
-		return;
-	}
-
-	for (const auto& Information : m_MESGITXTInformationStruct)
-	{
-
-		RE::BGSMessage* message = skyrim_cast<RE::BGSMessage*>(Information.Form); //MESG ITXT
-		if (message)
+		int pos = 0;
+		for (auto& button : message->menuButtons)
 		{
-			int pos = 0;
-			for (auto& button : message->menuButtons)
-			{
-				//SKSE::log::info("Pos: {} - String: {}", pos, text->text.c_str());
+			//SKSE::log::info("Pos: {} - String: {}", pos, text->text.c_str());
 
-				if (pos == Information.pos)
+			if (pos == index)
+			{
+				button->text = std::move(NewString);
+			}
+
+			pos++;
+		}
+
+	}
+	else
+	{
+		RE::BGSPerk* perk = skyrim_cast<RE::BGSPerk*>(Form); //PERK EPF2
+
+		if (perk)
+		{
+			for (auto& entry : perk->perkEntries)
+			{
+				if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
 				{
-					button->text = std::move(Information.ReplacerText);
+					RE::BGSEntryPointPerkEntry* entryPoint = skyrim_cast<RE::BGSEntryPointPerkEntry*>(entry);
+
+					if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kAddActivateChoice)
+					{
+						RE::BGSEntryPointFunctionDataActivateChoice* func = skyrim_cast<RE::BGSEntryPointFunctionDataActivateChoice*>(entryPoint->functionData);
+
+						//SKSE::log::info("ID: {} - String: {}", func->id, func->label);
+
+						if (func->id == index)
+						{
+							func->label = std::move(NewString);
+						}
+
+					}
 				}
 
-				pos++;
 			}
 
 		}
 		else
 		{
-			RE::BGSPerk* perk = skyrim_cast<RE::BGSPerk*>(Information.Form); //PERK EPF2
-
-			if (perk)
-			{
-				for (auto& entry : perk->perkEntries)
-				{
-					if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
-					{
-						RE::BGSEntryPointPerkEntry* entryPoint = skyrim_cast<RE::BGSEntryPointPerkEntry*>(entry);
-
-						if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kAddActivateChoice)
-						{
-							RE::BGSEntryPointFunctionDataActivateChoice* func = skyrim_cast<RE::BGSEntryPointFunctionDataActivateChoice*>(entryPoint->functionData);
-
-							//SKSE::log::info("ID: {} - String: {}", func->id, func->label);
-
-							if (func->id == Information.pos)
-							{
-								func->label = std::move(Information.ReplacerText);
-							}
-
-						}
-					}
-
-				}
-
-			}
-			else
-			{
-				SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}.", Information.Form->formID);
-			}
+			SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", Form->formID);
+			SKSE::log::error("out of plugin {}.", Utils::GetModName(Form));
 		}
-
 	}
-	m_MESGITXTInformationStruct.clear();
-	m_MESGITXTInformationStruct.shrink_to_fit();
+
 }
 
 void Processor::SetRegionDataStrings(RE::TESForm* Form, RE::BSFixedString NewString) //REGN RDMP
@@ -183,58 +189,70 @@ void Processor::SetRegionDataStrings(RE::TESForm* Form, RE::BSFixedString NewStr
 			if (region->GetType() == RE::TESRegionData::Type::kMap)
 			{
 				RE::TESRegionDataMap* mapData = skyrim_cast<RE::TESRegionDataMap*>(region);
-				mapData->mapName = NewString;
+				mapData->mapName = std::move(NewString);
 			}
 		}
 	}
 	else
 	{
-		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}.", Form->formID);
+		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", Form->formID);
+		SKSE::log::error("out of plugin {}.", Utils::GetModName(Form));
 	}
 }
 
-void Processor::SetEntryPointStrings() //PERK EPFD
+void Processor::SetEntryPointStrings(RE::TESForm* Form, RE::BSFixedString NewString, int index) //PERK EPFD
 {
-	if (m_PERKEPFDInformationStruct.empty())
+	RE::BGSPerk* perk = skyrim_cast<RE::BGSPerk*>(Form);
+
+	if (perk)
 	{
-		return;
-	}
-
-	for (const auto& Information : m_PERKEPFDInformationStruct)
-	{
-
-		RE::BGSPerk* perk = skyrim_cast<RE::BGSPerk*>(Information.Form);
-
-		if (perk)
+		int pos = 0;
+		for (auto& entry : perk->perkEntries)
 		{
-			int pos = 0;
-			for (auto& entry : perk->perkEntries)
+			if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
 			{
-				if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
+				RE::BGSEntryPointPerkEntry* entryPoint = skyrim_cast<RE::BGSEntryPointPerkEntry*>(entry);
+
+				if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kSetText)
 				{
-					RE::BGSEntryPointPerkEntry* entryPoint = skyrim_cast<RE::BGSEntryPointPerkEntry*>(entry);
+					RE::BGSEntryPointFunctionDataText* func = skyrim_cast<RE::BGSEntryPointFunctionDataText*>(entryPoint->functionData);
 
-					if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kSetText)
+					if (pos == index)
 					{
-						RE::BGSEntryPointFunctionDataText* func = skyrim_cast<RE::BGSEntryPointFunctionDataText*>(entryPoint->functionData);
-
-						if (pos == Information.pos)
-						{
-							func->text = Information.ReplacerText;
-						}
-
-						pos++;
+						func->text = std::move(NewString);
 					}
-				}
 
+					pos++;
+				}
+			}
+
+		}
+	}
+	else
+	{
+		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", Form->formID);
+		SKSE::log::error("out of plugin {}.", Utils::GetModName(Form));
+	}
+}
+
+
+void Processor::SetQuestObjectiveStrings(RE::TESForm* Form, RE::BSFixedString NewString, int index) //QUST NNAM
+{
+	RE::TESQuest* quest = skyrim_cast<RE::TESQuest*>(Form);
+
+	if (quest)
+	{
+		for (const auto& objective : quest->objectives)
+		{
+			if (objective->index == index)
+			{
+				objective->displayText = std::move(NewString);
 			}
 		}
-		else
-		{
-			SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}.", Information.Form->formID);
-		}
 	}
-	m_PERKEPFDInformationStruct.clear();
-	m_PERKEPFDInformationStruct.shrink_to_fit();
+	else
+	{
+		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", Form->formID);
+		SKSE::log::error("out of plugin {}.", Utils::GetModName(Form));
+	}
 }
-

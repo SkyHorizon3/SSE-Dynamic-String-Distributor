@@ -10,19 +10,17 @@ public:
 		return &menu;
 	}
 
-	static void AddToConstTranslationStruct(RE::TESForm* form, const std::string& string, Config::SubrecordType SubrecordType, const std::string& editorid)
+	static void AddToConstTranslationStruct(RE::TESForm* form, const std::string& string, Config::SubrecordType SubrecordType, int pos, const std::string& editorid)
 	{
-		m_ConstConfigurationInformationStruct.emplace_back(form, string, SubrecordType, editorid);
-	}
+		if (editorid.empty())
+		{
+			m_ConstConfigurationInformationStruct.emplace_back(form, string, SubrecordType, pos);
+		}
+		else
+		{
+			m_ConstConfigurationInformationStruct.emplace_back(form, string, SubrecordType, pos, editorid);
+		}
 
-	static void AddToMESGITXTTranslationStruct(RE::TESForm* form, const std::string& string, int pos)
-	{
-		m_MESGITXTInformationStruct.emplace_back(form, string, pos);
-	}
-
-	static void AddToPERKEPFDTranslationStruct(RE::TESForm* form, const std::string& string, int pos)
-	{
-		m_PERKEPFDInformationStruct.emplace_back(form, string, pos);
 	}
 
 	void RunConstTranslation();
@@ -34,32 +32,24 @@ private:
 
 	void SetGameSettingString(const std::string& a_name, const std::string& a_NewString);
 
-	void SetMessageBoxButtonStrings();
+	void SetMessageBoxButtonStrings(RE::TESForm* Form, RE::BSFixedString NewString, int index);
 
 	void SetRegionDataStrings(RE::TESForm* Form, RE::BSFixedString NewString);
 
-	void SetEntryPointStrings();
+	void SetEntryPointStrings(RE::TESForm* Form, RE::BSFixedString NewString, int index);
+
+	void SetQuestObjectiveStrings(RE::TESForm* Form, RE::BSFixedString NewString, int index);
 
 	struct ConstConfigurationInformation
 	{
 		RE::TESForm* Form;
 		std::string ReplacerText = "";
 		Config::SubrecordType SubrecordType;
+		int pos;
 		std::string EditorID = "";
 	};
 
 	static inline std::vector<ConstConfigurationInformation> m_ConstConfigurationInformationStruct; //Used for const translations
-
-	struct MESGITXTInformation
-	{
-		RE::TESForm* Form;
-		std::string ReplacerText = "";
-		int pos;
-	};
-
-	static inline std::vector<MESGITXTInformation> m_MESGITXTInformationStruct; //Used for MESG ITXT translations
-
-	static inline std::vector<MESGITXTInformation> m_PERKEPFDInformationStruct; //Used for PERK EPFD translations
 
 	Processor() = default;
 	~Processor() = default;
