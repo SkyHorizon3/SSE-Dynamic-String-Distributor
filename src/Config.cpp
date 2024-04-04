@@ -78,6 +78,13 @@ std::vector<std::string> Config::GetLoadOrder()
 		);
 
 		std::vector<std::string> AllPlugins;
+
+		if (!std::filesystem::exists("Data"sv))
+		{
+			SKSE::log::error("Data folder not found. Please make sure your Skyrim is even installed.");
+			return;
+		}
+
 		for (const auto& entry : std::filesystem::directory_iterator("Data"))
 		{
 			if (entry.is_regular_file() && (entry.path().extension() == L".esp" || entry.path().extension() == L".esm" || entry.path().extension() == L".esl"))
@@ -104,6 +111,10 @@ std::vector<std::string> Config::GetLoadOrder()
 
 		return loadOrder;
 	}
+	else
+	{
+		SKSE::log::error("User directory not found!");
+	}
 
 	return std::vector<std::string>();
 }
@@ -114,9 +125,8 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 	bool foundOverwriteFolder = false;  // To check if Overwrite folder is found
 
 	if (!std::filesystem::exists(Directory))
-	{
 		return;
-	}
+
 
 	for (const auto& entry : std::filesystem::directory_iterator(Directory))
 	{
@@ -201,6 +211,9 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 	}
 
 #ifndef NDEBUG
+	if (m_Folders.empty())
+		return;
+
 	static int position2 = 1;
 	for (const auto& Plugin : m_Folders)
 	{
@@ -216,6 +229,9 @@ void Config::EnumerateFilesInFolders(const std::string folders) //Get all files 
 	const std::string folderPath = "Data\\SKSE\\Plugins\\DynamicStringDistributor\\" + folders;
 	m_Files.clear();
 	m_Files.shrink_to_fit(); //I'm not sure if that does anything useful, but it doesn't really matter :D
+
+	if (!std::filesystem::exists(folderPath))
+		return;
 
 	for (const auto& entry : std::filesystem::recursive_directory_iterator(folderPath))
 	{
