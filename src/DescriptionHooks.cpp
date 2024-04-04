@@ -152,58 +152,11 @@ namespace Hook
 		}
 	};
 
-
-	struct LoadScreenTextHook //LSCR DESC
-	{
-		static void thunk(RE::TESLoadScreen* loadscreen, float* a2)
-		{
-			if (!loadscreen && !loadscreen->loadingText.size())
-			{
-				return func(loadscreen, a2);
-			}
-
-			func(loadscreen, a2);
-
-			for (const auto& Information : g_ConfigurationInformationStruct)
-			{
-				switch (Information.SubrecordType)
-				{
-				case Config::SubrecordType::kDESC:
-				{
-					if (loadscreen && loadscreen->formID == Information.Form->formID)
-					{
-						loadscreen->loadingText = Information.ReplacerText;
-
-#ifndef NDEBUG
-						SKSE::log::debug("Replaced LSCR DESC {0:08X} with:", loadscreen->formID);
-						SKSE::log::debug("{}", Information.ReplacerText);
-#endif
-					}
-				}
-				break;
-
-				default: break;
-				}
-			}
-
-		};
-		static inline REL::Relocation<decltype(thunk)> func;
-
-
-		static void Install()
-		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(51048, 51929), REL::VariantOffset(0x2BB, 0x1BC, 0x2CB) };
-			stl::write_thunk_call<LoadScreenTextHook>(target1.address());
-			SKSE::log::info("LoadScreenTextHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
-		}
-	};
-
 	void InstallDescriptionHooks()
 	{
 		Hook::ParentDESCHookAE::Install();
 		Hook::GetDescriptionHookAE::Install();
 		Hook::GetDescriptionHookSE::Install();
-		Hook::LoadScreenTextHook::Install();
 	}
 
 }

@@ -16,6 +16,11 @@ void Processor::RunConstTranslation()
 				SetConstStrings<RE::TESFullName>(Information.Form, Information.ReplacerText, &RE::TESFullName::fullName);
 			}
 			break;
+			case Config::SubrecordType::kDESC: //Only LSCR DESC
+			{
+				SetConstStrings <RE::TESLoadScreen>(Information.Form, Information.ReplacerText, &RE::TESLoadScreen::loadingText);
+			}
+			break;
 			case Config::SubrecordType::kDNAM:
 			{
 				SetConstStrings <RE::EffectSetting>(Information.Form, Information.ReplacerText, &RE::EffectSetting::magicItemDescription);
