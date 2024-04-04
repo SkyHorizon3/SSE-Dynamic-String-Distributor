@@ -206,9 +206,6 @@ namespace Hook
 		//Hook::HudMenuQuestObjectiveHook::Install();
 	}
 
-
-
-
 	/*
 	Old hook:
 

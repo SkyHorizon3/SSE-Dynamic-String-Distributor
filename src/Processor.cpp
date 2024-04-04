@@ -4,76 +4,76 @@
 
 void Processor::RunConstTranslation()
 {
-	if (!m_ConstConfigurationInformationStruct.empty())
+	if (m_ConstConfigurationInformationStruct.empty())
+		return;
+
+	for (const auto& Information : m_ConstConfigurationInformationStruct)
 	{
-		for (const auto& Information : m_ConstConfigurationInformationStruct)
+
+		switch (Information.SubrecordType)
 		{
-
-			switch (Information.SubrecordType)
-			{
-			case Config::SubrecordType::kFULL: //DIAL FULL, REFR FULL aren't working like this.
-			{
-				SetConstStrings<RE::TESFullName>(Information.Form, Information.ReplacerText, &RE::TESFullName::fullName);
-			}
-			break;
-			case Config::SubrecordType::kDESC: //Only LSCR DESC
-			{
-				SetConstStrings<RE::TESLoadScreen>(Information.Form, Information.ReplacerText, &RE::TESLoadScreen::loadingText);
-			}
-			break;
-			case Config::SubrecordType::kDNAM:
-			{
-				SetConstStrings<RE::EffectSetting>(Information.Form, Information.ReplacerText, &RE::EffectSetting::magicItemDescription);
-			}
-			break;
-			case Config::SubrecordType::kSHRT:
-			{
-				SetConstStrings<RE::TESNPC>(Information.Form, Information.ReplacerText, &RE::TESNPC::shortName);
-			}
-			break;
-			case Config::SubrecordType::kTNAM:
-			{
-				SetConstStrings<RE::TESWordOfPower>(Information.Form, Information.ReplacerText, &RE::TESWordOfPower::translation);
-			}
-			break;
-			case Config::SubrecordType::kDATA:
-			{
-				SetGameSettingString(Information.EditorID, Information.ReplacerText);
-			}
-			break;
-			case Config::SubrecordType::kITXT:
-			{
-				SetMessageBoxButtonStrings(Information.Form, Information.ReplacerText, Information.pos);
-			}
-			break;
-			case Config::SubrecordType::kRDMP:
-			{
-				SetRegionDataStrings(Information.Form, Information.ReplacerText);
-			}
-			break;
-			case Config::SubrecordType::kEPFD:
-			{
-				SetEntryPointStrings(Information.Form, Information.ReplacerText, Information.pos);
-			}
-			break;
-			case Config::SubrecordType::kNNAM:
-			{
-				SetQuestObjectiveStrings(Information.Form, Information.ReplacerText, Information.pos);
-			}
-			break;
-			case Config::SubrecordType::kUnknown:
-			{
-				SKSE::log::info("Unknown record {0:08X} in ConstTranslation", Information.Form->formID);
-				SKSE::log::error("out of plugin {}.", Utils::GetModName(Information.Form));
-			}
-			break;
-
-			default: break;
-			}
+		case Config::SubrecordType::kFULL: //DIAL FULL, REFR FULL aren't working like this.
+		{
+			SetConstStrings<RE::TESFullName>(Information.Form, Information.ReplacerText, &RE::TESFullName::fullName);
 		}
-		m_ConstConfigurationInformationStruct.clear(); //Structs only used once, so no need to keep them for fun
-		m_ConstConfigurationInformationStruct.shrink_to_fit();
+		break;
+		case Config::SubrecordType::kDESC: //Only LSCR DESC
+		{
+			SetConstStrings<RE::TESLoadScreen>(Information.Form, Information.ReplacerText, &RE::TESLoadScreen::loadingText);
+		}
+		break;
+		case Config::SubrecordType::kDNAM:
+		{
+			SetConstStrings<RE::EffectSetting>(Information.Form, Information.ReplacerText, &RE::EffectSetting::magicItemDescription);
+		}
+		break;
+		case Config::SubrecordType::kSHRT:
+		{
+			SetConstStrings<RE::TESNPC>(Information.Form, Information.ReplacerText, &RE::TESNPC::shortName);
+		}
+		break;
+		case Config::SubrecordType::kTNAM:
+		{
+			SetConstStrings<RE::TESWordOfPower>(Information.Form, Information.ReplacerText, &RE::TESWordOfPower::translation);
+		}
+		break;
+		case Config::SubrecordType::kDATA:
+		{
+			SetGameSettingString(Information.EditorID, Information.ReplacerText);
+		}
+		break;
+		case Config::SubrecordType::kITXT:
+		{
+			SetMessageBoxButtonStrings(Information.Form, Information.ReplacerText, Information.pos);
+		}
+		break;
+		case Config::SubrecordType::kRDMP:
+		{
+			SetRegionDataStrings(Information.Form, Information.ReplacerText);
+		}
+		break;
+		case Config::SubrecordType::kEPFD:
+		{
+			SetEntryPointStrings(Information.Form, Information.ReplacerText, Information.pos);
+		}
+		break;
+		case Config::SubrecordType::kNNAM:
+		{
+			SetQuestObjectiveStrings(Information.Form, Information.ReplacerText, Information.pos);
+		}
+		break;
+		case Config::SubrecordType::kUnknown:
+		{
+			SKSE::log::info("Unknown record {0:08X} in ConstTranslation", Information.Form->formID);
+			SKSE::log::error("out of plugin {}.", Utils::GetModName(Information.Form));
+		}
+		break;
+
+		default: break;
+		}
 	}
+	m_ConstConfigurationInformationStruct.clear(); //Structs only used once, so no need to keep them for fun
+	m_ConstConfigurationInformationStruct.shrink_to_fit();
 
 }
 

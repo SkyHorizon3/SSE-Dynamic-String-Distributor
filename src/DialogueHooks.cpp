@@ -12,7 +12,7 @@ namespace Hook
 		{
 			func(a_response, a_voiceFilePath, a_voiceType, a_topic, a_topicInfo);
 
-			RE::FormID trimedFormID = a_topicInfo->formID &= 0x00FFFFFF; //Remove the two first load order dependent positions. Since TESTopicInfo is only loaded on runtime.
+			RE::FormID trimedFormID = a_topicInfo->formID & 0x00FFFFFF; //Remove the two first load order dependent positions. Since TESTopicInfo is only loaded on runtime.
 			size_t key = Utils::combineHashWithIndex(trimedFormID, a_response->responseNumber, Utils::GetModName(a_topicInfo));
 
 			/*
