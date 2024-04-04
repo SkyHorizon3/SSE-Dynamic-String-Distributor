@@ -82,7 +82,7 @@ std::vector<std::string> Config::GetLoadOrder()
 		if (!std::filesystem::exists("Data"sv))
 		{
 			SKSE::log::error("Data folder not found. Please make sure your Skyrim is even installed.");
-			return;
+			return std::vector<std::string>();
 		}
 
 		for (const auto& entry : std::filesystem::directory_iterator("Data"))

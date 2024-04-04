@@ -18,12 +18,12 @@ void Processor::RunConstTranslation()
 			break;
 			case Config::SubrecordType::kDESC: //Only LSCR DESC
 			{
-				SetConstStrings <RE::TESLoadScreen>(Information.Form, Information.ReplacerText, &RE::TESLoadScreen::loadingText);
+				SetConstStrings<RE::TESLoadScreen>(Information.Form, Information.ReplacerText, &RE::TESLoadScreen::loadingText);
 			}
 			break;
 			case Config::SubrecordType::kDNAM:
 			{
-				SetConstStrings <RE::EffectSetting>(Information.Form, Information.ReplacerText, &RE::EffectSetting::magicItemDescription);
+				SetConstStrings<RE::EffectSetting>(Information.Form, Information.ReplacerText, &RE::EffectSetting::magicItemDescription);
 			}
 			break;
 			case Config::SubrecordType::kSHRT:
@@ -101,7 +101,7 @@ void Processor::SetGameSettingString(const std::string& a_name, const std::strin
 	{
 #ifndef NDEBUG
 
-		SKSE::log::debug("Faild to set GameSetting string for {}. NOTE: It is normal for this to happen with some settings, they are simply not loaded.", a_name.c_str());
+		SKSE::log::debug("Failed to set GameSetting string for {}. NOTE: It is normal for this to happen with some settings, they are simply not loaded.", a_name.c_str());
 #endif
 		return;
 	}
