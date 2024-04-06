@@ -19,14 +19,13 @@ namespace Hook
 				return func(marker);
 			}
 
-			func(marker);
-
 			if (!marker->IsDisabled())
 			{
 				if (auto mapMarker = marker->extraList.GetByType<RE::ExtraMapMarker>())
 				{
 					if (mapMarker && mapMarker->mapData)
 					{
+
 						size_t key = Utils::combineHash(marker->formID, Utils::GetModName(marker));
 
 						auto it = g_REFR_FULL_Map.find(key);
@@ -39,6 +38,8 @@ namespace Hook
 					}
 				}
 			}
+
+			func(marker);
 
 		};
 		static inline REL::Relocation<decltype(thunk)> func;

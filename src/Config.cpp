@@ -148,6 +148,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 
 	std::vector<std::string> loadOrder = GetLoadOrder();
 
+
 	for (auto it = m_Folders.begin(); it != m_Folders.end();)
 	{
 		const auto& folder = *it;
@@ -177,6 +178,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 		}
 	}
 
+
 #ifndef NDEBUG
 	static int position = 1;
 	for (const auto& Plugin : loadOrder)
@@ -184,6 +186,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 		SKSE::log::debug("Plugin{}: {}", position++, Plugin);
 	}
 #endif
+
 
 	// Sort folders based on load order of plugins
 	std::sort(m_Folders.begin(), m_Folders.end(), [this, &loadOrder](const std::string& a, const std::string& b)
@@ -210,10 +213,10 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 		m_Folders.emplace_back("Overwrite");
 	}
 
-#ifndef NDEBUG
 	if (m_Folders.empty())
 		return;
 
+#ifndef NDEBUG
 	static int position2 = 1;
 	for (const auto& Plugin : m_Folders)
 	{
@@ -241,6 +244,9 @@ void Config::EnumerateFilesInFolders(const std::string folders) //Get all files 
 		}
 
 	}
+
+	if (m_Files.empty())
+		return;
 
 	std::sort(m_Files.begin(), m_Files.end());//Alphatbet order, just to make sure.
 
