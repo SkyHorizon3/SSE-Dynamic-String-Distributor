@@ -211,9 +211,12 @@ void Processor::SetEntryPointStrings(RE::TESForm* Form, RE::BSFixedString NewStr
 
 	if (perk)
 	{
-		int pos = 0;
-		for (auto& entry : perk->perkEntries)
+
+		int entryCount = perk->perkEntries.size();
+		for (int i = entryCount - 1; i >= 0; --i)
 		{
+			auto& entry = perk->perkEntries[i];
+
 			if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
 			{
 				RE::BGSEntryPointPerkEntry* entryPoint = skyrim_cast<RE::BGSEntryPointPerkEntry*>(entry);
@@ -222,12 +225,10 @@ void Processor::SetEntryPointStrings(RE::TESForm* Form, RE::BSFixedString NewStr
 				{
 					RE::BGSEntryPointFunctionDataText* func = skyrim_cast<RE::BGSEntryPointFunctionDataText*>(entryPoint->functionData);
 
-					if (pos == index)
+					if (entryCount - 1 - i == index)
 					{
 						func->text = std::move(NewString);
 					}
-
-					pos++;
 				}
 			}
 
