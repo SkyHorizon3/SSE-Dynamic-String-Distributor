@@ -454,12 +454,6 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 
 		if (form == nullptr)
 		{
-			size_t separatorPos = formIDEntry.find('|');
-			form = RE::TESForm::LookupByID(std::stoul(formIDEntry.substr(0, separatorPos), nullptr, 16)); //For injected records.
-		}
-
-		if (form == nullptr)
-		{
 			SKSE::log::error("Couldn't find FormID {} in file: {}", formIDEntry, files);
 			return;
 		}
