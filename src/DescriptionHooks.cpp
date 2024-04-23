@@ -29,10 +29,8 @@ namespace Hook
 						SetDescription = Information.ReplacerText;
 						// Set object valid for GetDescription hook to check
 
-#ifndef NDEBUG
 						SKSE::log::debug("Replaced XXXX DESC {0:08X} with:", a_parent->formID);
 						SKSE::log::debug("{}", Information.ReplacerText);
-#endif
 
 					}
 				}
@@ -126,18 +124,16 @@ namespace Hook
 					{
 						*a_out = Information.ReplacerText;
 
-#ifndef NDEBUG
 						SKSE::log::debug("Replaced XXXX DESC {0:08X} with:", a_parent->formID);
 						SKSE::log::debug("{}", Information.ReplacerText);
-#endif
 					}
-				}
+					}
 				break;
 
 				default: break;
 				}
+				}
 			}
-		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
 
@@ -150,7 +146,7 @@ namespace Hook
 				SKSE::log::info("GetDescriptionHookSE hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 			}
 		}
-	};
+		};
 
 	void InstallDescriptionHooks()
 	{
@@ -159,4 +155,4 @@ namespace Hook
 		Hook::GetDescriptionHookSE::Install();
 	}
 
-}
+	}

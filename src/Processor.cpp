@@ -99,10 +99,7 @@ void Processor::SetGameSettingString(const std::string& a_name, const std::strin
 
 	if (setting == nullptr)
 	{
-#ifndef NDEBUG
-
 		SKSE::log::debug("Failed to set GameSetting string for {}. NOTE: It is normal for this to happen with some settings, they are simply not loaded.", a_name.c_str());
-#endif
 		return;
 	}
 

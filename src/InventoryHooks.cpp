@@ -35,10 +35,8 @@ namespace Hook
 						auto descriptionValue = RE::GFxValue(Information.ReplacerText);
 						itemCard->obj.SetMember("description", descriptionValue);
 
-#ifndef NDEBUG
 						SKSE::log::debug("Replaced BOOK CNAM {0:08X} with:", a_item->formID);
 						SKSE::log::debug("{}", Information.ReplacerText);
-#endif
 					}
 				}
 				break;

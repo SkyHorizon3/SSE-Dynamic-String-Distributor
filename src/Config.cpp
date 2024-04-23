@@ -30,9 +30,7 @@ std::vector<std::string> Config::GetLoadOrder()
 		{
 			loadOrderPath += L"\\AppData\\Local\\Skyrim VR\\plugins.txt";
 
-#ifndef NDEBUG
 			SKSE::log::debug("Directory: Skyrim VR");
-#endif
 		}
 		else
 		{
@@ -531,9 +529,8 @@ void Config::ParseTranslationFiles()
 
 	for (const auto& files : m_FilesInPluginFolder)
 	{
-#ifndef NDEBUG
 		SKSE::log::debug("Parsing file {}", files);
-#endif
+
 
 		try
 		{
