@@ -448,7 +448,7 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 	const std::string& stringValue = entry["string"];
 
 	RE::TESForm* form = nullptr;
-	if (entry["type"] != "GMST DATA" && entry["type"] != "INFO NAM1")
+	if (entry["type"] != "GMST DATA" && entry["type"] != "INFO NAM1" && entry["type"] != "INFO RNAM")
 	{
 		form = RE::TESDataHandler::GetSingleton()->LookupForm(formID, plugin);
 
