@@ -53,7 +53,8 @@ public:
 	};
 
 private:
-	bool caseInsensitiveStringCompare(const std::string& a, const std::string& b);
+	bool CaseInsensitiveStringCompare(const std::string& a, const std::string& b);
+	bool SearchCompare(const std::vector<std::string>& list, const std::string& str);
 	std::vector<std::string> GetLoadOrder();
 	void EnumerateFilesInFolders(std::string folders);
 	std::string GetSubrecordType(const std::string& types) const;

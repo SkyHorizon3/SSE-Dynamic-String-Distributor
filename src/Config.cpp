@@ -9,11 +9,19 @@
 //I don't like the way it looks, but it fulfils its purpose...
 
 // Case-insensitive comparison for strings
-bool Config::caseInsensitiveStringCompare(const std::string& a, const std::string& b)
+bool Config::CaseInsensitiveStringCompare(const std::string& a, const std::string& b)
 {
 	return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), [](char a, char b)
 		{
 			return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
+		});
+}
+
+bool Config::SearchCompare(const std::vector<std::string>& list, const std::string& str)
+{
+	return std::any_of(list.begin(), list.end(), [&](const std::string& loadedPlugin)
+		{
+			return CaseInsensitiveStringCompare(str, loadedPlugin);
 		});
 }
 
@@ -67,10 +75,7 @@ std::vector<std::string> Config::GetLoadOrder()
 		m_BaseGamePlugins.erase( //Just in case a BaseGamePlugin is inside the plugins.txt
 			std::remove_if(m_BaseGamePlugins.begin(), m_BaseGamePlugins.end(), [&](const std::string& BaseGamePlugin)
 				{
-					return std::find_if(loadOrder.begin(), loadOrder.end(), [&](const std::string& Plugin)
-						{
-							return caseInsensitiveStringCompare(BaseGamePlugin, Plugin); //Lambda inside lambda, lovely
-						}) != loadOrder.end();
+					return SearchCompare(loadOrder, BaseGamePlugin);
 				}),
 			m_BaseGamePlugins.end()
 		);
@@ -94,10 +99,7 @@ std::vector<std::string> Config::GetLoadOrder()
 		m_BaseGamePlugins.erase(
 			std::remove_if(m_BaseGamePlugins.begin(), m_BaseGamePlugins.end(), [&](const std::string& BaseGamePlugin) //Remove plugins not found in data folder from the BaseGamePlugin list.
 				{
-					return std::find_if(AllPlugins.begin(), AllPlugins.end(), [&](const std::string& Plugin)
-						{
-							return caseInsensitiveStringCompare(BaseGamePlugin, Plugin);
-						}) == AllPlugins.end();
+					return !SearchCompare(AllPlugins, BaseGamePlugin);
 				}),
 			m_BaseGamePlugins.end()
 		);
@@ -161,10 +163,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 		}
 		else
 		{
-			if (std::find_if(m_LoadOrder.begin(), m_LoadOrder.end(), [&](const std::string& loadedPlugin) //Please tell me if there is an easier way of doing this. My eyes and brain are hurting xD
-				{
-					return caseInsensitiveStringCompare(folder, loadedPlugin);
-				}) == m_LoadOrder.end())
+			if (!SearchCompare(m_LoadOrder, folder))
 			{
 				SKSE::log::info("Plugin {} not found, skipping all files in the folder", folder);
 				it = m_Folders.erase(it);
@@ -191,12 +190,12 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 		{
 			auto itA = std::find_if(m_LoadOrder.begin(), m_LoadOrder.end(), [&](const std::string& loadedPlugin)
 				{
-					return caseInsensitiveStringCompare(a, loadedPlugin);
+					return CaseInsensitiveStringCompare(a, loadedPlugin);
 				});
 
 			auto itB = std::find_if(m_LoadOrder.begin(), m_LoadOrder.end(), [&](const std::string& loadedPlugin)
 				{
-					return caseInsensitiveStringCompare(b, loadedPlugin);
+					return CaseInsensitiveStringCompare(b, loadedPlugin);
 				});
 
 			if (itA == m_LoadOrder.end()) return false;
@@ -285,7 +284,8 @@ std::tuple<RE::FormID, std::string> Config::ExtractFormIDAndPlugin(const std::st
 	RE::FormID formID = ConvertToFormID(formIDWithPlugin.substr(0, separatorPos));
 	std::string plugin = formIDWithPlugin.substr(separatorPos + 1);
 
-	if (std::find(m_LoadOrder.begin(), m_LoadOrder.end(), plugin) == m_LoadOrder.end()) {
+	if (!SearchCompare(m_LoadOrder, plugin))
+	{
 		return std::make_tuple(0, "");
 	}
 
@@ -584,4 +584,6 @@ void Config::LoadFiles()
 
 	ParseTranslationFiles();
 
+	m_Folders.clear();
+	m_LoadOrder.clear();
 }
