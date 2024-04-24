@@ -72,6 +72,7 @@ private:
 	Config& operator=(Config&&) = delete;
 
 	std::vector<std::string> m_Folders;
+	std::vector<std::string> m_LoadOrder;
 	std::vector<std::string> m_Files;
 	std::vector<std::string> m_FilesInPluginFolder;
 

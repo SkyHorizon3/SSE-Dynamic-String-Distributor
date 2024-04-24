@@ -144,7 +144,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 		}
 	}
 
-	std::vector<std::string> loadOrder = GetLoadOrder();
+	m_LoadOrder = GetLoadOrder();
 
 
 	for (auto it = m_Folders.begin(); it != m_Folders.end();)
@@ -161,10 +161,10 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 		}
 		else
 		{
-			if (std::find_if(loadOrder.begin(), loadOrder.end(), [&](const std::string& loadedPlugin) //Please tell me if there is an easier way of doing this. My eyes and brain are hurting xD
+			if (std::find_if(m_LoadOrder.begin(), m_LoadOrder.end(), [&](const std::string& loadedPlugin) //Please tell me if there is an easier way of doing this. My eyes and brain are hurting xD
 				{
 					return caseInsensitiveStringCompare(folder, loadedPlugin);
-				}) == loadOrder.end())
+				}) == m_LoadOrder.end())
 			{
 				SKSE::log::info("Plugin {} not found, skipping all files in the folder", folder);
 				it = m_Folders.erase(it);
@@ -179,7 +179,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 
 #ifndef NDEBUG
 	static int position = 1;
-	for (const auto& Plugin : loadOrder)
+	for (const auto& Plugin : m_LoadOrder)
 	{
 		SKSE::log::debug("Plugin{}: {}", position++, Plugin);
 	}
@@ -187,21 +187,21 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 
 
 	// Sort folders based on load order of plugins
-	std::sort(m_Folders.begin(), m_Folders.end(), [this, &loadOrder](const std::string& a, const std::string& b)
+	std::sort(m_Folders.begin(), m_Folders.end(), [this](const std::string& a, const std::string& b)
 		{
-			auto itA = std::find_if(loadOrder.begin(), loadOrder.end(), [&](const std::string& loadedPlugin)
+			auto itA = std::find_if(m_LoadOrder.begin(), m_LoadOrder.end(), [&](const std::string& loadedPlugin)
 				{
 					return caseInsensitiveStringCompare(a, loadedPlugin);
 				});
 
-			auto itB = std::find_if(loadOrder.begin(), loadOrder.end(), [&](const std::string& loadedPlugin)
+			auto itB = std::find_if(m_LoadOrder.begin(), m_LoadOrder.end(), [&](const std::string& loadedPlugin)
 				{
 					return caseInsensitiveStringCompare(b, loadedPlugin);
 				});
 
-			if (itA == loadOrder.end()) return false;
-			if (itB == loadOrder.end()) return true;
-			return std::distance(loadOrder.begin(), itA) < std::distance(loadOrder.begin(), itB);
+			if (itA == m_LoadOrder.end()) return false;
+			if (itB == m_LoadOrder.end()) return true;
+			return std::distance(m_LoadOrder.begin(), itA) < std::distance(m_LoadOrder.begin(), itB);
 		});
 
 
@@ -284,6 +284,10 @@ std::tuple<RE::FormID, std::string> Config::ExtractFormIDAndPlugin(const std::st
 
 	RE::FormID formID = ConvertToFormID(formIDWithPlugin.substr(0, separatorPos));
 	std::string plugin = formIDWithPlugin.substr(separatorPos + 1);
+
+	if (std::find(m_LoadOrder.begin(), m_LoadOrder.end(), plugin) == m_LoadOrder.end()) {
+		return std::make_tuple(0, "");
+	}
 
 	if (g_mergeMapperInterface)
 	{
@@ -445,6 +449,10 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 {
 	const std::string& formIDEntry = entry["form_id"].get<std::string>();
 	auto [formID, plugin] = ExtractFormIDAndPlugin(formIDEntry);
+
+	if (formID == 0 && plugin.empty())
+		return;
+
 	const std::string& stringValue = entry["string"];
 
 	RE::TESForm* form = nullptr;
