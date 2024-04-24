@@ -467,7 +467,6 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 		break;
 	case RecordType::kREFR_FULL:
 	case RecordType::kDIAL_FULL:
-	case RecordType::kINFO_RNAM:
 	{
 		size_t key = Utils::combineHash(form->formID, plugin);
 		if (recordType == RecordType::kREFR_FULL)
@@ -478,10 +477,12 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 		{
 			Hook::g_DIAL_FULL_Map.insert_or_assign(key, stringValue);
 		}
-		else if (recordType == RecordType::kINFO_RNAM)
-		{
-			Hook::g_INFO_RNAM_Map.insert_or_assign(key, stringValue);
-		}
+	}
+	break;
+	case RecordType::kINFO_RNAM:
+	{
+		size_t key = Utils::combineHash(formID, plugin);
+		Hook::g_INFO_RNAM_Map.insert_or_assign(key, stringValue);
 	}
 	break;
 	case RecordType::kINFO_NAM1:
