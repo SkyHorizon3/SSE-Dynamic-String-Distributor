@@ -52,6 +52,8 @@ public:
 		kUnknown
 	};
 
+	static inline bool EnableDebugLog = false;
+
 private:
 	bool CaseInsensitiveStringCompare(const std::string& a, const std::string& b);
 	bool SearchCompare(const std::vector<std::string>& list, const std::string& str);

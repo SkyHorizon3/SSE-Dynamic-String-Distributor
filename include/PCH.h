@@ -9,6 +9,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <xbyak/xbyak.h>
 #include <nlohmann/json.hpp>
+#include <SimpleIni.h>
 #include <ankerl/unordered_dense.h>
 
 template <>

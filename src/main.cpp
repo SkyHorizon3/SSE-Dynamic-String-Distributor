@@ -17,16 +17,29 @@ void SetupLog()
 	auto fileLoggerPtr = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFilePath.string(), true);
 	auto loggerPtr = std::make_shared<spdlog::logger>("log", std::move(fileLoggerPtr));
 
-#ifndef NDEBUG
-	loggerPtr->set_level(spdlog::level::trace);
-	loggerPtr->flush_on(spdlog::level::trace);
-#else
-	loggerPtr->set_level(spdlog::level::info);
-	loggerPtr->flush_on(spdlog::level::info);
-#endif
+	if (Config::EnableDebugLog)
+	{
+		loggerPtr->set_level(spdlog::level::trace);
+		loggerPtr->flush_on(spdlog::level::trace);
+	}
+	else
+	{
+		loggerPtr->set_level(spdlog::level::info);
+		loggerPtr->flush_on(spdlog::level::info);
+	}
 
 	spdlog::set_default_logger(std::move(loggerPtr));
 }
+
+void LoadINI()
+{
+	CSimpleIniA ini;
+	ini.SetUnicode(false);
+	ini.LoadFile(L"Data\\SKSE\\Plugins\\DynamicStringDistributor.ini");
+
+	Config::EnableDebugLog = ini.GetBoolValue("Debug", "EnableDebugLog");
+}
+
 
 void MessageListener(SKSE::MessagingInterface::Message* message)
 {
@@ -81,6 +94,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
 	SKSE::Init(skse);
 
+	LoadINI();
 	SetupLog();
 
 	SKSE::GetMessagingInterface()->RegisterListener(MessageListener);

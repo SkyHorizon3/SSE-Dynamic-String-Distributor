@@ -45,11 +45,11 @@ std::vector<std::string> Config::GetLoadOrder()
 			std::wstring name = std::filesystem::exists("steam_api64.dll") ? L"Skyrim Special Edition" : L"Skyrim Special Edition GOG";
 			loadOrderPath += L"\\AppData\\Local\\" + name + L"\\plugins.txt";
 
-#ifndef NDEBUG
-			std::string second = std::filesystem::exists("steam_api64.dll") ? "Skyrim Special Edition" : "Skyrim Special Edition GOG";
-
-			SKSE::log::debug("Directory: {}", second);
-#endif
+			if (EnableDebugLog)
+			{
+				const std::string& second = std::filesystem::exists("steam_api64.dll") ? "Skyrim Special Edition" : "Skyrim Special Edition GOG";
+				SKSE::log::debug("Directory: {}", second);
+			}
 		}
 
 		std::vector<std::string> loadOrder;
@@ -176,13 +176,14 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 	}
 
 
-#ifndef NDEBUG
-	static int position = 1;
-	for (const auto& Plugin : m_LoadOrder)
+	if (EnableDebugLog)
 	{
-		SKSE::log::debug("Plugin{}: {}", position++, Plugin);
+		static int position = 0;
+		for (const auto& Plugin : m_LoadOrder)
+		{
+			SKSE::log::debug("Plugin{}: {}", position++, Plugin);
+		}
 	}
-#endif
 
 
 	// Sort folders based on load order of plugins
@@ -213,20 +214,17 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 	if (m_Folders.empty())
 		return;
 
-#ifndef NDEBUG
-	static int position2 = 1;
-	for (const auto& Plugin : m_Folders)
+	if (EnableDebugLog)
 	{
-		SKSE::log::debug("Folder{}: {}", position2++, Plugin);
+		static int position2 = 0;
+		for (const auto& Plugin : m_Folders)
+		{
+			SKSE::log::debug("Folder{}: {}", position2++, Plugin);
+		}
 	}
-#endif
 
 	for (const auto& folders : m_Folders)
-	{
-
 		EnumerateFilesInFolders(folders);
-
-	}
 
 }
 
@@ -253,18 +251,11 @@ void Config::EnumerateFilesInFolders(const std::string folders) //Get all files 
 
 	std::sort(files.begin(), files.end());//Alphatbet order, just to make sure.
 
-#ifndef NDEBUG
-	static int folderCount = 1;
-#endif
-
+	static int num = 0;
 	for (const auto& file : files)
 	{
 		m_FilesInPluginFolder.emplace_back(folderPath + "\\" + file);
-
-#ifndef NDEBUG
-		SKSE::log::debug("File{}: {}", folderCount++, (folderPath + "\\" + file));
-#endif
-
+		SKSE::log::debug("File{}: {}", num++, (folderPath + "\\" + file));
 	}
 
 }
@@ -478,7 +469,7 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 
 		if (form == nullptr)
 		{
-			SKSE::log::error("Couldn't find FormID {} in file: {}", formIDEntry, files);
+			SKSE::log::error("Couldn't find FormID {} with record type {} in file: {}", formIDEntry, entry["type"].get<std::string>(), files);
 			return;
 		}
 	}

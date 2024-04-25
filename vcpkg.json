@@ -10,7 +10,8 @@
     "directxtk",
     "catch2",
     "rapidcsv",
-    "unordered-dense"
+    "unordered-dense",
+    "simpleini"
   ],
   "builtin-baseline": "62aa44929954469878eb8fc562af706a8f5615a5"
 }
