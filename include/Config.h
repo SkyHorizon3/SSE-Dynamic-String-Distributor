@@ -1,15 +1,9 @@
 #pragma once
 using json = nlohmann::json;
 
-class Config
+class Config : public ISingleton<Config>
 {
 public:
-	static Config* GetSingleton()
-	{
-		static Config menu;
-		return &menu;
-	}
-
 	void EnumerateFolder();
 	void LoadFiles();
 
@@ -55,8 +49,6 @@ public:
 	static inline bool EnableDebugLog = false;
 
 private:
-	bool CaseInsensitiveStringCompare(const std::string& a, const std::string& b);
-	bool SearchCompare(const std::vector<std::string>& list, const std::string& str);
 	std::vector<std::string> GetLoadOrder();
 	void EnumerateFilesInFolders(std::string folders);
 	std::string GetSubrecordType(const std::string& types) const;
@@ -66,13 +58,6 @@ private:
 	SubrecordType GetSubrecordType_map(const std::string& type);
 	void ProcessEntry(const std::string& files, const json& entry, RecordType recordType);
 	void ParseTranslationFiles();
-
-	Config() = default;
-	~Config() = default;
-	Config(const Config&) = delete;
-	Config(Config&&) = delete;
-	Config& operator=(const Config&) = delete;
-	Config& operator=(Config&&) = delete;
 
 	std::vector<std::string> m_Folders;
 	std::vector<std::string> m_LoadOrder;

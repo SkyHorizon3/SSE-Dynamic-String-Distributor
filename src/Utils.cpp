@@ -43,4 +43,21 @@ namespace Utils
 		return filename.data();
 	}
 
+	bool CaseInsensitiveStringCompare(const std::string& a, const std::string& b)
+	{
+		return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), [](char a, char b)
+			{
+				return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
+			});
+	}
+
+	//return true if str is found in list.
+	bool SearchCompare(const std::vector<std::string>& list, const std::string& str)
+	{
+		return std::any_of(list.begin(), list.end(), [&](const std::string& loadedPlugin)
+			{
+				return CaseInsensitiveStringCompare(str, loadedPlugin);
+			});
+	}
+
 }

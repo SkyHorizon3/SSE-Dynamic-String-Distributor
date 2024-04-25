@@ -1,15 +1,9 @@
 #pragma once
 #include "Config.h"
 
-class Processor
+class Processor : public ISingleton<Processor>
 {
 public:
-	static Processor* GetSingleton()
-	{
-		static Processor menu;
-		return &menu;
-	}
-
 	static void AddToConstTranslationStruct(RE::TESForm* form, const std::string& string, Config::SubrecordType SubrecordType, int pos, const std::string& editorid)
 	{
 		if (editorid.empty())
@@ -50,11 +44,4 @@ private:
 	};
 
 	static inline std::vector<ConstConfigurationInformation> m_ConstConfigurationInformationStruct; //Used for const translations
-
-	Processor() = default;
-	~Processor() = default;
-	Processor(const Processor&) = delete;
-	Processor(Processor&&) = delete;
-	Processor& operator=(const Processor&) = delete;
-	Processor& operator=(Processor&&) = delete;
 };
