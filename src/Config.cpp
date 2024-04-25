@@ -221,37 +221,43 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 	}
 #endif
 
+	for (const auto& folders : m_Folders)
+	{
+
+		EnumerateFilesInFolders(folders);
+
+	}
+
 }
 
 
 void Config::EnumerateFilesInFolders(const std::string folders) //Get all files in each of the folders directory
 {
-	const std::string folderPath = "Data\\SKSE\\Plugins\\DynamicStringDistributor\\" + folders;
-	m_Files.clear();
-	m_Files.shrink_to_fit(); //I'm not sure if that does anything useful, but it doesn't really matter :D
-
+	const std::string& folderPath = "Data\\SKSE\\Plugins\\DynamicStringDistributor\\" + folders;
 	if (!std::filesystem::exists(folderPath))
 		return;
+
+	std::vector<std::string> files;
 
 	for (const auto& entry : std::filesystem::recursive_directory_iterator(folderPath))
 	{
 		if (entry.is_regular_file() && entry.path().extension() == L".json")
 		{
-			m_Files.emplace_back(entry.path().filename().string());
+			files.emplace_back(entry.path().filename().string());
 		}
 
 	}
 
-	if (m_Files.empty())
+	if (files.empty())
 		return;
 
-	std::sort(m_Files.begin(), m_Files.end());//Alphatbet order, just to make sure.
+	std::sort(files.begin(), files.end());//Alphatbet order, just to make sure.
 
 #ifndef NDEBUG
 	static int folderCount = 1;
 #endif
 
-	for (const auto& file : m_Files)
+	for (const auto& file : files)
 	{
 		m_FilesInPluginFolder.emplace_back(folderPath + "\\" + file);
 
@@ -260,6 +266,7 @@ void Config::EnumerateFilesInFolders(const std::string folders) //Get all files 
 #endif
 
 	}
+
 }
 
 std::string Config::GetSubrecordType(const std::string& types) const
@@ -439,6 +446,7 @@ Config::SubrecordType Config::GetSubrecordType_map(const std::string& type)
 		{"NNAM", SubrecordType::kNNAM},
 		{"ITXT", SubrecordType::kITXT},
 		{"EPFD", SubrecordType::kEPFD},
+		{"EPF2", SubrecordType::kITXT},
 	};
 
 	auto it = typeMap.find(type);
@@ -456,7 +464,15 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 	const std::string& stringValue = entry["string"];
 
 	RE::TESForm* form = nullptr;
-	if (entry["type"] != "GMST DATA" && entry["type"] != "INFO NAM1" && entry["type"] != "INFO RNAM")
+
+	switch (recordType)
+	{
+	case RecordType::kINFO_RNAM:
+	case RecordType::kINFO_NAM1:
+	case RecordType::kGMST_DATA:
+		break;
+
+	default:
 	{
 		form = RE::TESDataHandler::GetSingleton()->LookupForm(formID, plugin);
 
@@ -465,6 +481,8 @@ void Config::ProcessEntry(const std::string& files, const json& entry, RecordTyp
 			SKSE::log::error("Couldn't find FormID {} in file: {}", formIDEntry, files);
 			return;
 		}
+	}
+
 	}
 
 	switch (recordType)
@@ -552,8 +570,7 @@ void Config::ParseTranslationFiles()
 			{
 				try
 				{
-					const std::string& types = entry["type"];
-					RecordType recordType = GetRecordType_map(types);
+					RecordType recordType = GetRecordType_map(entry["type"]);
 					ProcessEntry(files, entry, recordType);
 				}
 				catch (const std::exception& e)
@@ -574,13 +591,6 @@ void Config::LoadFiles()
 {
 	if (m_Folders.empty())
 		return;
-
-	for (const auto& folders : m_Folders)
-	{
-
-		EnumerateFilesInFolders(folders);
-
-	}
 
 	ParseTranslationFiles();
 

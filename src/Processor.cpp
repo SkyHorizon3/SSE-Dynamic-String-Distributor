@@ -105,7 +105,8 @@ void Processor::SetGameSettingString(const std::string& a_name, const std::strin
 
 	if (setting->GetType() == RE::Setting::Type::kString)
 	{
-		//RE::free(setting->data.s); -> don't know why this is crashing. If you know, please tell me!
+		//if (setting->data.s)
+			//RE::free(setting->data.s);
 
 		auto length = a_NewString.length() + 1;
 		char* NewChar = (char*)RE::MemoryManager::GetSingleton()->Allocate(length, 0, 0);

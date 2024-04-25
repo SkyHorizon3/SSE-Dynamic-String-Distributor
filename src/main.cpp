@@ -65,7 +65,7 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 
 		auto endTime = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-		SKSE::log::info("The retrieval and parsing of jsons, the execution of ConstTranslation and the installation of hooks took {} milliseconds.", duration.count());
+		SKSE::log::info("The parsing of jsons, the execution of ConstTranslation and the installation of hooks took {} milliseconds.", duration.count());
 
 	}
 	break;
