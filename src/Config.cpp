@@ -210,7 +210,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 }
 
 
-void Config::EnumerateFilesInFolders(const std::string folders) //Get all files in each of the folders directory
+void Config::EnumerateFilesInFolders(const std::string& folders) //Get all files in each of the folders directory
 {
 	const std::string& folderPath = "Data\\SKSE\\Plugins\\DynamicStringDistributor\\" + folders;
 	if (!std::filesystem::exists(folderPath))
@@ -425,7 +425,7 @@ Config::SubrecordType Config::GetSubrecordType_map(const std::string& type)
 	return (it != typeMap.end()) ? it->second : SubrecordType::kUnknown;
 }
 
-void Config::ProcessEntry(const std::string& files, const json& entry, RecordType recordType)
+void Config::ProcessEntry(const std::string& files, const json& entry, const RecordType& recordType)
 {
 	const std::string& formIDEntry = entry["form_id"].get<std::string>();
 	auto [formID, plugin] = ExtractFormIDAndPlugin(formIDEntry);

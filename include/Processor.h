@@ -22,17 +22,17 @@ public:
 private:
 
 	template <typename T>
-	void SetConstStrings(RE::TESForm* Form, RE::BSFixedString NewString, RE::BSFixedString T::* memberPtr);
+	void SetConstStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, RE::BSFixedString T::* memberPtr);
 
 	void SetGameSettingString(const std::string& a_name, const std::string& a_NewString);
 
-	void SetMessageBoxButtonStrings(RE::TESForm* Form, RE::BSFixedString NewString, int index);
+	void SetMessageBoxButtonStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, const int& index);
 
-	void SetRegionDataStrings(RE::TESForm* Form, RE::BSFixedString NewString);
+	void SetRegionDataStrings(RE::TESForm* Form, const RE::BSFixedString& NewString);
 
-	void SetEntryPointStrings(RE::TESForm* Form, RE::BSFixedString NewString, int index);
+	void SetEntryPointStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, const int& index);
 
-	void SetQuestObjectiveStrings(RE::TESForm* Form, RE::BSFixedString NewString, int index);
+	void SetQuestObjectiveStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, const int& index);
 
 	struct ConstConfigurationInformation
 	{

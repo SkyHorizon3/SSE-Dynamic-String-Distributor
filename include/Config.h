@@ -50,13 +50,13 @@ public:
 
 private:
 	std::vector<std::string> GetLoadOrder();
-	void EnumerateFilesInFolders(std::string folders);
+	void EnumerateFilesInFolders(const std::string& folders);
 	std::string GetSubrecordType(const std::string& types) const;
 	std::tuple<RE::FormID, std::string> ExtractFormIDAndPlugin(const std::string& formIDWithPlugin);
 	RE::FormID ConvertToFormID(std::string input);
 	RecordType GetRecordType_map(const std::string& type);
 	SubrecordType GetSubrecordType_map(const std::string& type);
-	void ProcessEntry(const std::string& files, const json& entry, RecordType recordType);
+	void ProcessEntry(const std::string& files, const json& entry, const RecordType& recordType);
 	void ParseTranslationFiles();
 
 	std::vector<std::string> m_Folders;

@@ -78,7 +78,7 @@ void Processor::RunConstTranslation()
 }
 
 template <typename T>
-void Processor::SetConstStrings(RE::TESForm* Form, RE::BSFixedString NewString, RE::BSFixedString T::* memberPtr)
+void Processor::SetConstStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, RE::BSFixedString T::* memberPtr)
 {
 	T* OrigString = skyrim_cast<T*>(Form);
 	if (OrigString)
@@ -124,7 +124,7 @@ void Processor::SetGameSettingString(const std::string& a_name, const std::strin
 }
 
 
-void Processor::SetMessageBoxButtonStrings(RE::TESForm* Form, RE::BSFixedString NewString, int index)
+void Processor::SetMessageBoxButtonStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, const int& index)
 {
 	RE::BGSMessage* message = skyrim_cast<RE::BGSMessage*>(Form); //MESG ITXT
 	if (message)
@@ -181,7 +181,7 @@ void Processor::SetMessageBoxButtonStrings(RE::TESForm* Form, RE::BSFixedString 
 
 }
 
-void Processor::SetRegionDataStrings(RE::TESForm* Form, RE::BSFixedString NewString) //REGN RDMP
+void Processor::SetRegionDataStrings(RE::TESForm* Form, const RE::BSFixedString& NewString) //REGN RDMP
 {
 	RE::TESRegion* regionData = skyrim_cast<RE::TESRegion*>(Form);
 
@@ -203,7 +203,7 @@ void Processor::SetRegionDataStrings(RE::TESForm* Form, RE::BSFixedString NewStr
 	}
 }
 
-void Processor::SetEntryPointStrings(RE::TESForm* Form, RE::BSFixedString NewString, int index) //PERK EPFD
+void Processor::SetEntryPointStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, const int& index) //PERK EPFD
 {
 	RE::BGSPerk* perk = skyrim_cast<RE::BGSPerk*>(Form);
 
@@ -240,7 +240,7 @@ void Processor::SetEntryPointStrings(RE::TESForm* Form, RE::BSFixedString NewStr
 }
 
 
-void Processor::SetQuestObjectiveStrings(RE::TESForm* Form, RE::BSFixedString NewString, int index) //QUST NNAM
+void Processor::SetQuestObjectiveStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, const int& index) //QUST NNAM
 {
 	RE::TESQuest* quest = skyrim_cast<RE::TESQuest*>(Form);
 
