@@ -6,6 +6,7 @@
 
 namespace Hook
 {
+	/*
 	struct DialogueConstructHook //INFO NAM1
 	{
 		static void thunk(RE::TESTopicInfo::ResponseData* a_response, char* a_voiceFilePath, RE::BGSVoiceType* a_voiceType, RE::TESTopic* a_topic, RE::TESTopicInfo* a_topicInfo)
@@ -64,6 +65,83 @@ namespace Hook
 		}
 
 	};
+	*/
+
+
+	struct DialogueResponseHook
+	{
+		static bool SetBSString(RE::BSString& a_str, char* a_buffer, int32_t a3)
+		{
+			using func_t = decltype(&SetBSString);
+			REL::Relocation<func_t> func{ RELOCATION_ID(10979, 11044) };
+			return func(a_str, a_buffer, a3);
+		}
+
+		struct TrampolineCall : Xbyak::CodeGenerator
+		{
+			TrampolineCall(std::uintptr_t ret, std::uintptr_t func)
+			{
+				Xbyak::Label funcLabel;
+				Xbyak::Label retnLabel;
+
+				mov(r8d, rbp); //r8d would always be 0
+				mov(r9, rsi);
+
+				sub(rsp, 0x20);
+				call(ptr[rip + funcLabel]);
+				add(rsp, 0x20);
+
+				jmp(ptr[rip + retnLabel]);
+
+				L(funcLabel);
+				dq(func);
+
+				L(retnLabel);
+				dq(ret);
+			}
+		};
+
+		static void thunk(RE::BSString& a_str, char* a_buffer, RE::TESTopicInfo* a_topicInfo, RE::TESTopicInfo::ResponseData* a_response)
+		{
+			RE::FormID trimedFormID = a_topicInfo->formID & 0x00FFFFFF; //Remove the two first load order dependent positions. Since TESTopicInfo is only loaded on runtime.
+			size_t key = Utils::combineHashWithIndex(trimedFormID, a_response->responseNumber, Utils::GetModName(a_topicInfo));
+
+			SKSE::log::debug("Original string: {}", a_response->responseText.c_str());
+			SKSE::log::debug("FormID: {0:08X}", a_topicInfo->formID);
+			SKSE::log::debug("TrimmedFormID: {0:08X}", trimedFormID);
+			SKSE::log::debug("Number: {}", a_response->responseNumber);
+			SKSE::log::debug("Plugin: {}", Utils::GetModName(a_topicInfo));
+
+			auto it = g_INFO_NAM1_Map.find(key);
+			if (it != g_INFO_NAM1_Map.end())
+			{
+				a_str = it->second;
+				char* newtext = const_cast<char*>(a_str.c_str());
+
+				SetBSString(a_str, newtext, 0);
+			}
+			else
+			{
+				SetBSString(a_str, a_buffer, 0);
+			}
+		}
+
+		static void Install()
+		{
+			constexpr auto address = RELOCATION_ID(34429, 35249);
+			REL::Relocation<std::uintptr_t> target{ address, 0x61 }; //same for all
+			auto trampolineJmp = TrampolineCall(target.address() + 0x5, stl::unrestricted_cast<std::uintptr_t>(thunk));
+
+			auto& trampoline = SKSE::GetTrampoline();
+			SKSE::AllocTrampoline(trampolineJmp.getSize());
+			auto result = trampoline.allocate(trampolineJmp);
+			SKSE::AllocTrampoline(14);
+			trampoline.write_branch<5>(target.address(), (std::uintptr_t)result);
+
+			REL::safe_fill(address.address() + 0x5B, REL::NOP, 0x3); // just in case
+
+		}
+	};
 
 	struct DialogueMenuTextHook //DIAL FULL, INFO RNAM
 	{
@@ -109,9 +187,10 @@ namespace Hook
 
 	void InstallDialogueHooks()
 	{
-		Hook::DialogueStreamHook::Install();
-		Hook::DialogueConstructHook::Install();
-		Hook::DialogueMenuTextHook::Install();
+		//Hook::DialogueStreamHook::Install();
+		//Hook::DialogueConstructHook::Install();
+		DialogueResponseHook::Install();
+		DialogueMenuTextHook::Install();
 	}
 
 }
