@@ -84,14 +84,14 @@ namespace Hook
 				Xbyak::Label funcLabel;
 				Xbyak::Label retnLabel;
 
-				mov(r8d, rbp); //r8d would always be 0
-				mov(r9, rsi);
+				mov(r8d, rbp); //r8d would always be 0. So use it for a_topicInfo
+				mov(r9, rsi); //a_response
 
-				sub(rsp, 0x20);
-				call(ptr[rip + funcLabel]);
+				sub(rsp, 0x20); //allocate for call
+				call(ptr[rip + funcLabel]); //call thunk
 				add(rsp, 0x20);
 
-				jmp(ptr[rip + retnLabel]);
+				jmp(ptr[rip + retnLabel]); //jump back to original code
 
 				L(funcLabel);
 				dq(func);
@@ -128,8 +128,8 @@ namespace Hook
 
 		static void Install()
 		{
-			constexpr auto address = RELOCATION_ID(34429, 35249);
-			REL::Relocation<std::uintptr_t> target{ address, 0x61 }; //same for all
+			constexpr auto targetAddress = RELOCATION_ID(34429, 35249);
+			REL::Relocation<std::uintptr_t> target{ targetAddress, 0x61 }; //same for all
 			auto trampolineJmp = TrampolineCall(target.address() + 0x5, stl::unrestricted_cast<std::uintptr_t>(thunk));
 
 			auto& trampoline = SKSE::GetTrampoline();
@@ -138,7 +138,7 @@ namespace Hook
 			SKSE::AllocTrampoline(14);
 			trampoline.write_branch<5>(target.address(), (std::uintptr_t)result);
 
-			REL::safe_fill(address.address() + 0x5B, REL::NOP, 0x3); // just in case
+			REL::safe_write(targetAddress.address() + 0x5B, REL::NOP3, 0x3); // just in case
 
 		}
 	};
