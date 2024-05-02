@@ -6,69 +6,7 @@
 
 namespace Hook
 {
-	/*
-	struct DialogueConstructHook //INFO NAM1
-	{
-		static void thunk(RE::TESTopicInfo::ResponseData* a_response, char* a_voiceFilePath, RE::BGSVoiceType* a_voiceType, RE::TESTopic* a_topic, RE::TESTopicInfo* a_topicInfo)
-		{
-			func(a_response, a_voiceFilePath, a_voiceType, a_topic, a_topicInfo);
-
-			RE::FormID trimedFormID = a_topicInfo->formID & 0x00FFFFFF; //Remove the two first load order dependent positions. Since TESTopicInfo is only loaded on runtime.
-			size_t key = Utils::combineHashWithIndex(trimedFormID, a_response->responseNumber, Utils::GetModName(a_topicInfo));
-
-			SKSE::log::debug("String: {}", a_response->responseText.c_str());
-			SKSE::log::debug("FormID: {0:08X}", a_topicInfo->formID);
-			SKSE::log::debug("TrimmedFormID: {0:08X}", trimedFormID);
-			SKSE::log::debug("Number: {}", a_response->responseNumber);
-			SKSE::log::debug("Plugin: {}", Utils::GetModName(a_topicInfo));
-
-			auto it = g_INFO_NAM1_Map.find(key);
-			if (it != g_INFO_NAM1_Map.end())
-			{
-				g_INFO_NAM1_TEMP_Map.emplace(a_response->responseText.c_str(), it->second); //Can't set with responseText = "newText". So setting it with the hook below. The function is called directly after this construct function.
-				g_INFO_NAM1_Map.erase(it);
-			}
-		}
-		static inline REL::Relocation<decltype(thunk)> func;
-
-		static void Install()
-		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(34429, 35249), REL::VariantOffset(0xDE, 0xDE, 0xDE) };
-			stl::write_thunk_call<DialogueConstructHook>(target1.address());
-			SKSE::log::info("DialogueConstructHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
-		}
-
-	};
-
-	struct DialogueStreamHook //INFO NAM1
-	{
-		static void thunk(RE::BSString& a_out, char* a_buffer, std::uint64_t a3)
-		{
-			func(a_out, a_buffer, a3);
-
-			auto it = g_INFO_NAM1_TEMP_Map.find(a_out.c_str());
-
-			if (it != g_INFO_NAM1_TEMP_Map.end())
-			{
-				a_out = it->second;
-			}
-
-		}
-		static inline REL::Relocation<decltype(thunk)> func;
-
-
-		static void Install()
-		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(34429, 35249), REL::VariantOffset(0x61, 0x61, 0x61) };
-			stl::write_thunk_call<DialogueStreamHook>(target1.address());
-			SKSE::log::info("DialogueStreamHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
-		}
-
-	};
-	*/
-
-
-	struct DialogueResponseHook
+	struct DialogueResponseHook //INFO NAM1
 	{
 		static bool SetBSString(RE::BSString& a_str, char* a_buffer, int32_t a3)
 		{
