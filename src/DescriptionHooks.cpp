@@ -127,13 +127,13 @@ namespace Hook
 						SKSE::log::debug("Replaced XXXX DESC {0:08X} with:", a_parent->formID);
 						SKSE::log::debug("{}", Information.ReplacerText);
 					}
-					}
+				}
 				break;
 
 				default: break;
 				}
-				}
 			}
+		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
 
@@ -141,12 +141,12 @@ namespace Hook
 		{
 			if (REL::Module::IsSE() || REL::Module::IsVR())
 			{
-				REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(14399, 0), REL::VariantOffset(0x53, 0x0, 0x53) };
+				REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(14399, 0), REL::Relocate(0x53, 0x0) };
 				stl::write_thunk_call<GetDescriptionHookSE>(target1.address());
 				SKSE::log::info("GetDescriptionHookSE hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 			}
 		}
-		};
+	};
 
 	void InstallDescriptionHooks()
 	{
@@ -155,4 +155,4 @@ namespace Hook
 		Hook::GetDescriptionHookSE::Install();
 	}
 
-	}
+}

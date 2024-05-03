@@ -55,9 +55,9 @@ std::vector<std::string> Config::GetLoadOrder()
 
 		m_BaseGamePlugins.erase( //Just in case a BaseGamePlugin is inside the plugins.txt
 			std::remove_if(m_BaseGamePlugins.begin(), m_BaseGamePlugins.end(), [&](const std::string& BaseGamePlugin)
-				{
-					return Utils::SearchCompare(loadOrder, BaseGamePlugin);
-				}),
+			{
+				return Utils::SearchCompare(loadOrder, BaseGamePlugin);
+			}),
 			m_BaseGamePlugins.end()
 		);
 
@@ -79,9 +79,9 @@ std::vector<std::string> Config::GetLoadOrder()
 
 		m_BaseGamePlugins.erase(
 			std::remove_if(m_BaseGamePlugins.begin(), m_BaseGamePlugins.end(), [&](const std::string& BaseGamePlugin) //Remove plugins not found in data folder from the BaseGamePlugin list.
-				{
-					return !Utils::SearchCompare(AllPlugins, BaseGamePlugin);
-				}),
+			{
+				return !Utils::SearchCompare(AllPlugins, BaseGamePlugin);
+			}),
 			m_BaseGamePlugins.end()
 		);
 
@@ -357,7 +357,7 @@ Config::RecordType Config::GetRecordType_map(const std::string& type)
 		{"MGEF DNAM", RecordType::kConst_Translation},
 		{"MGEF FULL", RecordType::kConst_Translation},
 		{"MISC FULL", RecordType::kConst_Translation},
-		{"NPC_ FULL", RecordType::kConst_Translation},
+		{"NPC_ FULL", RecordType::kNPC__FULL},
 		{"NPC_ SHRT", RecordType::kConst_Translation},
 		{"PERK EPF2", RecordType::kMESG_ITXT},
 		{"PERK EPFD", RecordType::kPERK_EPFD},
@@ -441,7 +441,7 @@ void Config::ProcessEntry(const std::string& files, const json& entry, const Rec
 	{
 	case RecordType::kINFO_RNAM:
 	case RecordType::kINFO_NAM1:
-	case RecordType::kGMST_DATA:
+	case RecordType::kGMST_DATA: //Don't look them up because they aren't loaded
 		break;
 
 	default:
@@ -475,6 +475,12 @@ void Config::ProcessEntry(const std::string& files, const json& entry, const Rec
 		{
 			Hook::g_DIAL_FULL_Map.insert_or_assign(key, stringValue);
 		}
+	}
+	break;
+	case RecordType::kNPC__FULL:
+	{
+		size_t key = Utils::combineHash(form->formID, plugin);
+		Hook::g_NPC_FULL_Map.insert_or_assign(key, stringValue); //This is to late -> TODO: Split parsing into Postload and DataLoaded
 	}
 	break;
 	case RecordType::kINFO_RNAM:

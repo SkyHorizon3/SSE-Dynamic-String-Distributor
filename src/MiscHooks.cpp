@@ -47,7 +47,7 @@ namespace Hook
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(18755, 19216), REL::VariantOffset(0xA6, 0xE4, 0xA6) }; //Theres also 40750, 0x176 on AE. But that's leading to random crashes
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(18755, 19216), REL::Relocate(0xA6, 0xE4) }; //Theres also 40750, 0x176 on AE. But that's leading to random crashes
 			stl::write_thunk_call<MapMarkerDataHook>(target1.address());
 			SKSE::log::info("MapMarkerDataHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 		}
@@ -114,6 +114,77 @@ namespace Hook
 		}
 	};
 
+	struct NpcNameFileStreamHook //NPC FULL - Why this way? Because templates use one of their templates names and it's horrible to change it
+	{
+		static void TESFullName__sub_140196D80(RE::TESFullName* a_fullname, RE::TESFile* a_file)
+		{
+			using func_t = decltype(&TESFullName__sub_140196D80);
+			REL::Relocation<func_t> func{ RELOCATION_ID(14546, 14718) };
+			return func(a_fullname, a_file);
+		}
+
+		struct TrampolineCall : Xbyak::CodeGenerator
+		{
+			TrampolineCall(std::uintptr_t retn, std::uintptr_t func)
+			{
+				Xbyak::Label funcLabel;
+				Xbyak::Label retnLabel;
+
+				if (REL::Module::IsAE())
+				{
+					mov(r8, r12); //TESNPC as 3rd parameter
+				}
+				else
+				{
+					mov(r8, r15);
+				}
+
+				sub(rsp, 0x20); //allocate for call
+				call(ptr[rip + funcLabel]); //call thunk
+				add(rsp, 0x20);
+
+				jmp(ptr[rip + retnLabel]); //jump back to original code
+
+				L(funcLabel);
+				dq(func);
+
+				L(retnLabel);
+				dq(retn);
+			}
+		};
+
+		static void thunk(RE::TESFullName* a_npcFullname, RE::TESFile* a_file, RE::TESNPC* a_npc)
+		{
+			TESFullName__sub_140196D80(a_npcFullname, a_file); //Invoke and get original output
+
+			size_t key = Utils::combineHash(a_npc->formID, Utils::GetModName(a_npc));
+
+			auto it = g_NPC_FULL_Map.find(key);
+			if (it != g_NPC_FULL_Map.end())
+			{
+				a_npcFullname->fullName = it->second;
+			}
+		}
+
+		static void Install()
+		{
+			constexpr auto targetAddress = RELOCATION_ID(24159, 24663);
+			REL::Relocation<std::uintptr_t> target{ targetAddress, REL::Relocate(0x7CE, 0x924) };
+			auto trampolineJmp = TrampolineCall(target.address() + 0x5, stl::unrestricted_cast<std::uintptr_t>(thunk));
+
+			auto& trampoline = SKSE::GetTrampoline();
+			SKSE::AllocTrampoline(trampolineJmp.getSize());
+			auto result = trampoline.allocate(trampolineJmp);
+			SKSE::AllocTrampoline(14);
+			trampoline.write_branch<5>(target.address(), (std::uintptr_t)result);
+		}
+	};
+
+	void InstallPostLoadHooks()
+	{
+		NpcNameFileStreamHook::Install();
+	}
+
 	void InstallHooks()
 	{
 		InstallInventoryHooks();
@@ -121,7 +192,7 @@ namespace Hook
 		InstallDialogueHooks();
 		InstallQuestHooks();
 
-		Hook::MapMarkerDataHook::Install();
-		Hook::CrosshairTextHook::Install();
+		MapMarkerDataHook::Install();
+		CrosshairTextHook::Install();
 	}
 }

@@ -23,6 +23,7 @@ public:
 		kREFR_FULL,
 		kGMST_DATA,
 		kPERK_EPFD,
+		kNPC__FULL,
 
 		kNotVisible,
 		kUnknown

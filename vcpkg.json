@@ -1,6 +1,6 @@
 {
   "name": "dynamicstringdistributor",
-  "version-semver": "1.1.7",
+  "version-semver": "1.1.8",
   "description": "",
   "license": "GPL-3.0",
   "dependencies": [

@@ -54,8 +54,8 @@ namespace Hook
 				std::make_pair(RELOCATION_ID(50005, 50949), 0x80),
 				std::make_pair(RELOCATION_ID(50201, 51130), 0xB2),
 				std::make_pair(RELOCATION_ID(50297, 51218), 0x35),
-				std::make_pair(RELOCATION_ID(50674, 51569), REL::Relocate(0x80, 0x7A, 0x80)),
-				std::make_pair(RELOCATION_ID(50973, 51852), REL::Relocate(0x80, 0x7A, 0x80)),
+				std::make_pair(RELOCATION_ID(50674, 51569), REL::Relocate(0x80, 0x7A)),
+				std::make_pair(RELOCATION_ID(50973, 51852), REL::Relocate(0x80, 0x7A)),
 			};
 
 			for (auto& [id, offset] : targets)

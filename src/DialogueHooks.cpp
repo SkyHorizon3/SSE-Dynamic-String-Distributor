@@ -109,7 +109,7 @@ namespace Hook
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(34434, 35254), REL::VariantOffset(0xCC, 0x226, 0xCC) };
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(34434, 35254), REL::Relocate(0xCC, 0x226) };
 			stl::write_thunk_call<DialogueMenuTextHook>(target1.address());
 			SKSE::log::info("DialogueMenuTextHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 
@@ -125,8 +125,6 @@ namespace Hook
 
 	void InstallDialogueHooks()
 	{
-		//Hook::DialogueStreamHook::Install();
-		//Hook::DialogueConstructHook::Install();
 		DialogueResponseHook::Install();
 		DialogueMenuTextHook::Install();
 	}

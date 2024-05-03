@@ -40,7 +40,6 @@ void LoadINI()
 	Config::EnableDebugLog = ini.GetBoolValue("Debug", "EnableDebugLog");
 }
 
-
 void MessageListener(SKSE::MessagingInterface::Message* message)
 {
 	switch (message->type)
@@ -62,6 +61,8 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 		{
 			SKSE::log::info("MergeMapper not detected");
 		}
+
+		Hook::InstallPostLoadHooks();
 
 		Config::GetSingleton()->EnumerateFolder();
 	}

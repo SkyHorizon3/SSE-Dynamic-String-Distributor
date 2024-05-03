@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(DynamicStringDistributor VERSION 1.1.7 LANGUAGES CXX)
+project(DynamicStringDistributor VERSION 1.1.8 LANGUAGES CXX)
 
 # Set your project version and specify C++ standard
 set(CMAKE_CXX_STANDARD 23)
