@@ -459,10 +459,6 @@ void Config::ProcessEntry(const std::string& files, const json& entry, const Rec
 
 	switch (recordType)
 	{
-	case RecordType::kACTI_RNAM:
-	case RecordType::kFLOR_RNAM:
-		Hook::g_FLOR_RNAM_RDMP_Map.insert_or_assign(entry["original"], stringValue);
-		break;
 	case RecordType::kREFR_FULL:
 	case RecordType::kDIAL_FULL:
 	{
@@ -477,10 +473,48 @@ void Config::ProcessEntry(const std::string& files, const json& entry, const Rec
 		}
 	}
 	break;
+	case RecordType::kQUST_NNAM:
+	case RecordType::kMESG_ITXT:
+	case RecordType::kPERK_EPFD:
+		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), entry["index"].get<int>(), "");
+		break;
+	case RecordType::kConst_Translation:
+		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), 0, "");
+		break;
+	case RecordType::kNormal_Translation:
+		Hook::g_ConfigurationInformationStruct.emplace_back(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])));
+		break;
+	case RecordType::kNotVisible:
+		SKSE::log::info("File {} contains not visible type: {}", files, entry["type"].get<std::string>());
+		break;
+	case RecordType::kUnknown:
+		SKSE::log::info("File {} contains unknown type: {}", files, entry["type"].get<std::string>());
+		break;
+
+	default: break;
+	}
+}
+
+void Config::ProcessEntryPreload(const json& entry, const RecordType& recordType)
+{
+	const std::string& formIDEntry = entry["form_id"].get<std::string>();
+	auto [formID, plugin] = ExtractFormIDAndPlugin(formIDEntry);
+
+	if (formID == 0 && plugin.empty())
+		return;
+
+	const std::string& stringValue = entry["string"];
+
+	switch (recordType)
+	{
+	case RecordType::kACTI_RNAM:
+	case RecordType::kFLOR_RNAM:
+		Hook::g_FLOR_RNAM_RDMP_Map.insert_or_assign(entry["original"], stringValue);
+		break;
 	case RecordType::kNPC__FULL:
 	{
-		size_t key = Utils::combineHash(form->formID, plugin);
-		Hook::g_NPC_FULL_Map.insert_or_assign(key, stringValue); //This is to late -> TODO: Split parsing into Postload and DataLoaded
+		size_t key = Utils::combineHash(formID, plugin);
+		Hook::g_NPC_FULL_Map.insert_or_assign(key, stringValue);
 	}
 	break;
 	case RecordType::kINFO_RNAM:
@@ -498,30 +532,15 @@ void Config::ProcessEntry(const std::string& files, const json& entry, const Rec
 	case RecordType::kQUST_CNAM:
 		Hook::g_QUST_CNAM_Map.insert_or_assign(entry["original"], stringValue);
 		break;
-	case RecordType::kQUST_NNAM:
-	case RecordType::kMESG_ITXT:
-	case RecordType::kPERK_EPFD:
-		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), entry["index"].get<int>(), "");
-		break;
-	case RecordType::kConst_Translation:
-		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), 0, "");
-		break;
 	case RecordType::kGMST_DATA:
-		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), 0, entry["editor_id"]);
+		Processor::AddToConstTranslationStruct(nullptr, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), 0, entry["editor_id"]);
 		break;
-	case RecordType::kNormal_Translation:
-		Hook::g_ConfigurationInformationStruct.emplace_back(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])));
-		break;
-	case RecordType::kNotVisible:
-		SKSE::log::info("File {} contains not visible type: {}", files, entry["type"].get<std::string>());
-		break;
-	case RecordType::kUnknown:
-		SKSE::log::info("File {} contains unknown type: {}", files, entry["type"].get<std::string>());
-		break;
+
+	default: break;
 	}
 }
 
-void Config::ParseTranslationFiles()
+void Config::ParseTranslationFiles(bool preload)
 {
 	if (m_FilesInPluginFolder.empty())
 		return;
@@ -529,7 +548,6 @@ void Config::ParseTranslationFiles()
 	for (const auto& files : m_FilesInPluginFolder)
 	{
 		SKSE::log::debug("Parsing file {}", files);
-
 
 		try
 		{
@@ -549,7 +567,15 @@ void Config::ParseTranslationFiles()
 				try
 				{
 					RecordType recordType = GetRecordType_map(entry["type"]);
-					ProcessEntry(files, entry, recordType);
+
+					if (preload)
+					{
+						ProcessEntryPreload(entry, recordType);
+					}
+					else
+					{
+						ProcessEntry(files, entry, recordType);
+					}
 				}
 				catch (const std::exception& e)
 				{
@@ -565,13 +591,10 @@ void Config::ParseTranslationFiles()
 }
 
 
-void Config::LoadFiles()
+void Config::LoadFiles(bool preload)
 {
 	if (m_Folders.empty())
 		return;
 
-	ParseTranslationFiles();
-
-	m_Folders.clear();
-	m_LoadOrder.clear();
+	ParseTranslationFiles(preload);
 }

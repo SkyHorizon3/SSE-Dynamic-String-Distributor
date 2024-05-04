@@ -65,13 +65,14 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 		Hook::InstallPostLoadHooks();
 
 		Config::GetSingleton()->EnumerateFolder();
+		Config::GetSingleton()->LoadFiles(true);
 	}
 	break;
 	case SKSE::MessagingInterface::kDataLoaded:
 	{
 		auto startTime = std::chrono::high_resolution_clock::now();
 
-		Config::GetSingleton()->LoadFiles();
+		Config::GetSingleton()->LoadFiles(false);
 
 		Processor::GetSingleton()->RunConstTranslation();
 

@@ -5,7 +5,7 @@ class Config : public ISingleton<Config>
 {
 public:
 	void EnumerateFolder();
-	void LoadFiles();
+	void LoadFiles(bool preload);
 
 	enum class RecordType
 	{
@@ -58,7 +58,8 @@ private:
 	RecordType GetRecordType_map(const std::string& type);
 	SubrecordType GetSubrecordType_map(const std::string& type);
 	void ProcessEntry(const std::string& files, const json& entry, const RecordType& recordType);
-	void ParseTranslationFiles();
+	void ProcessEntryPreload(const json& entry, const RecordType& recordType);
+	void ParseTranslationFiles(bool preload);
 
 	std::vector<std::string> m_Folders;
 	std::vector<std::string> m_LoadOrder;

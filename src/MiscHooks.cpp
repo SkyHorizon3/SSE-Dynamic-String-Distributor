@@ -157,7 +157,7 @@ namespace Hook
 		{
 			TESFullName__sub_140196D80(a_npcFullname, a_file); //Invoke and get original output
 
-			size_t key = Utils::combineHash(a_npc->formID, Utils::GetModName(a_npc));
+			size_t key = Utils::combineHash(a_npc->formID & 0x00FFFFFF, Utils::GetModName(a_npc));
 
 			auto it = g_NPC_FULL_Map.find(key);
 			if (it != g_NPC_FULL_Map.end())
