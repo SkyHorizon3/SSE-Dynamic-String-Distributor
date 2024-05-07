@@ -16,22 +16,18 @@ namespace Hook
 		{
 			auto result = func(marker);
 
-			if (!marker)
+			if (!marker || marker->IsDisabled())
 			{
 				return result;
 			}
 
-			if (!marker->IsDisabled())
+			size_t key = Utils::combineHash(marker->formID, Utils::GetModName(marker));
+
+			auto it = g_REFR_FULL_Map.find(key);
+
+			if (it != g_REFR_FULL_Map.end())
 			{
-				size_t key = Utils::combineHash(marker->formID, Utils::GetModName(marker));
-
-				auto it = g_REFR_FULL_Map.find(key);
-
-				if (it != g_REFR_FULL_Map.end())
-				{
-					result->fullName = it->second;
-				}
-
+				result->fullName = it->second;
 			}
 
 			return result;

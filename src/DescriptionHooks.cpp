@@ -56,19 +56,17 @@ namespace Hook
 
 		static void Install()
 		{
-			if (REL::Module::IsAE())
-			{
-				//GetDescriptionParent Hook AE
-				REL::Relocation<std::uintptr_t> codeSwap{ RELOCATION_ID(0, 14552), REL::VariantOffset(0x0, 0x8B, 0x0) }; //14019C91B xor     r8d, r8d
-				REL::safe_fill(codeSwap.address(), REL::NOP, 0x5);
-				auto newCode = ParentDESCHookAE::GetParentInsideHook();
-				assert(newCode.getSize() <= 0x5);
-				REL::safe_write(codeSwap.address(), newCode.getCode(), newCode.getSize());
+			//GetDescriptionParent Hook AE
+			REL::Relocation<std::uintptr_t> codeSwap{ REL::ID(14552), 0x8B }; //14019C91B xor     r8d, r8d
+			REL::safe_fill(codeSwap.address(), REL::NOP, 0x5);
+			auto newCode = ParentDESCHookAE::GetParentInsideHook();
+			assert(newCode.getSize() <= 0x5);
+			REL::safe_write(codeSwap.address(), newCode.getCode(), newCode.getSize());
 
-				REL::Relocation<std::uintptr_t> target01{ RELOCATION_ID(0, 14552), REL::VariantOffset(0x0, 0x93, 0x0) };
-				stl::write_thunk_call<ParentDESCHookAE>(target01.address());
-				SKSE::log::info("ParentDESCHookAE hooked at address: {:x} and offset: {:x}", target01.address(), target01.offset());
-			}
+			REL::Relocation<std::uintptr_t> target01{ REL::ID(14552),0x93 };
+			stl::write_thunk_call<ParentDESCHookAE>(target01.address());
+			SKSE::log::info("ParentDESCHookAE hooked at address: {:x} and offset: {:x}", target01.address(), target01.offset());
+
 		}
 
 	};
@@ -94,16 +92,15 @@ namespace Hook
 
 		static void Install()
 		{
-			if (REL::Module::IsAE())
-			{
-				REL::Relocation<std::uintptr_t> target01{ RELOCATION_ID(0, 14552), REL::VariantOffset(0x0, 0xFB, 0x0) };
-				stl::write_thunk_call<GetDescriptionHookAE>(target01.address());
-				SKSE::log::info("GetDescriptionHookAE hooked at address: {:x} and offset: {:x}", target01.address(), target01.offset());
 
-				REL::Relocation<std::uintptr_t> target02{ RELOCATION_ID(0, 14552), REL::VariantOffset(0x0, 0x174, 0x0) };
-				stl::write_thunk_call<GetDescriptionHookAE>(target02.address());
-				SKSE::log::info("GetDescriptionHookAE hooked at address: {:x} and offset: {:x}", target02.address(), target02.offset());
-			}
+			REL::Relocation<std::uintptr_t> target01{ REL::ID(14552), 0xFB };
+			stl::write_thunk_call<GetDescriptionHookAE>(target01.address());
+			SKSE::log::info("GetDescriptionHookAE hooked at address: {:x} and offset: {:x}", target01.address(), target01.offset());
+
+			REL::Relocation<std::uintptr_t> target02{ REL::ID(14552), 0x174 };
+			stl::write_thunk_call<GetDescriptionHookAE>(target02.address());
+			SKSE::log::info("GetDescriptionHookAE hooked at address: {:x} and offset: {:x}", target02.address(), target02.offset());
+
 		}
 
 	};
@@ -139,20 +136,25 @@ namespace Hook
 
 		static void Install()
 		{
-			if (REL::Module::IsSE() || REL::Module::IsVR())
-			{
-				REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(14399, 0), REL::Relocate(0x53, 0x0) };
-				stl::write_thunk_call<GetDescriptionHookSE>(target1.address());
-				SKSE::log::info("GetDescriptionHookSE hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
-			}
+
+			REL::Relocation<std::uintptr_t> target1{ REL::ID(14399), 0x53 };
+			stl::write_thunk_call<GetDescriptionHookSE>(target1.address());
+			SKSE::log::info("GetDescriptionHookSE hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
+
 		}
 	};
 
 	void InstallDescriptionHooks()
 	{
-		Hook::ParentDESCHookAE::Install();
-		Hook::GetDescriptionHookAE::Install();
-		Hook::GetDescriptionHookSE::Install();
+		if (REL::Module::IsAE())
+		{
+			Hook::ParentDESCHookAE::Install();
+			Hook::GetDescriptionHookAE::Install();
+		}
+		else
+		{
+			Hook::GetDescriptionHookSE::Install();
+		}
 	}
 
 }
