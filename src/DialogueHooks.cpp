@@ -22,7 +22,7 @@ namespace Hook
 				Xbyak::Label funcLabel;
 				Xbyak::Label retnLabel;
 
-				mov(r8d, rbp); //r8d would always be 0. So use it for a_topicInfo
+				mov(r8, rbp); //r8 would always be 0. So use it for a_topicInfo
 				mov(r9, rsi); //a_response
 
 				sub(rsp, 0x20); //allocate for call
