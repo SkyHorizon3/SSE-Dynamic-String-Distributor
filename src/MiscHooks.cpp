@@ -12,34 +12,29 @@ namespace Hook
 
 	struct MapMarkerDataHook //REFR FULL
 	{
-		static void thunk(RE::TESObjectREFR* marker)
+		static RE::TESFullName* thunk(RE::TESObjectREFR* marker)
 		{
+			auto result = func(marker);
+
 			if (!marker)
 			{
-				return func(marker);
+				return result;
 			}
 
 			if (!marker->IsDisabled())
 			{
-				if (auto mapMarker = marker->extraList.GetByType<RE::ExtraMapMarker>())
+				size_t key = Utils::combineHash(marker->formID, Utils::GetModName(marker));
+
+				auto it = g_REFR_FULL_Map.find(key);
+
+				if (it != g_REFR_FULL_Map.end())
 				{
-					if (mapMarker && mapMarker->mapData)
-					{
-
-						size_t key = Utils::combineHash(marker->formID, Utils::GetModName(marker));
-
-						auto it = g_REFR_FULL_Map.find(key);
-
-						if (it != g_REFR_FULL_Map.end())
-						{
-							mapMarker->mapData->locationName.fullName = it->second;
-						}
-
-					}
+					result->fullName = it->second;
 				}
+
 			}
 
-			func(marker);
+			return result;
 
 		};
 		static inline REL::Relocation<decltype(thunk)> func;
