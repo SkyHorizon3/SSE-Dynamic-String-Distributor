@@ -11,7 +11,7 @@ namespace Hook
 		static bool SetBSString(RE::BSString& a_str, char* a_buffer, int32_t a3)
 		{
 			using func_t = decltype(&SetBSString);
-			REL::Relocation<func_t> func{ RELOCATION_ID(10979, 11044) };
+			REL::Relocation<func_t> func{ RELOCATION_ID(10979, AE_CHECK(SKSE::RUNTIME_SSE_1_6_1130, 11044, 439876)) };
 			return func(a_str, a_buffer, a3);
 		}
 
