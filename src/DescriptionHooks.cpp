@@ -1,88 +1,98 @@
 #include "MiscHooks.h"
 #include "Processor.h"
+#include "Utils.h"
 #include "DescriptionHooks.h"
 
 namespace Hook
 {
+	std::string GetItemDescription(RE::FormID& formID, Config::SubrecordType subrecord)
+	{
+		const size_t key = Utils::combineHashSubrecord(formID, subrecord);
+		auto it = g_DESC_CNAM_Map.find(key);
+		if (it != g_DESC_CNAM_Map.end())
+		{
+			return it->second;
+		}
+
+		return "";
+	}
+
 	// Track if an object is valid between the two AE hooks
 	static bool IsDESC = false;
 	std::string SetDescription = "";
-	struct ParentDESCHookAE
+
+	struct DescriptionHookAE // XXXX DESC
 	{
-		static void thunk(RE::BSString* a_out, RE::TESForm* a_parent, std::uint64_t a_unk)
+		struct TrampolineCall : Xbyak::CodeGenerator
 		{
-			//Perks, Race Descriptions and any other DESC in xEdit except for loading screens
-
-			UNREFERENCED_PARAMETER(a_unk);
-
-			func(a_out, nullptr, 0); // Invoke original
-
-			for (const auto& Information : g_ConfigurationInformationStruct)
+			TrampolineCall(std::uintptr_t retn, std::uintptr_t func)
 			{
-				switch (Information.SubrecordType)
-				{
-				case Config::SubrecordType::kDESC: //So it doesn't set CNAM as DESC if both are in a json
-				{
-					if (a_parent && a_parent->formID == Information.Form->formID)
-					{
-						IsDESC = true;
-						SetDescription = Information.ReplacerText;
-						// Set object valid for GetDescription hook to check
+				Xbyak::Label funcLabel;
+				Xbyak::Label retnLabel;
 
-						SKSE::log::debug("Replaced XXXX DESC {0:08X} with:", a_parent->formID);
-						SKSE::log::debug("{}", Information.ReplacerText);
+				mov(rcx, rdi);
 
-					}
-				}
-				break;
+				sub(rsp, 0x20); //allocate for call
+				call(ptr[rip + funcLabel]); //call thunk
+				add(rsp, 0x20);
 
-				default: break;
-				}
+				mov(dword[r14], 0x65); // original code
 
-			}
-		}
+				jmp(ptr[rip + retnLabel]); //jump back to original code
 
-		static inline REL::Relocation<decltype(thunk)> func;
+				L(funcLabel);
+				dq(func);
 
-		struct GetParentInsideHook : Xbyak::CodeGenerator
-		{
-			// This moves the parent form, which is currently in rdi, to rdx so the other hook can use it
-			GetParentInsideHook()
-			{
-				mov(rdx, rdi);
+				L(retnLabel);
+				dq(retn);
 			}
 		};
 
+		static void thunk(RE::TESForm* a_parent)
+		{
+			if (a_parent && a_parent->formID)
+			{
+				const std::string& newDescription = GetItemDescription(a_parent->formID, Config::SubrecordType::kDESC);
+
+				if (!newDescription.empty())
+				{
+					IsDESC = true;
+					SetDescription = newDescription;
+
+					SKSE::log::debug("Replaced XXXX DESC {0:08X} with:", a_parent->formID);
+					SKSE::log::debug("{}", newDescription);
+				}
+			}
+		}
 
 		static void Install()
 		{
-			//GetDescriptionParent Hook AE
-			REL::Relocation<std::uintptr_t> codeSwap{ REL::ID(14552), 0x8B }; //14019C91B xor     r8d, r8d
-			REL::safe_fill(codeSwap.address(), REL::NOP, 0x5);
-			auto newCode = ParentDESCHookAE::GetParentInsideHook();
-			assert(newCode.getSize() <= 0x5);
-			REL::safe_write(codeSwap.address(), newCode.getCode(), newCode.getSize());
 
-			REL::Relocation<std::uintptr_t> target01{ REL::ID(14552),0x93 };
-			stl::write_thunk_call<ParentDESCHookAE>(target01.address());
-			SKSE::log::info("ParentDESCHookAE hooked at address: {:x} and offset: {:x}", target01.address(), target01.offset());
+			constexpr auto targetAddress = REL::ID(14552);
+
+			REL::safe_fill(targetAddress.address() + 0x84, REL::NOP, 0x7); // just in case
+
+			REL::Relocation<std::uintptr_t> target{ targetAddress, 0x84 };
+			auto trampolineJmp = TrampolineCall(target.address() + 0x7, stl::unrestricted_cast<std::uintptr_t>(thunk));
+
+			auto& trampoline = SKSE::GetTrampoline();
+			SKSE::AllocTrampoline(trampolineJmp.getSize());
+			auto result = trampoline.allocate(trampolineJmp);
+			SKSE::AllocTrampoline(14);
+			trampoline.write_branch<6>(target.address(), (std::uintptr_t)result);
 
 		}
-
 	};
 
-	struct GetDescriptionHookAE //Nearly any DESC
+	struct GetDescriptionHookAE
 	{
-		static void thunk(RE::BSString* a_out, std::uint64_t a2, std::uint64_t a3)
+		static void thunk(RE::BSString& a_out, std::uint64_t a2, std::uint64_t a3)
 		{
 			func(a_out, a2, a3);
 
-			//g_Logger->info("Output: {}", a_out->c_str());
-
-
-			if (IsDESC && !a_out->empty()) //Don't replace anything thats empty. This stops the hook from also replacing BOOK CNAM with BOOK DESC if there is no CNAM.
+			if (IsDESC && !a_out.empty()) //Don't replace anything thats empty. This stops the hook from also replacing BOOK CNAM with BOOK DESC if there is no CNAM.
 			{
-				*a_out = SetDescription;
+				a_out = SetDescription;
 			}
 			IsDESC = false;
 
@@ -101,33 +111,31 @@ namespace Hook
 			stl::write_thunk_call<GetDescriptionHookAE>(target02.address());
 			SKSE::log::info("GetDescriptionHookAE hooked at address: {:x} and offset: {:x}", target02.address(), target02.offset());
 
+			/*
+			REL::Relocation<std::uintptr_t> target03{ REL::ID(14552),0x93 };
+			stl::write_thunk_call<GetDescriptionHookAE>(target03.address());
+			SKSE::log::info("GetDescriptionHookAE hooked at address: {:x} and offset: {:x}", target03.address(), target03.offset());
+			*/
 		}
 
 	};
 
 	struct GetDescriptionHookSE
 	{
-		static void thunk(RE::TESDescription* a_description, RE::BSString* a_out, RE::TESForm* a_parent, std::uint32_t unk)
+		static void thunk(RE::TESDescription* a_description, RE::BSString& a_out, RE::TESForm* a_parent, std::uint32_t unk)
 		{
 			func(a_description, a_out, a_parent, unk);  // invoke original to get original description string output
 
-			for (const auto& Information : g_ConfigurationInformationStruct)
+			if (a_parent && !a_out.empty() && a_parent->formID)
 			{
-				switch (Information.SubrecordType)
-				{
-				case Config::SubrecordType::kDESC: //So it doesn't set CNAM as DESC if both are in a json
-				{
-					if (a_parent && a_parent->formID == Information.Form->formID && !a_out->empty())
-					{
-						*a_out = Information.ReplacerText;
+				const std::string& newDescription = GetItemDescription(a_parent->formID, Config::SubrecordType::kDESC);
 
-						SKSE::log::debug("Replaced XXXX DESC {0:08X} with:", a_parent->formID);
-						SKSE::log::debug("{}", Information.ReplacerText);
-					}
-				}
-				break;
+				if (!newDescription.empty())
+				{
+					a_out = newDescription;
 
-				default: break;
+					SKSE::log::debug("Replaced XXXX DESC {0:08X} with:", a_parent->formID);
+					SKSE::log::debug("{}", newDescription);
 				}
 			}
 		}
@@ -136,11 +144,9 @@ namespace Hook
 
 		static void Install()
 		{
-
 			REL::Relocation<std::uintptr_t> target1{ REL::ID(14399), 0x53 };
 			stl::write_thunk_call<GetDescriptionHookSE>(target1.address());
 			SKSE::log::info("GetDescriptionHookSE hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
-
 		}
 	};
 
@@ -148,12 +154,12 @@ namespace Hook
 	{
 		if (REL::Module::IsAE())
 		{
-			Hook::ParentDESCHookAE::Install();
-			Hook::GetDescriptionHookAE::Install();
+			DescriptionHookAE::Install();
+			GetDescriptionHookAE::Install();
 		}
 		else
 		{
-			Hook::GetDescriptionHookSE::Install();
+			GetDescriptionHookSE::Install();
 		}
 	}
 

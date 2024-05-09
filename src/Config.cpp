@@ -462,7 +462,7 @@ void Config::ProcessEntry(const std::string& files, const json& entry, const Rec
 	case RecordType::kREFR_FULL:
 	case RecordType::kDIAL_FULL:
 	{
-		size_t key = Utils::combineHash(form->formID, plugin);
+		const size_t key = Utils::combineHash(form->formID, plugin);
 		if (recordType == RecordType::kREFR_FULL)
 		{
 			Hook::g_REFR_FULL_Map.insert_or_assign(key, stringValue);
@@ -482,8 +482,11 @@ void Config::ProcessEntry(const std::string& files, const json& entry, const Rec
 		Processor::AddToConstTranslationStruct(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])), 0, "");
 		break;
 	case RecordType::kNormal_Translation:
-		Hook::g_ConfigurationInformationStruct.emplace_back(form, stringValue, GetSubrecordType_map(GetSubrecordType(entry["type"])));
-		break;
+	{
+		const size_t key = Utils::combineHashSubrecord(form->formID, GetSubrecordType_map(GetSubrecordType(entry["type"])));
+		Hook::g_DESC_CNAM_Map.emplace(key, stringValue);
+	}
+	break;
 	case RecordType::kNotVisible:
 		SKSE::log::info("File {} contains not visible type: {}", files, entry["type"].get<std::string>());
 		break;
@@ -513,19 +516,19 @@ void Config::ProcessEntryPreload(const json& entry, const RecordType& recordType
 		break;
 	case RecordType::kNPC__FULL:
 	{
-		size_t key = Utils::combineHash(formID, plugin);
+		const size_t key = Utils::combineHash(formID, plugin);
 		Hook::g_NPC_FULL_Map.insert_or_assign(key, stringValue);
 	}
 	break;
 	case RecordType::kINFO_RNAM:
 	{
-		size_t key = Utils::combineHash(formID, plugin);
+		const size_t key = Utils::combineHash(formID, plugin);
 		Hook::g_INFO_RNAM_Map.insert_or_assign(key, stringValue);
 	}
 	break;
 	case RecordType::kINFO_NAM1:
 	{
-		size_t key = Utils::combineHashWithIndex(formID, entry["index"].get<int>(), plugin);
+		const size_t key = Utils::combineHashWithIndex(formID, entry["index"].get<int>(), plugin);
 		Hook::g_INFO_NAM1_Map.insert_or_assign(key, stringValue);
 	}
 	break;

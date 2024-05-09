@@ -1,4 +1,5 @@
 #include "Utils.h"
+#include "Config.h"
 #include "MergeMapperPluginAPI.h"
 
 namespace Utils
@@ -16,6 +17,13 @@ namespace Utils
 		size_t intValue = static_cast<size_t>(value);
 		size_t formHash = std::hash<uint32_t>{}(formID);
 		return strHash ^ (intValue + formHash + 0x9e3779b9 + (strHash << 6) + (strHash >> 2));
+	}
+
+	size_t combineHashSubrecord(uint32_t formID, Config::SubrecordType subrecord)
+	{
+		size_t intValue = static_cast<size_t>(subrecord);
+		size_t formHash = std::hash<uint32_t>{}(formID);
+		return formHash ^ (intValue + formHash + 0x9e3779b9 + (formHash << 6) + (formHash >> 2));
 	}
 
 	std::string GetModName(const RE::TESForm* form)

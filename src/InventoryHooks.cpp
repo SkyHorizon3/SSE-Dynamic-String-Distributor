@@ -1,6 +1,7 @@
 #include "MiscHooks.h"
 #include "InventoryHooks.h"
 #include "Processor.h"
+#include "DescriptionHooks.h"
 
 namespace Hook
 {
@@ -23,25 +24,17 @@ namespace Hook
 
 		static void handleDescriptionItems(RE::ItemCard* itemCard, RE::TESBoundObject* a_item)
 		{
-			for (const auto& Information : g_ConfigurationInformationStruct)
+			if (a_item && a_item->formID)
 			{
-				switch (Information.SubrecordType)
-				{
-				case Config::SubrecordType::kCNAM:
-				{
-					// Replace the ItemCardDescription of books
-					if (a_item->formID == Information.Form->formID)
-					{
-						auto descriptionValue = RE::GFxValue(Information.ReplacerText);
-						itemCard->obj.SetMember("description", descriptionValue);
+				const std::string& newDescription = GetItemDescription(a_item->formID, Config::SubrecordType::kCNAM);
 
-						SKSE::log::debug("Replaced BOOK CNAM {0:08X} with:", a_item->formID);
-						SKSE::log::debug("{}", Information.ReplacerText);
-					}
-				}
-				break;
+				if (!newDescription.empty())
+				{
+					auto descriptionValue = RE::GFxValue(newDescription);
+					itemCard->obj.SetMember("description", descriptionValue);
 
-				default: break;
+					SKSE::log::debug("Replaced BOOK CNAM {0:08X} with:", a_item->formID);
+					SKSE::log::debug("{}", newDescription);;
 				}
 			}
 		}
