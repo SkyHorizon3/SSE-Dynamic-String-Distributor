@@ -156,7 +156,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 		}
 	}
 
-
+	/*
 	if (EnableDebugLog)
 	{
 		static int position = 0;
@@ -165,7 +165,7 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 			SKSE::log::debug("Plugin{}: {}", position++, Plugin);
 		}
 	}
-
+	*/
 
 	// Sort folders based on load order of plugins
 	std::sort(m_Folders.begin(), m_Folders.end(), [this](const std::string& a, const std::string& b)

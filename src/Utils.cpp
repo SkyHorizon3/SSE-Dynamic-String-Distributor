@@ -50,14 +50,10 @@ namespace Utils
 			return 0;
 		}
 
-		RE::FormID formID = 0;
+		RE::FormID formID = form->GetFormID() & 0xFFFFFF; // remove file index -> 0x00XXXXXX
 		if (array->front()->IsLight())
 		{
-			formID = form->GetFormID() & 0xFFF;
-		}
-		else
-		{
-			formID = form->GetFormID() & 0xFFFFFF;
+			formID = formID & 0xFFF; // remove ESL index -> 0x00000XXX
 		}
 
 		return formID;
