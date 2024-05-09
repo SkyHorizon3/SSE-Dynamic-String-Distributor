@@ -1,5 +1,4 @@
 #include "Utils.h"
-#include "Config.h"
 #include "MergeMapperPluginAPI.h"
 
 namespace Utils

@@ -24,7 +24,7 @@ namespace Hook
 
 		static void handleDescriptionItems(RE::ItemCard* itemCard, RE::TESBoundObject* a_item)
 		{
-			if (a_item && a_item->formID)
+			if (a_item->formID)
 			{
 				const std::string& newDescription = GetItemDescription(a_item->formID, Config::SubrecordType::kCNAM);
 
