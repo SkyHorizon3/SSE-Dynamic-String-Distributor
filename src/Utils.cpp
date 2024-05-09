@@ -34,13 +34,33 @@ namespace Utils
 		const auto file = array->front();
 		std::string_view filename = file ? file->GetFilename() : "";
 
-		if (g_mergeMapperInterface)
+		return filename.data();
+	}
+
+	RE::FormID GetTrimmedFormID(const RE::TESForm* form)
+	{
+		if (!form)
 		{
-			auto formID = form->GetFormID() & 0xFFFFFF;
-			std::tie(filename, formID) = g_mergeMapperInterface->GetOriginalFormID(filename.data(), formID);
+			return 0;
 		}
 
-		return filename.data();
+		const auto array = form->sourceFiles.array;
+		if (!array || array->empty())
+		{
+			return 0;
+		}
+
+		RE::FormID formID = 0;
+		if (array->front()->IsLight())
+		{
+			formID = form->GetFormID() & 0xFFF;
+		}
+		else
+		{
+			formID = form->GetFormID() & 0xFFFFFF;
+		}
+
+		return formID;
 	}
 
 	bool CaseInsensitiveStringCompare(const std::string& a, const std::string& b)

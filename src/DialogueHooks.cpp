@@ -41,14 +41,15 @@ namespace Hook
 
 		static void thunk(RE::BSString& a_str, char* a_buffer, RE::TESTopicInfo* a_topicInfo, RE::TESTopicInfo::ResponseData* a_response)
 		{
-			RE::FormID trimedFormID = a_topicInfo->formID & 0x00FFFFFF; //Remove the two first load order dependent positions. Since TESTopicInfo is only loaded on runtime.
-			size_t key = Utils::combineHashWithIndex(trimedFormID, a_response->responseNumber, Utils::GetModName(a_topicInfo));
+			const std::string& fileName = Utils::GetModName(a_topicInfo);
+			const RE::FormID trimmedFormID = Utils::GetTrimmedFormID(a_topicInfo);
+			size_t key = Utils::combineHashWithIndex(trimmedFormID, a_response->responseNumber, fileName);
 
 			SKSE::log::debug("Original string: {}", a_response->responseText.c_str());
 			SKSE::log::debug("FormID: {0:08X}", a_topicInfo->formID);
-			SKSE::log::debug("TrimmedFormID: {0:08X}", trimedFormID);
+			SKSE::log::debug("TrimmedFormID: {0:08X}", trimmedFormID);
 			SKSE::log::debug("Number: {}", a_response->responseNumber);
-			SKSE::log::debug("Plugin: {}", Utils::GetModName(a_topicInfo));
+			SKSE::log::debug("Plugin: {}", fileName);
 
 			auto it = g_INFO_NAM1_Map.find(key);
 			if (it != g_INFO_NAM1_Map.end())
@@ -77,7 +78,6 @@ namespace Hook
 			trampoline.write_branch<5>(target.address(), (std::uintptr_t)result);
 
 			REL::safe_write(targetAddress.address() + 0x5B, REL::NOP3, 0x3); // just in case
-
 		}
 	};
 
