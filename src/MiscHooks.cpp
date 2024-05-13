@@ -14,18 +14,18 @@ namespace Hook
 	{
 		static RE::TESFullName* thunk(RE::TESObjectREFR* marker)
 		{
-			auto result = func(marker);
-
 			if (!marker || marker->IsDisabled())
 			{
-				return result;
+				return func(marker);
 			}
+
+			auto result = func(marker);
 
 			size_t key = Utils::combineHash(marker->formID, Utils::GetModName(marker));
 
 			auto it = g_REFR_FULL_Map.find(key);
 
-			if (it != g_REFR_FULL_Map.end())
+			if (result && it != g_REFR_FULL_Map.end())
 			{
 				result->fullName = it->second;
 			}
