@@ -61,7 +61,7 @@ std::vector<std::string> Config::GetLoadOrder()
 			m_BaseGamePlugins.end()
 		);
 
-		std::vector<std::string> AllPlugins;
+		std::vector<std::string> activePlugins;
 
 		if (!std::filesystem::exists("Data"sv))
 		{
@@ -73,14 +73,14 @@ std::vector<std::string> Config::GetLoadOrder()
 		{
 			if (entry.is_regular_file() && (entry.path().extension() == L".esp" || entry.path().extension() == L".esm" || entry.path().extension() == L".esl"))
 			{
-				AllPlugins.emplace_back(entry.path().filename().string());
+				activePlugins.emplace_back(entry.path().filename().string());
 			}
 		}
 
 		m_BaseGamePlugins.erase(
 			std::remove_if(m_BaseGamePlugins.begin(), m_BaseGamePlugins.end(), [&](const std::string& BaseGamePlugin) //Remove plugins not found in data folder from the BaseGamePlugin list.
 			{
-				return !Utils::SearchCompare(AllPlugins, BaseGamePlugin);
+				return !Utils::SearchCompare(activePlugins, BaseGamePlugin);
 			}),
 			m_BaseGamePlugins.end()
 		);

@@ -1,6 +1,6 @@
 {
   "name": "dynamicstringdistributor",
-  "version-semver": "1.2.0",
+  "version-semver": "1.2.1",
   "description": "",
   "license": "GPL-3.0",
   "dependencies": [
@@ -11,7 +11,8 @@
     "catch2",
     "rapidcsv",
     "unordered-dense",
-    "simpleini"
+    "simpleini",
+    "zlib"
   ],
   "builtin-baseline": "62aa44929954469878eb8fc562af706a8f5615a5"
 }

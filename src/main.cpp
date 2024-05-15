@@ -1,6 +1,7 @@
 ﻿#include "Config.h"
 #include "MiscHooks.h"
 #include "Processor.h"
+#include "Parser.h"
 #include "MergeMapperPluginAPI.h"
 
 // Setup logger for plugin
@@ -98,6 +99,8 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 
 	LoadINI();
 	SetupLog();
+
+	Parser::GetSingleton()->load("Data\\parseTest.esp");
 
 	SKSE::GetMessagingInterface()->RegisterListener(MessageListener);
 	SKSE::log::info("{} v{} loaded", Plugin::NAME, Plugin::VERSION);
