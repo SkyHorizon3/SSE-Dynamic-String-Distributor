@@ -100,7 +100,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 	LoadINI();
 	SetupLog();
 
-	Parser::GetSingleton()->load("Data\\parseTest.esp");
+	//Parser::GetSingleton()->load("Data\\parseTest.esp");
 
 	SKSE::GetMessagingInterface()->RegisterListener(MessageListener);
 	SKSE::log::info("{} v{} loaded", Plugin::NAME, Plugin::VERSION);

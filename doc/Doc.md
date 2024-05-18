@@ -4,9 +4,9 @@ If you're not trying to do an english to english replacement I also recommend us
 
 The replacement string needs to follow the json format. The best way to do this is to write the text as it should look and convert it with [freeformatter](https://www.freeformatter.com/json-escape.html#before-output).
 
-## Replace XXXX FULL, XXXX DESC, NPC_ SHRT, WOOP TNAM, INFO RNAM, BOOK CNAM, MGEF DNAM, REGN RDMP
+## Replace XXXX FULL, XXXX DESC, NPC_ SHRT, WOOP TNAM, INFO RNAM, BOOK CNAM, MGEF DNAM, REGN RDMP, ACTI RNAM, FLOR RNAM
 
-Use this scheme for any full name, any DESC, NPC_ SHRT, WOOP TNAM, INFO RNAM, BOOK CNAM, MGEF DNAM, REGN RDMP.
+Use this scheme for any full name, any DESC, NPC_ SHRT, WOOP TNAM, INFO RNAM, BOOK CNAM, MGEF DNAM, REGN RDMP, ACTI RNAM, FLOR RNAM.
 
 ```json
 [
@@ -50,12 +50,22 @@ Example:
         "form_id": "000E40D3|Skyrim.esm",
         "type": "MGEF DNAM",
         "string": "<mag>-prozentige Krankheitsresistenz."
+    },
+    {
+        "form_id": "000A2C46|Skyrim.esm",
+        "type": "ACTI RNAM",
+        "string": "Hallo!"
+    },
+	{
+        "form_id": "000176CD|Skyrim.esm",
+        "type": "FLOR RNAM",
+        "string": "Hallo2!"
     }
 ]
 ```
 
-## Replace ACTI RNAM, FLOR RNAM, QUST CNAM
-Use this scheme for ACTI RNAM, FLOR RNAM, QUST CNAM replacements.
+## Replace QUST CNAM
+Use this scheme for QUST CNAM replacements.
 
 
 ```json
@@ -65,18 +75,6 @@ Use this scheme for ACTI RNAM, FLOR RNAM, QUST CNAM replacements.
         "type": "Record type",
         "original": "original string",
         "string": "replacement/translation string"
-    }
-]
-```
-
-Example:
-```json
-[
-    {
-        "form_id": "0010DCB5|Skyrim.esm",
-        "type": "ACTI RNAM",
-        "original": "Mine",
-        "string": "new string"
     }
 ]
 ```

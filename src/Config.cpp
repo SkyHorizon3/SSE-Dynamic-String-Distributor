@@ -512,8 +512,11 @@ void Config::ProcessEntryPreload(const json& entry, const RecordType& recordType
 	{
 	case RecordType::kACTI_RNAM:
 	case RecordType::kFLOR_RNAM:
-		Hook::g_FLOR_RNAM_RDMP_Map.insert_or_assign(entry["original"], stringValue);
-		break;
+	{
+		const size_t key = Utils::combineHash(formID, plugin);
+		Hook::g_ACTI_Map.insert_or_assign(key, stringValue);
+	}
+	break;
 	case RecordType::kNPC__FULL:
 	{
 		const size_t key = Utils::combineHash(formID, plugin);

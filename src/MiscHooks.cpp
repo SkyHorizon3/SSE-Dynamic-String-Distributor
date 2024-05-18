@@ -45,66 +45,6 @@ namespace Hook
 
 	};
 
-	//Credits to po3 https://github.com/powerof3/SimpleActivateSKSE released under MIT
-	//Still compatible
-	struct CrosshairTextHook //Could also hook the calls of 1400F9E60... Unfortunately there are only 148
-	{
-		static void thunk(RE::UIMessageQueue* queue_this, const RE::BSFixedString& menuName, RE::UI_MESSAGE_TYPE type, RE::IUIMessageData* data)
-		{
-			const auto messagedata = data ? static_cast<RE::HUDData*>(data) : nullptr;
-			const auto crosshairRef = messagedata ? messagedata->crossHairRef.get() : RE::TESObjectREFRPtr();
-
-			if (messagedata && crosshairRef)
-			{
-				switch (crosshairRef->GetFormType())
-				{
-				case RE::FormType::Reference: //ACTI RNAM, FLOR RNAM
-				{
-					//SKSE::log::info("String: {}", messagedata->text.c_str());
-
-					std::istringstream iss(messagedata->text.c_str());
-					std::string line1;
-
-					if (std::getline(iss, line1))
-					{
-						auto it1 = g_FLOR_RNAM_RDMP_Map.find(line1);
-						if (it1 != g_FLOR_RNAM_RDMP_Map.end())
-						{
-							std::string restOfText, line;
-							while (std::getline(iss, line))
-							{
-								restOfText += line + "\n";
-							}
-
-							if (!restOfText.empty())
-							{
-								restOfText.pop_back(); // remove useless \n
-							}
-
-							messagedata->text = it1->second + "\n" + restOfText;
-						}
-					}
-				}
-				break;
-
-				default:
-					break;
-				}
-			}
-
-			func(queue_this, menuName, type, data);
-		};
-		static inline REL::Relocation<decltype(thunk)> func;
-
-
-		static void Install()
-		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(39535, 40621), REL::VariantOffset(0x289, 0x280, 0x22E) };
-			stl::write_thunk_call<CrosshairTextHook>(target1.address());
-			SKSE::log::info("CrosshairTextHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
-		}
-	};
-
 	struct NpcNameFileStreamHook //NPC FULL - Why this way? Because templates use one of their templates names and it's horrible to change it
 	{
 		static void TESFullName__sub_140196D80(RE::TESFullName* a_fullname, RE::TESFile* a_file)
@@ -171,9 +111,84 @@ namespace Hook
 		}
 	};
 
+	static bool IsACTI = false;
+	std::string SetActivationText = "";
+	struct GetActivateText // ACTI RNAM, FLOR RNAM
+	{
+		static void thunk(RE::TESObjectACTI* a_this, RE::TESFile* a_file)
+		{
+			IsACTI = false;
+
+			size_t key = Utils::combineHash(Utils::GetTrimmedFormID(a_this), Utils::GetModName(a_this));
+			auto it = g_ACTI_Map.find(key);
+
+			if (it != g_ACTI_Map.end())
+			{
+				IsACTI = true;
+				SetActivationText = it->second;
+			}
+
+			func(a_this, a_file);
+		}
+		static inline REL::Relocation<decltype(thunk)> func;
+
+		static void Install()
+		{
+			std::array targets{
+				std::make_pair(RELOCATION_ID(16800, 17181), 0x3F),
+				std::make_pair(RELOCATION_ID(16984, 17367), 0x5F),
+				std::make_pair(RELOCATION_ID(17010, 17393), 0x134),
+				std::make_pair(RELOCATION_ID(17010, 17393), 0x18E),
+				std::make_pair(RELOCATION_ID(17010, 17393), 0x1ED),
+				std::make_pair(RELOCATION_ID(17293, 17694), 0x36),
+			};
+
+			for (auto& [id, offset] : targets)
+			{
+				REL::Relocation<std::uintptr_t> target(id, offset);
+				stl::write_thunk_call<GetActivateText>(target.address());
+				SKSE::log::info("GetActivateText hooked at address: {:x} and offset: {:x}", target.address(), target.offset());
+			}
+		}
+	};
+
+
+	struct SetActivateText
+	{
+		static char** thunk(char** a_this, RE::BSFixedString& a_str)
+		{
+			if (IsACTI && !a_str.empty())
+			{
+				a_str = SetActivationText;
+			}
+			IsACTI = false;
+
+			return func(a_this, a_str);
+		}
+		static inline REL::Relocation<decltype(thunk)> func;
+
+		static void Install()
+		{
+			std::array targets{
+				std::make_pair(RELOCATION_ID(17294, 17711), REL::Relocate(0x421, 0xF9)),
+				std::make_pair(RELOCATION_ID(17294, 17711), REL::Relocate(0x47A, 0x14C)),
+				std::make_pair(RELOCATION_ID(17294, 17711), REL::Relocate(0x4AE, 0x178)),
+			};
+
+			for (auto& [id, offset] : targets)
+			{
+				REL::Relocation<std::uintptr_t> target(id, offset);
+				stl::write_thunk_call<SetActivateText>(target.address());
+				SKSE::log::info("SetActivateText hooked at address: {:x} and offset: {:x}", target.address(), target.offset());
+			}
+		}
+	};
+
 	void InstallPostLoadHooks()
 	{
 		NpcNameFileStreamHook::Install();
+		GetActivateText::Install();
+		SetActivateText::Install();
 	}
 
 	void InstallHooks()
@@ -184,6 +199,5 @@ namespace Hook
 		InstallQuestHooks();
 
 		MapMarkerDataHook::Install();
-		CrosshairTextHook::Install();
 	}
 }
