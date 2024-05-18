@@ -553,7 +553,7 @@ void Config::ParseTranslationFiles(bool preload)
 
 	for (const auto& files : m_FilesInPluginFolder)
 	{
-		SKSE::log::debug("Parsing file {}", files);
+		//SKSE::log::debug("Parsing file {}", files);
 
 		try
 		{

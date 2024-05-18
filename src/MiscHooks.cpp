@@ -40,7 +40,6 @@ namespace Hook
 		{
 			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(18755, 19216), REL::Relocate(0xA6, 0xE4) }; //Theres also 40750, 0x176 on AE. But that's leading to random crashes
 			stl::write_thunk_call<MapMarkerDataHook>(target1.address());
-			SKSE::log::info("MapMarkerDataHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 		}
 
 	};
@@ -147,7 +146,6 @@ namespace Hook
 			{
 				REL::Relocation<std::uintptr_t> target(id, offset);
 				stl::write_thunk_call<GetActivateText>(target.address());
-				SKSE::log::info("GetActivateText hooked at address: {:x} and offset: {:x}", target.address(), target.offset());
 			}
 		}
 	};
@@ -179,7 +177,6 @@ namespace Hook
 			{
 				REL::Relocation<std::uintptr_t> target(id, offset);
 				stl::write_thunk_call<SetActivateText>(target.address());
-				SKSE::log::info("SetActivateText hooked at address: {:x} and offset: {:x}", target.address(), target.offset());
 			}
 		}
 	};
@@ -189,6 +186,8 @@ namespace Hook
 		NpcNameFileStreamHook::Install();
 		GetActivateText::Install();
 		SetActivateText::Install();
+
+		SKSE::log::info("Installed PostLoadHooks!");
 	}
 
 	void InstallHooks()
@@ -199,5 +198,7 @@ namespace Hook
 		InstallQuestHooks();
 
 		MapMarkerDataHook::Install();
+
+		SKSE::log::info("Installed DataLoadedHooks!");
 	}
 }

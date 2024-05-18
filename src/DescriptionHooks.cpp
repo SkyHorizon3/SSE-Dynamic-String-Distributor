@@ -80,7 +80,6 @@ namespace Hook
 			auto result = trampoline.allocate(trampolineJmp);
 			SKSE::AllocTrampoline(14);
 			trampoline.write_branch<6>(target.address(), (std::uintptr_t)result);
-
 		}
 	};
 
@@ -105,11 +104,9 @@ namespace Hook
 
 			REL::Relocation<std::uintptr_t> target01{ REL::ID(14552), 0xFB };
 			stl::write_thunk_call<GetDescriptionHookAE>(target01.address());
-			SKSE::log::info("GetDescriptionHookAE hooked at address: {:x} and offset: {:x}", target01.address(), target01.offset());
 
 			REL::Relocation<std::uintptr_t> target02{ REL::ID(14552), 0x174 };
 			stl::write_thunk_call<GetDescriptionHookAE>(target02.address());
-			SKSE::log::info("GetDescriptionHookAE hooked at address: {:x} and offset: {:x}", target02.address(), target02.offset());
 
 			/*
 			REL::Relocation<std::uintptr_t> target03{ REL::ID(14552),0x93 };
@@ -146,7 +143,6 @@ namespace Hook
 		{
 			REL::Relocation<std::uintptr_t> target1{ REL::ID(14399), 0x53 };
 			stl::write_thunk_call<GetDescriptionHookSE>(target1.address());
-			SKSE::log::info("GetDescriptionHookSE hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 		}
 	};
 

@@ -111,13 +111,11 @@ namespace Hook
 		{
 			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(34434, 35254), REL::Relocate(0xCC, 0x226) };
 			stl::write_thunk_call<DialogueMenuTextHook>(target1.address());
-			SKSE::log::info("DialogueMenuTextHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 
 			if (REL::Module::IsAE())
 			{
 				REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(0, 35254), REL::VariantOffset(0x0, 0x115, 0x0) };
 				stl::write_thunk_call<DialogueMenuTextHook>(target2.address());
-				SKSE::log::info("DialogueMenuTextHook hooked at address: {:x} and offset: {:x}", target2.address(), target2.offset());
 			}
 		}
 	};
