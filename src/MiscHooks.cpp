@@ -186,6 +186,7 @@ namespace Hook
 		NpcNameFileStreamHook::Install();
 		GetActivateText::Install();
 		SetActivateText::Install();
+		InstallDialogueHooksPostLoad();
 
 		SKSE::log::info("Installed PostLoadHooks!");
 	}

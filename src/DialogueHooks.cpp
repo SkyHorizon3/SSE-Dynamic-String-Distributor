@@ -51,18 +51,18 @@ namespace Hook
 			SKSE::log::debug("Number: {}", a_response->responseNumber);
 			SKSE::log::debug("Plugin: {}", fileName);
 
-			auto it = g_INFO_NAM1_Map.find(key);
-			if (it != g_INFO_NAM1_Map.end())
-			{
-				a_str = it->second;
-				char* newtext = const_cast<char*>(a_str.c_str());
+			//auto it = g_INFO_NAM1_Map.find(key);
+			//if (it != g_INFO_NAM1_Map.end())
+			//{
+				//	a_str = it->second;
+				//	char* newtext = const_cast<char*>(a_str.c_str());
 
-				SetBSString(a_str, newtext, 0);
-			}
-			else
-			{
-				SetBSString(a_str, a_buffer, 0);
-			}
+			//	SetBSString(a_str, newtext, 0);
+			//}
+			//else
+			//{
+			SetBSString(a_str, a_buffer, 0);
+			//}
 		}
 
 		static void Install()
@@ -78,6 +78,51 @@ namespace Hook
 			trampoline.write_branch<5>(target.address(), (std::uintptr_t)result);
 
 			REL::safe_write(targetAddress.address() + 0x5B, REL::NOP3, 0x3); // just in case
+		}
+	};
+
+	struct SharedResponseDataHook // Hacky workaround for records with DNAM (shared response data)
+	{
+		struct MoveParent : Xbyak::CodeGenerator
+		{
+			MoveParent() // move RE::TESTopicInfo* as 3rd parameter
+			{
+				mov(r8, r12);
+			}
+		};
+
+		static bool thunk(RE::TESFile* a_file, void* a_buf, std::uint64_t a_topicInfo)
+		{
+			auto result = func(a_file, a_buf, 4u); // invoke with 4u from original code
+
+			RE::TESTopicInfo* parentInfo = reinterpret_cast<RE::TESTopicInfo*>(a_topicInfo);
+
+			std::uint32_t* data = static_cast<std::uint32_t*>(a_buf);
+
+
+			/*
+			SKSE::log::info("FormID - Parent: {0:08X}", parentInfo->formID);
+			SKSE::log::info("FormID - DNAM: {0:08X}", *data);
+			SKSE::log::info("File: {}", a_file->GetFilename());
+			*/
+
+			return result;
+		}
+		static inline REL::Relocation<decltype(thunk)> func;
+
+		static void Install()
+		{
+			constexpr auto targetAddress = RELOCATION_ID(25058, 25597);
+
+			REL::Relocation<std::uintptr_t> swapTarget{ targetAddress, REL::Relocate(0x332, 0x39F) };
+			REL::safe_fill(swapTarget.address(), REL::NOP, 0x6);
+
+			auto newCode = MoveParent();
+			assert(newCode.getSize() <= 0x6);
+			REL::safe_write(swapTarget.address(), newCode.getCode(), newCode.getSize());
+
+			REL::Relocation<std::uintptr_t> target{ targetAddress, REL::Relocate(0x33F, 0x3AC) };
+			stl::write_thunk_call<SharedResponseDataHook>(target.address());
 		}
 	};
 
@@ -120,6 +165,10 @@ namespace Hook
 		}
 	};
 
+	void InstallDialogueHooksPostLoad()
+	{
+		SharedResponseDataHook::Install();
+	}
 
 	void InstallDialogueHooks()
 	{

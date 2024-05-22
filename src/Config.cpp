@@ -507,32 +507,38 @@ void Config::ProcessEntryPreload(const json& entry, const RecordType& recordType
 		return;
 
 	const std::string& stringValue = entry["string"];
+	const size_t key = Utils::combineHash(formID, plugin);
+
+	auto insertIntoMap = [&](auto& map) {
+		map.insert_or_assign(key, stringValue);
+		};
 
 	switch (recordType)
 	{
 	case RecordType::kACTI_RNAM:
 	case RecordType::kFLOR_RNAM:
-	{
-		const size_t key = Utils::combineHash(formID, plugin);
-		Hook::g_ACTI_Map.insert_or_assign(key, stringValue);
-	}
-	break;
+		insertIntoMap(Hook::g_ACTI_Map);
+		break;
 	case RecordType::kNPC__FULL:
-	{
-		const size_t key = Utils::combineHash(formID, plugin);
-		Hook::g_NPC_FULL_Map.insert_or_assign(key, stringValue);
-	}
-	break;
+		insertIntoMap(Hook::g_NPC_FULL_Map);
+		break;
 	case RecordType::kINFO_RNAM:
-	{
-		const size_t key = Utils::combineHash(formID, plugin);
-		Hook::g_INFO_RNAM_Map.insert_or_assign(key, stringValue);
-	}
-	break;
+		insertIntoMap(Hook::g_INFO_RNAM_Map);
+		break;
 	case RecordType::kINFO_NAM1:
 	{
-		const size_t key = Utils::combineHashWithIndex(formID, entry["index"].get<int>(), plugin);
-		Hook::g_INFO_NAM1_Map.insert_or_assign(key, stringValue);
+
+		auto& valueList = Hook::g_INFO_NAM1_Map[formIDEntry];
+		Hook::Value value = { entry["index"].get<int>(), stringValue };
+
+		auto it = std::find_if(valueList.begin(), valueList.end(),
+			[&value](const Hook::Value& v) { return v.first == value.first; });
+
+		if (it != valueList.end())
+			it->second = value.second;
+		else
+			valueList.emplace_back(value);
+
 	}
 	break;
 	case RecordType::kQUST_CNAM:
@@ -551,21 +557,21 @@ void Config::ParseTranslationFiles(bool preload)
 	if (m_FilesInPluginFolder.empty())
 		return;
 
-	for (const auto& files : m_FilesInPluginFolder)
+	for (const auto& file : m_FilesInPluginFolder)
 	{
 		//SKSE::log::debug("Parsing file {}", files);
 
 		try
 		{
-			std::ifstream file(files);
-			if (!file.is_open())
+			std::ifstream jsonfile(file);
+			if (!jsonfile.is_open())
 			{
-				SKSE::log::error("Couldn't open file {}", files);
+				SKSE::log::error("Couldn't open file {}", file);
 				continue;
 			}
 
 			json jsonData;
-			file >> jsonData;
+			jsonfile >> jsonData;
 
 			//Read data out of json file
 			for (const auto& entry : jsonData)
@@ -580,18 +586,18 @@ void Config::ParseTranslationFiles(bool preload)
 					}
 					else
 					{
-						ProcessEntry(files, entry, recordType);
+						ProcessEntry(file, entry, recordType);
 					}
 				}
 				catch (const std::exception& e)
 				{
-					SKSE::log::error("Exception while processing entry in file {}: {}", files, e.what());
+					SKSE::log::error("Exception while processing entry in file {}: {}", file, e.what());
 				}
 			}
 		}
 		catch (const std::exception& e)
 		{
-			SKSE::log::error("Exception while parsing JSON file {}: {}", files, e.what());
+			SKSE::log::error("Exception while parsing JSON file {}: {}", file, e.what());
 		}
 	}
 }
