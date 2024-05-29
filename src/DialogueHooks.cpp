@@ -43,7 +43,7 @@ namespace Hook
 		{
 			const std::string& fileName = Utils::GetModName(a_topicInfo);
 			const RE::FormID trimmedFormID = Utils::GetTrimmedFormID(a_topicInfo);
-			size_t key = Utils::combineHashWithIndex(trimmedFormID, a_response->responseNumber, fileName);
+			const size_t key = Utils::combineHashWithIndex(trimmedFormID, a_response->responseNumber, fileName);
 
 			SKSE::log::debug("Original string: {}", a_response->responseText.c_str());
 			SKSE::log::debug("FormID: {0:08X}", a_topicInfo->formID);
@@ -51,18 +51,25 @@ namespace Hook
 			SKSE::log::debug("Number: {}", a_response->responseNumber);
 			SKSE::log::debug("Plugin: {}", fileName);
 
-			//auto it = g_INFO_NAM1_Map.find(key);
-			//if (it != g_INFO_NAM1_Map.end())
-			//{
-				//	a_str = it->second;
-				//	char* newtext = const_cast<char*>(a_str.c_str());
+			auto it = g_INFO_NAM1_Map.find(std::to_string(trimmedFormID) + fileName);
+			if (it != g_INFO_NAM1_Map.end())
+			{
+				const std::uint8_t reponseNumber = a_response->responseNumber;
+				const auto& value = it->second;
 
-			//	SetBSString(a_str, newtext, 0);
-			//}
-			//else
-			//{
-			SetBSString(a_str, a_buffer, 0);
-			//}
+				auto contains = std::find_if(value.begin(), value.end(),
+					[&reponseNumber](const Hook::Value& v) { return v.first == reponseNumber; });
+
+				if (contains != value.end())
+				{
+					a_str = contains->second;
+					SetBSString(a_str, const_cast<char*>(a_str.c_str()), 0);
+				}
+			}
+			else
+			{
+				SetBSString(a_str, a_buffer, 0);
+			}
 		}
 
 		static void Install()
@@ -95,19 +102,33 @@ namespace Hook
 		{
 			auto result = func(a_file, a_buf, 4u); // invoke with 4u from original code
 
-			RE::TESTopicInfo* parentInfo = reinterpret_cast<RE::TESTopicInfo*>(a_topicInfo);
+			const RE::TESTopicInfo* parentInfo = reinterpret_cast<RE::TESTopicInfo*>(a_topicInfo);
+			std::uint32_t dnamFormID = *static_cast<std::uint32_t*>(a_buf);
+			std::uint32_t firstTwoHexDigits = dnamFormID >> 24; // extract first two digits and convert to decimal
+			RE::FormID formID = dnamFormID & 0xFFFFFF; // remove file index -> 0x00XXXXXX
 
-			std::uint32_t* data = static_cast<std::uint32_t*>(a_buf);
+			const RE::TESFile* lookupFile = a_file;
+			if (firstTwoHexDigits != a_file->masterCount)
+			{
+				lookupFile = a_file->masterPtrs[firstTwoHexDigits];
+			}
 
+			if (lookupFile->IsLight())
+			{
+				formID &= 0xFFF;
+			}
 
-			/*
-			SKSE::log::info("FormID - Parent: {0:08X}", parentInfo->formID);
-			SKSE::log::info("FormID - DNAM: {0:08X}", *data);
-			SKSE::log::info("File: {}", a_file->GetFilename());
-			*/
+			const std::string filename = lookupFile->GetFilename().data();
+			auto it = g_INFO_NAM1_Map.find(std::to_string(formID) + filename);
+			if (it != g_INFO_NAM1_Map.end())
+			{
+				const std::string newKey = std::to_string(Utils::GetTrimmedFormID(parentInfo)) + filename;
+				g_INFO_NAM1_Map.insert({ newKey, it->second });
+			}
 
 			return result;
 		}
+
 		static inline REL::Relocation<decltype(thunk)> func;
 
 		static void Install()

@@ -527,9 +527,8 @@ void Config::ProcessEntryPreload(const json& entry, const RecordType& recordType
 		break;
 	case RecordType::kINFO_NAM1:
 	{
-
-		auto& valueList = Hook::g_INFO_NAM1_Map[formIDEntry];
-		Hook::Value value = { entry["index"].get<int>(), stringValue };
+		auto& valueList = Hook::g_INFO_NAM1_Map[std::to_string(formID) + plugin];
+		Hook::Value value = { entry["index"].get<std::uint8_t>(), stringValue };
 
 		auto it = std::find_if(valueList.begin(), valueList.end(),
 			[&value](const Hook::Value& v) { return v.first == value.first; });
