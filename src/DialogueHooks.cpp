@@ -43,7 +43,6 @@ namespace Hook
 		{
 			const std::string& fileName = Utils::GetModName(a_topicInfo);
 			const RE::FormID trimmedFormID = Utils::GetTrimmedFormID(a_topicInfo);
-			const size_t key = Utils::combineHashWithIndex(trimmedFormID, a_response->responseNumber, fileName);
 
 			SKSE::log::debug("Original string: {}", a_response->responseText.c_str());
 			SKSE::log::debug("FormID: {0:08X}", a_topicInfo->formID);
@@ -63,7 +62,8 @@ namespace Hook
 				if (contains != value.end())
 				{
 					a_str = contains->second;
-					SetBSString(a_str, const_cast<char*>(a_str.c_str()), 0);
+					char* newText = const_cast<char*>(a_str.c_str());
+					SetBSString(a_str, newText, 0);
 				}
 			}
 			else
@@ -111,6 +111,15 @@ namespace Hook
 			if (firstTwoHexDigits != a_file->masterCount)
 			{
 				lookupFile = a_file->masterPtrs[firstTwoHexDigits];
+			}
+
+			if (lookupFile == nullptr)
+			{
+				SKSE::log::error("FormID - Parent: {0:08X}", parentInfo->formID);
+				SKSE::log::error("FormID - DNAM: {0:08X}", dnamFormID);
+				SKSE::log::error("FormID - ID: {}", firstTwoHexDigits);
+				SKSE::log::error("File - Parent: {}", a_file->GetFilename());
+				return result;
 			}
 
 			if (lookupFile->IsLight())
