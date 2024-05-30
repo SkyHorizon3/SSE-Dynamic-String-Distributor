@@ -1,6 +1,6 @@
 {
   "name": "dynamicstringdistributor",
-  "version-semver": "1.2.0",
+  "version-semver": "1.2.1",
   "description": "",
   "license": "GPL-3.0",
   "dependencies": [
@@ -13,5 +13,5 @@
     "unordered-dense",
     "simpleini"
   ],
-  "builtin-baseline": "62aa44929954469878eb8fc562af706a8f5615a5"
+  "builtin-baseline": "7eb700c9688daed6d8bdcdc571ebe3eedea6a774"
 }

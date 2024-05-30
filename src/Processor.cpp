@@ -81,16 +81,15 @@ template <typename T>
 void Processor::SetConstStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, RE::BSFixedString T::* memberPtr)
 {
 	T* OrigString = skyrim_cast<T*>(Form);
-	if (OrigString)
-	{
-		OrigString->*memberPtr = std::move(NewString);
-	}
-	else
+
+	if (!OrigString)
 	{
 		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", Form->formID);
 		SKSE::log::error("out of plugin {}.", Utils::GetModName(Form));
+		return;
 	}
 
+	OrigString->*memberPtr = std::move(NewString);
 }
 
 void Processor::SetGameSettingString(const std::string& a_name, const std::string& a_NewString)
@@ -126,7 +125,7 @@ void Processor::SetGameSettingString(const std::string& a_name, const std::strin
 
 void Processor::SetMessageBoxButtonStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, const int& index)
 {
-	RE::BGSMessage* message = skyrim_cast<RE::BGSMessage*>(Form); //MESG ITXT
+	RE::BGSMessage* message = Form->As<RE::BGSMessage>(); //MESG ITXT
 	if (message)
 	{
 		int pos = 0;
@@ -145,118 +144,113 @@ void Processor::SetMessageBoxButtonStrings(RE::TESForm* Form, const RE::BSFixedS
 	}
 	else
 	{
-		RE::BGSPerk* perk = skyrim_cast<RE::BGSPerk*>(Form); //PERK EPF2
+		RE::BGSPerk* perk = Form->As<RE::BGSPerk>(); //PERK EPF2
 
-		if (perk)
-		{
-			for (auto& entry : perk->perkEntries)
-			{
-				if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
-				{
-					RE::BGSEntryPointPerkEntry* entryPoint = skyrim_cast<RE::BGSEntryPointPerkEntry*>(entry);
-
-					if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kAddActivateChoice)
-					{
-						RE::BGSEntryPointFunctionDataActivateChoice* func = skyrim_cast<RE::BGSEntryPointFunctionDataActivateChoice*>(entryPoint->functionData);
-
-						//SKSE::log::info("ID: {} - String: {}", func->id, func->label);
-
-						if (func->id == index)
-						{
-							func->label = std::move(NewString);
-						}
-
-					}
-				}
-
-			}
-
-		}
-		else
+		if (!perk)
 		{
 			SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", Form->formID);
 			SKSE::log::error("out of plugin {}.", Utils::GetModName(Form));
+			return;
 		}
+
+		for (auto& entry : perk->perkEntries)
+		{
+			if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
+			{
+				RE::BGSEntryPointPerkEntry* entryPoint = static_cast<RE::BGSEntryPointPerkEntry*>(entry);
+
+				if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kAddActivateChoice)
+				{
+					RE::BGSEntryPointFunctionDataActivateChoice* func = static_cast<RE::BGSEntryPointFunctionDataActivateChoice*>(entryPoint->functionData);
+
+					//SKSE::log::info("ID: {} - String: {}", func->id, func->label);
+
+					if (func->id == index)
+					{
+						func->label = std::move(NewString);
+					}
+
+				}
+			}
+
+		}
+
 	}
 
 }
 
 void Processor::SetRegionDataStrings(RE::TESForm* Form, const RE::BSFixedString& NewString) //REGN RDMP
 {
-	RE::TESRegion* regionData = skyrim_cast<RE::TESRegion*>(Form);
+	RE::TESRegion* regionData = Form->As<RE::TESRegion>();
 
-	if (regionData && regionData->dataList)
-	{
-		for (const auto& region : regionData->dataList->regionDataList)
-		{
-			if (region->GetType() == RE::TESRegionData::Type::kMap)
-			{
-				RE::TESRegionDataMap* mapData = skyrim_cast<RE::TESRegionDataMap*>(region);
-				mapData->mapName = std::move(NewString);
-			}
-		}
-	}
-	else
+	if (!regionData || !regionData->dataList)
 	{
 		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", Form->formID);
 		SKSE::log::error("out of plugin {}.", Utils::GetModName(Form));
+		return;
 	}
+
+	for (const auto& region : regionData->dataList->regionDataList)
+	{
+		if (region->GetType() == RE::TESRegionData::Type::kMap)
+		{
+			RE::TESRegionDataMap* mapData = static_cast<RE::TESRegionDataMap*>(region);
+			mapData->mapName = std::move(NewString);
+		}
+	}
+
 }
 
 void Processor::SetEntryPointStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, const int& index) //PERK EPFD
 {
-	RE::BGSPerk* perk = skyrim_cast<RE::BGSPerk*>(Form);
-
-	if (perk)
-	{
-
-		int entryCount = perk->perkEntries.size();
-		for (int i = entryCount - 1; i >= 0; --i)
-		{
-			auto& entry = perk->perkEntries[i];
-
-			if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
-			{
-				RE::BGSEntryPointPerkEntry* entryPoint = skyrim_cast<RE::BGSEntryPointPerkEntry*>(entry);
-
-				if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kSetText)
-				{
-					RE::BGSEntryPointFunctionDataText* func = skyrim_cast<RE::BGSEntryPointFunctionDataText*>(entryPoint->functionData);
-
-					if (entryCount - 1 - i == index)
-					{
-						func->text = std::move(NewString);
-					}
-				}
-			}
-
-		}
-	}
-	else
+	RE::BGSPerk* perk = Form->As<RE::BGSPerk>();
+	if (!perk)
 	{
 		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", Form->formID);
 		SKSE::log::error("out of plugin {}.", Utils::GetModName(Form));
+		return;
+	}
+
+	int entryCount = perk->perkEntries.size();
+	for (int i = entryCount - 1; i >= 0; --i)
+	{
+		auto& entry = perk->perkEntries[i];
+
+		if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
+		{
+			RE::BGSEntryPointPerkEntry* entryPoint = static_cast<RE::BGSEntryPointPerkEntry*>(entry);
+
+			if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kSetText)
+			{
+				RE::BGSEntryPointFunctionDataText* func = static_cast<RE::BGSEntryPointFunctionDataText*>(entryPoint->functionData);
+
+				if (entryCount - 1 - i == index)
+				{
+					func->text = std::move(NewString);
+				}
+			}
+		}
+
 	}
 }
 
 
 void Processor::SetQuestObjectiveStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, const int& index) //QUST NNAM
 {
-	RE::TESQuest* quest = skyrim_cast<RE::TESQuest*>(Form);
+	RE::TESQuest* quest = Form->As<RE::TESQuest>();
 
-	if (quest)
-	{
-		for (const auto& objective : quest->objectives)
-		{
-			if (objective->index == index)
-			{
-				objective->displayText = std::move(NewString);
-			}
-		}
-	}
-	else
+	if (!quest)
 	{
 		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", Form->formID);
 		SKSE::log::error("out of plugin {}.", Utils::GetModName(Form));
+		return;
+	}
+
+	for (const auto& objective : quest->objectives)
+	{
+		if (objective->index == index)
+		{
+			objective->displayText = std::move(NewString);
+		}
 	}
 }

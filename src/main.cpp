@@ -1,6 +1,7 @@
 ﻿#include "Config.h"
 #include "MiscHooks.h"
 #include "Processor.h"
+#include "Parser.h"
 #include "MergeMapperPluginAPI.h"
 
 // Setup logger for plugin

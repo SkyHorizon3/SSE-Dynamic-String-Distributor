@@ -61,7 +61,7 @@ std::vector<std::string> Config::GetLoadOrder()
 			m_BaseGamePlugins.end()
 		);
 
-		std::vector<std::string> AllPlugins;
+		std::vector<std::string> activePlugins;
 
 		if (!std::filesystem::exists("Data"sv))
 		{
@@ -73,14 +73,14 @@ std::vector<std::string> Config::GetLoadOrder()
 		{
 			if (entry.is_regular_file() && (entry.path().extension() == L".esp" || entry.path().extension() == L".esm" || entry.path().extension() == L".esl"))
 			{
-				AllPlugins.emplace_back(entry.path().filename().string());
+				activePlugins.emplace_back(entry.path().filename().string());
 			}
 		}
 
 		m_BaseGamePlugins.erase(
 			std::remove_if(m_BaseGamePlugins.begin(), m_BaseGamePlugins.end(), [&](const std::string& BaseGamePlugin) //Remove plugins not found in data folder from the BaseGamePlugin list.
 			{
-				return !Utils::SearchCompare(AllPlugins, BaseGamePlugin);
+				return !Utils::SearchCompare(activePlugins, BaseGamePlugin);
 			}),
 			m_BaseGamePlugins.end()
 		);
@@ -507,29 +507,37 @@ void Config::ProcessEntryPreload(const json& entry, const RecordType& recordType
 		return;
 
 	const std::string& stringValue = entry["string"];
+	const size_t key = Utils::combineHash(formID, plugin);
+
+	auto insertIntoMap = [&](auto& map) {
+		map.insert_or_assign(key, stringValue);
+		};
 
 	switch (recordType)
 	{
 	case RecordType::kACTI_RNAM:
 	case RecordType::kFLOR_RNAM:
-		Hook::g_FLOR_RNAM_RDMP_Map.insert_or_assign(entry["original"], stringValue);
+		insertIntoMap(Hook::g_ACTI_Map);
 		break;
 	case RecordType::kNPC__FULL:
-	{
-		const size_t key = Utils::combineHash(formID, plugin);
-		Hook::g_NPC_FULL_Map.insert_or_assign(key, stringValue);
-	}
-	break;
+		insertIntoMap(Hook::g_NPC_FULL_Map);
+		break;
 	case RecordType::kINFO_RNAM:
-	{
-		const size_t key = Utils::combineHash(formID, plugin);
-		Hook::g_INFO_RNAM_Map.insert_or_assign(key, stringValue);
-	}
-	break;
+		insertIntoMap(Hook::g_INFO_RNAM_Map);
+		break;
 	case RecordType::kINFO_NAM1:
 	{
-		const size_t key = Utils::combineHashWithIndex(formID, entry["index"].get<int>(), plugin);
-		Hook::g_INFO_NAM1_Map.insert_or_assign(key, stringValue);
+		auto& valueList = Hook::g_INFO_NAM1_Map[std::to_string(formID) + plugin];
+		Hook::Value value = { entry["index"].get<std::uint8_t>(), stringValue };
+
+		auto it = std::find_if(valueList.begin(), valueList.end(),
+			[&value](const Hook::Value& v) { return v.first == value.first; });
+
+		if (it != valueList.end())
+			it->second = value.second;
+		else
+			valueList.emplace_back(value);
+
 	}
 	break;
 	case RecordType::kQUST_CNAM:
@@ -548,21 +556,21 @@ void Config::ParseTranslationFiles(bool preload)
 	if (m_FilesInPluginFolder.empty())
 		return;
 
-	for (const auto& files : m_FilesInPluginFolder)
+	for (const auto& file : m_FilesInPluginFolder)
 	{
-		SKSE::log::debug("Parsing file {}", files);
+		//SKSE::log::debug("Parsing file {}", files);
 
 		try
 		{
-			std::ifstream file(files);
-			if (!file.is_open())
+			std::ifstream jsonfile(file);
+			if (!jsonfile.is_open())
 			{
-				SKSE::log::error("Couldn't open file {}", files);
+				SKSE::log::error("Couldn't open file {}", file);
 				continue;
 			}
 
 			json jsonData;
-			file >> jsonData;
+			jsonfile >> jsonData;
 
 			//Read data out of json file
 			for (const auto& entry : jsonData)
@@ -577,18 +585,18 @@ void Config::ParseTranslationFiles(bool preload)
 					}
 					else
 					{
-						ProcessEntry(files, entry, recordType);
+						ProcessEntry(file, entry, recordType);
 					}
 				}
 				catch (const std::exception& e)
 				{
-					SKSE::log::error("Exception while processing entry in file {}: {}", files, e.what());
+					SKSE::log::error("Exception while processing entry in file {}: {}", file, e.what());
 				}
 			}
 		}
 		catch (const std::exception& e)
 		{
-			SKSE::log::error("Exception while parsing JSON file {}: {}", files, e.what());
+			SKSE::log::error("Exception while parsing JSON file {}: {}", file, e.what());
 		}
 	}
 }

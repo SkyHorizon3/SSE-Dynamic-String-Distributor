@@ -130,7 +130,6 @@ namespace Hook
 			//JournalMenu quest description text Hook
 			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(24778, 25259), REL::Relocate(0x21C, 0x221) };//First: 5B ->Don't know; Second: C4 ->Don't know; Third: 221 ->Quest description text
 			stl::write_thunk_call<QuestCNAMTextHook>(target1.address());
-			SKSE::log::info("QuestCNAMTextHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 		}
 
 	};

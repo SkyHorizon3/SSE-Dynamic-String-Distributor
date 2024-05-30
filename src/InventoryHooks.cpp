@@ -55,14 +55,12 @@ namespace Hook
 			{
 				REL::Relocation<std::uintptr_t> target(id, offset);
 				stl::write_thunk_call<ItemCardPopulateHook>(target.address());
-				SKSE::log::info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target.address(), target.offset());
 			}
 
 			if (REL::Module::IsAE())
 			{
 				REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(0, 51458), REL::VariantOffset(0x0, 0x87, 0x0) };
 				stl::write_thunk_call<ItemCardPopulateHook>(target.address());
-				SKSE::log::info("ItemCardPopulateHook hooked at address: {:x} and offset: {:x}", target.address(), target.offset());
 			}
 		}
 	};

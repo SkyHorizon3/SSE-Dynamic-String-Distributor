@@ -43,7 +43,6 @@ namespace Hook
 		{
 			const std::string& fileName = Utils::GetModName(a_topicInfo);
 			const RE::FormID trimmedFormID = Utils::GetTrimmedFormID(a_topicInfo);
-			size_t key = Utils::combineHashWithIndex(trimmedFormID, a_response->responseNumber, fileName);
 
 			SKSE::log::debug("Original string: {}", a_response->responseText.c_str());
 			SKSE::log::debug("FormID: {0:08X}", a_topicInfo->formID);
@@ -51,18 +50,26 @@ namespace Hook
 			SKSE::log::debug("Number: {}", a_response->responseNumber);
 			SKSE::log::debug("Plugin: {}", fileName);
 
-			auto it = g_INFO_NAM1_Map.find(key);
+			auto it = g_INFO_NAM1_Map.find(std::to_string(trimmedFormID) + fileName);
 			if (it != g_INFO_NAM1_Map.end())
 			{
-				a_str = it->second;
-				char* newtext = const_cast<char*>(a_str.c_str());
+				const std::uint8_t reponseNumber = a_response->responseNumber;
+				const auto& value = it->second;
 
-				SetBSString(a_str, newtext, 0);
+				auto contains = std::find_if(value.begin(), value.end(),
+					[&reponseNumber](const Hook::Value& v) { return v.first == reponseNumber; });
+
+				if (contains != value.end())
+				{
+					a_str = contains->second;
+					char* newText = const_cast<char*>(a_str.c_str());
+					SetBSString(a_str, newText, 0);
+					return;
+				}
 			}
-			else
-			{
-				SetBSString(a_str, a_buffer, 0);
-			}
+
+			SetBSString(a_str, a_buffer, 0);
+
 		}
 
 		static void Install()
@@ -78,6 +85,74 @@ namespace Hook
 			trampoline.write_branch<5>(target.address(), (std::uintptr_t)result);
 
 			REL::safe_write(targetAddress.address() + 0x5B, REL::NOP3, 0x3); // just in case
+		}
+	};
+
+	struct SharedResponseDataHook // Hacky workaround for records with DNAM (shared response data)
+	{
+		struct MoveParent : Xbyak::CodeGenerator
+		{
+			MoveParent() // move RE::TESTopicInfo* as 3rd parameter
+			{
+				mov(r8, r12);
+			}
+		};
+
+		static bool thunk(RE::TESFile* a_file, void* a_buf, std::uint64_t a_topicInfo)
+		{
+			auto result = func(a_file, a_buf, 4u); // invoke with 4u from original code
+
+			const RE::TESTopicInfo* parentInfo = reinterpret_cast<RE::TESTopicInfo*>(a_topicInfo);
+			std::uint32_t dnamFormID = *static_cast<std::uint32_t*>(a_buf);
+			std::uint32_t firstTwoHexDigits = dnamFormID >> 24; // extract first two digits and convert to decimal
+			RE::FormID formID = dnamFormID & 0xFFFFFF; // remove file index -> 0x00XXXXXX
+
+			const RE::TESFile* lookupFile = a_file;
+			if (firstTwoHexDigits != a_file->masterCount)
+			{
+				lookupFile = a_file->masterPtrs[firstTwoHexDigits];
+			}
+
+			if (lookupFile == nullptr)
+			{
+				SKSE::log::error("INFO DNAM error, please report it in our Discord!");
+				SKSE::log::error("FormID - Parent: {0:08X}", parentInfo->formID);
+				SKSE::log::error("FormID - DNAM: {0:08X}", dnamFormID);
+				SKSE::log::error("FormID - ID: {}", firstTwoHexDigits);
+				SKSE::log::error("File - Parent: {}", a_file->GetFilename());
+				return result;
+			}
+
+			if (lookupFile->IsLight())
+			{
+				formID &= 0xFFF;
+			}
+
+			auto it = g_INFO_NAM1_Map.find(std::to_string(formID) + lookupFile->GetFilename().data());
+			if (it != g_INFO_NAM1_Map.end())
+			{
+				const std::string newKey = std::to_string(Utils::GetTrimmedFormID(parentInfo)) + Utils::GetModName(parentInfo);
+				g_INFO_NAM1_Map.insert({ newKey, it->second });
+			}
+
+			return result;
+		}
+
+		static inline REL::Relocation<decltype(thunk)> func;
+
+		static void Install()
+		{
+			constexpr auto targetAddress = RELOCATION_ID(25058, 25597);
+
+			REL::Relocation<std::uintptr_t> swapTarget{ targetAddress, REL::Relocate(0x332, 0x39F) };
+			REL::safe_fill(swapTarget.address(), REL::NOP, 0x6);
+
+			auto newCode = MoveParent();
+			assert(newCode.getSize() <= 0x6);
+			REL::safe_write(swapTarget.address(), newCode.getCode(), newCode.getSize());
+
+			REL::Relocation<std::uintptr_t> target{ targetAddress, REL::Relocate(0x33F, 0x3AC) };
+			stl::write_thunk_call<SharedResponseDataHook>(target.address());
 		}
 	};
 
@@ -111,17 +186,19 @@ namespace Hook
 		{
 			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(34434, 35254), REL::Relocate(0xCC, 0x226) };
 			stl::write_thunk_call<DialogueMenuTextHook>(target1.address());
-			SKSE::log::info("DialogueMenuTextHook hooked at address: {:x} and offset: {:x}", target1.address(), target1.offset());
 
 			if (REL::Module::IsAE())
 			{
 				REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(0, 35254), REL::VariantOffset(0x0, 0x115, 0x0) };
 				stl::write_thunk_call<DialogueMenuTextHook>(target2.address());
-				SKSE::log::info("DialogueMenuTextHook hooked at address: {:x} and offset: {:x}", target2.address(), target2.offset());
 			}
 		}
 	};
 
+	void InstallDialogueHooksPostLoad()
+	{
+		SharedResponseDataHook::Install();
+	}
 
 	void InstallDialogueHooks()
 	{
