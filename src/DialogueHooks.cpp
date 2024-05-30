@@ -64,12 +64,12 @@ namespace Hook
 					a_str = contains->second;
 					char* newText = const_cast<char*>(a_str.c_str());
 					SetBSString(a_str, newText, 0);
+					return;
 				}
 			}
-			else
-			{
-				SetBSString(a_str, a_buffer, 0);
-			}
+
+			SetBSString(a_str, a_buffer, 0);
+
 		}
 
 		static void Install()
@@ -115,6 +115,7 @@ namespace Hook
 
 			if (lookupFile == nullptr)
 			{
+				SKSE::log::error("INFO DNAM error, please report it in our Discord!");
 				SKSE::log::error("FormID - Parent: {0:08X}", parentInfo->formID);
 				SKSE::log::error("FormID - DNAM: {0:08X}", dnamFormID);
 				SKSE::log::error("FormID - ID: {}", firstTwoHexDigits);
@@ -127,11 +128,10 @@ namespace Hook
 				formID &= 0xFFF;
 			}
 
-			const std::string filename = lookupFile->GetFilename().data();
-			auto it = g_INFO_NAM1_Map.find(std::to_string(formID) + filename);
+			auto it = g_INFO_NAM1_Map.find(std::to_string(formID) + lookupFile->GetFilename().data());
 			if (it != g_INFO_NAM1_Map.end())
 			{
-				const std::string newKey = std::to_string(Utils::GetTrimmedFormID(parentInfo)) + filename;
+				const std::string newKey = std::to_string(Utils::GetTrimmedFormID(parentInfo)) + Utils::GetModName(parentInfo);
 				g_INFO_NAM1_Map.insert({ newKey, it->second });
 			}
 
