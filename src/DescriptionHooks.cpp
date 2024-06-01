@@ -7,8 +7,8 @@ namespace Hook
 {
 	std::string GetItemDescription(RE::FormID& formID, Config::SubrecordType subrecord)
 	{
-		const size_t key = Utils::combineHashSubrecord(formID, subrecord);
-		auto it = g_DESC_CNAM_Map.find(key);
+		const auto key = Utils::combineHashSubrecord(formID, subrecord);
+		const auto it = g_DESC_CNAM_Map.find(key);
 		if (it != g_DESC_CNAM_Map.end())
 		{
 			return it->second;

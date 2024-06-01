@@ -41,7 +41,7 @@ namespace Hook
 
 		static void thunk(RE::BSString& a_str, char* a_buffer, RE::TESTopicInfo* a_topicInfo, RE::TESTopicInfo::ResponseData* a_response)
 		{
-			const std::string& fileName = Utils::GetModName(a_topicInfo);
+			std::string_view fileName = Utils::GetModName(a_topicInfo);
 			const RE::FormID trimmedFormID = Utils::GetTrimmedFormID(a_topicInfo);
 
 			SKSE::log::debug("Original string: {}", a_response->responseText.c_str());
@@ -50,7 +50,7 @@ namespace Hook
 			SKSE::log::debug("Number: {}", a_response->responseNumber);
 			SKSE::log::debug("Plugin: {}", fileName);
 
-			auto it = g_INFO_NAM1_Map.find(std::to_string(trimmedFormID) + fileName);
+			const auto it = g_INFO_NAM1_Map.find(std::to_string(trimmedFormID) + fileName.data());
 			if (it != g_INFO_NAM1_Map.end())
 			{
 				const std::uint8_t reponseNumber = a_response->responseNumber;
@@ -104,7 +104,7 @@ namespace Hook
 
 			const RE::TESTopicInfo* parentInfo = reinterpret_cast<RE::TESTopicInfo*>(a_topicInfo);
 			std::uint32_t dnamFormID = *static_cast<std::uint32_t*>(a_buf);
-			std::uint32_t firstTwoHexDigits = dnamFormID >> 24; // extract first two digits and convert to decimal
+			const std::uint32_t firstTwoHexDigits = dnamFormID >> 24; // extract first two digits and convert to decimal
 			RE::FormID formID = dnamFormID & 0xFFFFFF; // remove file index -> 0x00XXXXXX
 
 			const RE::TESFile* lookupFile = a_file;
@@ -128,7 +128,7 @@ namespace Hook
 				formID &= 0xFFF;
 			}
 
-			auto it = g_INFO_NAM1_Map.find(std::to_string(formID) + lookupFile->GetFilename().data());
+			const auto it = g_INFO_NAM1_Map.find(std::to_string(formID) + lookupFile->GetFilename().data());
 			if (it != g_INFO_NAM1_Map.end())
 			{
 				const std::string newKey = std::to_string(Utils::GetTrimmedFormID(parentInfo)) + Utils::GetModName(parentInfo);
@@ -162,16 +162,16 @@ namespace Hook
 		{
 			func(a_out, a2, a3);
 
-			size_t key1 = Utils::combineHash(a_out.parentTopic->formID, Utils::GetModName(a_out.parentTopic));
-			auto it1 = g_DIAL_FULL_Map.find(key1);
+			const auto key1 = Utils::combineHash(a_out.parentTopic->formID, Utils::GetModName(a_out.parentTopic));
+			const auto it1 = g_DIAL_FULL_Map.find(key1);
 
 			if (it1 != g_DIAL_FULL_Map.end())
 			{
 				a_out.topicText = it1->second;
 			}
 
-			size_t key2 = Utils::combineHash(a_out.parentTopicInfo->formID, Utils::GetModName(a_out.parentTopicInfo));
-			auto it2 = g_INFO_RNAM_Map.find(key2); //INFO RNAM always overwrites DIAL FULL of parenttopic
+			const auto key2 = Utils::combineHash(a_out.parentTopicInfo->formID, Utils::GetModName(a_out.parentTopicInfo));
+			const auto it2 = g_INFO_RNAM_Map.find(key2); //INFO RNAM always overwrites DIAL FULL of parenttopic
 
 			if (it2 != g_INFO_RNAM_Map.end())
 			{

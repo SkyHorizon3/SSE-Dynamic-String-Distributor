@@ -21,10 +21,9 @@ namespace Hook
 
 			auto result = func(marker);
 
-			size_t key = Utils::combineHash(marker->formID, Utils::GetModName(marker));
+			const auto key = Utils::combineHash(marker->formID, Utils::GetModName(marker));
 
-			auto it = g_REFR_FULL_Map.find(key);
-
+			const auto it = g_REFR_FULL_Map.find(key);
 			if (result && it != g_REFR_FULL_Map.end())
 			{
 				result->fullName = it->second;
@@ -87,9 +86,9 @@ namespace Hook
 		{
 			TESFullName__sub_140196D80(a_npcFullname, a_file); //Invoke and get original output
 
-			size_t key = Utils::combineHash(Utils::GetTrimmedFormID(a_npc), Utils::GetModName(a_npc));
+			const auto key = Utils::combineHash(Utils::GetTrimmedFormID(a_npc), Utils::GetModName(a_npc));
 
-			auto it = g_NPC_FULL_Map.find(key);
+			const auto it = g_NPC_FULL_Map.find(key);
 			if (it != g_NPC_FULL_Map.end())
 			{
 				a_npcFullname->fullName = it->second;
@@ -118,8 +117,8 @@ namespace Hook
 		{
 			IsACTI = false;
 
-			size_t key = Utils::combineHash(Utils::GetTrimmedFormID(a_this), Utils::GetModName(a_this));
-			auto it = g_ACTI_Map.find(key);
+			const auto key = Utils::combineHash(Utils::GetTrimmedFormID(a_this), Utils::GetModName(a_this));
+			const auto it = g_ACTI_Map.find(key);
 
 			if (it != g_ACTI_Map.end())
 			{
