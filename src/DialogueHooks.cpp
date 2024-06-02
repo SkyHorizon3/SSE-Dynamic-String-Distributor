@@ -108,7 +108,7 @@ namespace Hook
 			RE::FormID formID = dnamFormID & 0xFFFFFF; // remove file index -> 0x00XXXXXX
 
 			const RE::TESFile* lookupFile = a_file;
-			if (firstTwoHexDigits != a_file->masterCount)
+			if (firstTwoHexDigits < a_file->masterCount)
 			{
 				lookupFile = a_file->masterPtrs[firstTwoHexDigits];
 			}

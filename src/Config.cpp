@@ -287,9 +287,9 @@ RE::FormID Config::ConvertToFormID(std::string input)
 	{
 		if (input.length() == 8)
 		{
-			if (input.substr(0, 2) == "FE")
+			if (input.compare(0, 2, "FE") == 0)
 			{
-				input = "0x" + input.substr(3);
+				input = "0x" + input.substr(5);
 			}
 			else
 			{
@@ -302,7 +302,7 @@ RE::FormID Config::ConvertToFormID(std::string input)
 		}
 	}
 
-	//SKSE::log::info("FormID: {}.", input);
+	//SKSE::log::info("FormID: {}", input);
 
 	return std::stoul(input, nullptr, 16);
 }
@@ -549,7 +549,7 @@ void Config::ParseTranslationFiles(bool preload)
 
 	for (const auto& file : m_FilesInPluginFolder)
 	{
-		//SKSE::log::debug("Parsing file {}", files);
+		//SKSE::log::debug("Parsing file {}", file);
 
 		try
 		{
