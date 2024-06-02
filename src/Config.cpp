@@ -283,31 +283,22 @@ std::tuple<RE::FormID, std::string> Config::ExtractFormIDAndPlugin(const std::st
 
 RE::FormID Config::ConvertToFormID(std::string input)
 {
-
-	if (input.find('x') == std::string::npos) // If it contains x do nothing. Assume FormID is correct.
+	if (input.find('x') == std::string::npos) // If it does not contain 'x', process it.
 	{
-		switch (input.length())
-		{
-		case 8:
+		if (input.length() == 8)
 		{
 			if (input.substr(0, 2) == "FE")
 			{
-				input[4] = 'x';
-				input.erase(0, 3);
+				input = "0x" + input.substr(3);
 			}
 			else
 			{
-				input[1] = 'x';
+				input = "0x" + input.substr(2);
 			}
 		}
-		break;
-
-		default:
+		else
 		{
-			input = "0x" + input;
-		}
-		break;
-
+			input.insert(0, "0x");
 		}
 	}
 
