@@ -41,7 +41,7 @@ namespace Hook
 
 		static void thunk(RE::BSString& a_str, char* a_buffer, RE::TESTopicInfo* a_topicInfo, RE::TESTopicInfo::ResponseData* a_response)
 		{
-			std::string_view fileName = Utils::GetModName(a_topicInfo);
+			const std::string& fileName = Utils::GetModName(a_topicInfo);
 			const RE::FormID trimmedFormID = Utils::GetTrimmedFormID(a_topicInfo);
 
 			SKSE::log::debug("Original string: {}", a_response->responseText.c_str());
@@ -50,7 +50,7 @@ namespace Hook
 			SKSE::log::debug("Number: {}", a_response->responseNumber);
 			SKSE::log::debug("Plugin: {}", fileName);
 
-			const auto it = g_INFO_NAM1_Map.find(std::to_string(trimmedFormID) + fileName.data());
+			const auto it = g_INFO_NAM1_Map.find(std::to_string(trimmedFormID) + fileName);
 			if (it != g_INFO_NAM1_Map.end())
 			{
 				const std::uint8_t reponseNumber = a_response->responseNumber;

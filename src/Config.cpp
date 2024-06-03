@@ -28,8 +28,8 @@ std::vector<std::string> Config::GetLoadOrder()
 
 			if (EnableDebugLog)
 			{
-				const std::string& second = std::filesystem::exists("steam_api64.dll") ? "Skyrim Special Edition" : "Skyrim Special Edition GOG";
-				SKSE::log::debug("Directory: {} - Version: {}", second, REL::Module::get().version());
+				std::string_view skyrim = std::filesystem::exists("steam_api64.dll") ? "Skyrim Special Edition" : "Skyrim Special Edition GOG";
+				SKSE::log::debug("Directory: {} - Version: {}", skyrim, REL::Module::get().version());
 			}
 		}
 
