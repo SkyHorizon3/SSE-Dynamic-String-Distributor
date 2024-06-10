@@ -143,6 +143,9 @@ namespace Hook
 		{
 			REL::Relocation<std::uintptr_t> target1{ REL::ID(14399), 0x53 };
 			stl::write_thunk_call<GetDescriptionHookSE>(target1.address());
+
+			REL::Relocation<std::uintptr_t> target2{ REL::ID(14400), 0x78 };
+			stl::write_thunk_call<GetDescriptionHookSE>(target2.address());
 		}
 	};
 
