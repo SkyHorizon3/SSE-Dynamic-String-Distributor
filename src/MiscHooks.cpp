@@ -133,12 +133,12 @@ namespace Hook
 		static void Install()
 		{
 			std::array targets{
-				std::make_pair(RELOCATION_ID(16800, 17181), 0x3F),
-				std::make_pair(RELOCATION_ID(16984, 17367), 0x5F),
-				std::make_pair(RELOCATION_ID(17010, 17393), 0x134),
-				std::make_pair(RELOCATION_ID(17010, 17393), 0x18E),
-				std::make_pair(RELOCATION_ID(17010, 17393), 0x1ED),
-				std::make_pair(RELOCATION_ID(17293, 17694), 0x36),
+				std::make_pair(REL::VariantID(16800, 17181, 0x2244A0), 0x3F),
+				std::make_pair(REL::VariantID(16984, 17367, 0x22A450), 0x5F),
+				std::make_pair(REL::VariantID(17010, 17393, 0x22AC40), 0x134),
+				std::make_pair(REL::VariantID(17010, 17393, 0x22AC40), 0x18E),
+				std::make_pair(REL::VariantID(17010, 17393, 0x22AC40), 0x1ED),
+				std::make_pair(REL::VariantID(17293, 17694, 0x234D50), 0x36),
 			};
 
 			for (auto& [id, offset] : targets)
@@ -167,9 +167,9 @@ namespace Hook
 		static void Install()
 		{
 			std::array targets{
-				std::make_pair(RELOCATION_ID(17294, 17711), REL::Relocate(0x421, 0xF9)),
-				std::make_pair(RELOCATION_ID(17294, 17711), REL::Relocate(0x47A, 0x14C)),
-				std::make_pair(RELOCATION_ID(17294, 17711), REL::Relocate(0x4AE, 0x178)),
+				std::make_pair(REL::VariantID(17294, 17711, 0x234DC0), REL::Relocate(0x421, 0xF9)),
+				std::make_pair(REL::VariantID(17294, 17711, 0x234DC0), REL::Relocate(0x47A, 0x14C)),
+				std::make_pair(REL::VariantID(17294, 17711, 0x234DC0), REL::Relocate(0x4AE, 0x178)),
 			};
 
 			for (auto& [id, offset] : targets)

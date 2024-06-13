@@ -59,7 +59,7 @@ namespace Hook
 
 			if (REL::Module::IsAE())
 			{
-				REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(0, 51458), REL::VariantOffset(0x0, 0x87, 0x0) };
+				REL::Relocation<std::uintptr_t> target{ REL::ID(51458), 0x87 };
 				stl::write_thunk_call<ItemCardPopulateHook>(target.address());
 			}
 		}

@@ -142,7 +142,7 @@ namespace Hook
 
 		static void Install()
 		{
-			constexpr auto targetAddress = RELOCATION_ID(25058, 25597);
+			constexpr auto targetAddress = REL::VariantID(25058, 25597, 0x3A1310);
 
 			REL::Relocation<std::uintptr_t> swapTarget{ targetAddress, REL::Relocate(0x332, 0x39F) };
 			REL::safe_fill(swapTarget.address(), REL::NOP, 0x6);
