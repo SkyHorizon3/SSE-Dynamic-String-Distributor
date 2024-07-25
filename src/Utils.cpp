@@ -1,28 +1,33 @@
 #include "Utils.h"
+#include "Config.h"
 #include "MergeMapperPluginAPI.h"
 
 namespace Utils
 {
-	size_t combineHash(uint32_t formID, const std::string& str)
+	template<typename... HashValues>
+	size_t combineHashes(HashValues... values)
 	{
-		size_t strHash = std::hash<std::string>{}(str);
-		size_t formHash = std::hash<uint32_t>{}(formID);
-		return strHash ^ (formHash + 0x9e3779b9 + (strHash << 6) + (strHash >> 2));
+		size_t combinedHash = 0;
+		constexpr size_t constant = 0x9e3779b9;
+
+		((combinedHash ^= (std::hash<std::decay_t<HashValues>>{}(values)+constant + (combinedHash << 6) + (combinedHash >> 2))), ...);
+
+		return combinedHash;
 	}
 
-	size_t combineHashWithIndex(uint32_t formID, int value, const std::string& str)
+	size_t combineHash(const std::uint32_t formID, const std::string& str)
 	{
-		size_t strHash = std::hash<std::string>{}(str);
-		size_t intValue = static_cast<size_t>(value);
-		size_t formHash = std::hash<uint32_t>{}(formID);
-		return strHash ^ (intValue + formHash + 0x9e3779b9 + (strHash << 6) + (strHash >> 2));
+		return combineHashes(str, formID);
 	}
 
-	size_t combineHashSubrecord(uint32_t formID, Config::SubrecordType subrecord)
+	size_t combineHashWithIndex(const std::uint32_t formID, int value, const std::string& str)
 	{
-		size_t intValue = static_cast<size_t>(subrecord);
-		size_t formHash = std::hash<uint32_t>{}(formID);
-		return formHash ^ (intValue + formHash + 0x9e3779b9 + (formHash << 6) + (formHash >> 2));
+		return combineHashes(str, static_cast<size_t>(value), formID);
+	}
+
+	size_t combineHashSubrecord(const std::uint32_t formID, Config::SubrecordType subrecord)
+	{
+		return combineHashes(formID, static_cast<size_t>(subrecord));
 	}
 
 	std::string GetModName(const RE::TESForm* form)
@@ -66,12 +71,14 @@ namespace Utils
 		return formID;
 	}
 
-	bool CaseInsensitiveStringCompare(const std::string& a, const std::string& b)
+	bool char_equals(char a, char b)
 	{
-		return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), [](char a, char b)
-			{
-				return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
-			});
+		return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
+	}
+
+	bool CaseInsensitiveStringCompare(std::string_view a, std::string_view b)
+	{
+		return a.size() == b.size() && std::ranges::equal(a, b, char_equals);
 	}
 
 	//return true if str is found in list.
@@ -81,6 +88,36 @@ namespace Utils
 			{
 				return CaseInsensitiveStringCompare(str, loadedPlugin);
 			});
+	}
+
+	std::wstring GetPluginTXTFilePath()
+	{
+		wchar_t userDir[MAX_PATH];
+		if (FAILED(SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, userDir)))
+		{
+			SKSE::log::error("User directory not found!");
+			return L"";
+		}
+
+		std::wstring loadOrderPath = userDir;
+		if (REL::Module::IsVR())
+		{
+			loadOrderPath += L"\\AppData\\Local\\Skyrim VR\\plugins.txt";
+			SKSE::log::debug("Directory: Skyrim VR");
+		}
+		else
+		{
+			std::wstring name = std::filesystem::exists("steam_api64.dll") ? L"Skyrim Special Edition" : L"Skyrim Special Edition GOG";
+			loadOrderPath += L"\\AppData\\Local\\" + name + L"\\plugins.txt";
+
+			if (Config::EnableDebugLog)
+			{
+				std::string_view skyrim = std::filesystem::exists("steam_api64.dll") ? "Skyrim Special Edition" : "Skyrim Special Edition GOG";
+				SKSE::log::debug("Directory: {} - Version: {}", skyrim, REL::Module::get().version());
+			}
+		}
+
+		return loadOrderPath;
 	}
 
 }

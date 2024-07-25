@@ -8,101 +8,70 @@
 
 std::vector<std::string> Config::GetLoadOrder()
 {
-	// Get user directory path
-	wchar_t userDir[MAX_PATH];
-	if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, userDir)))
+	const std::wstring loadOrderPath = Utils::GetPluginTXTFilePath();
+	if (!std::filesystem::exists(loadOrderPath) || loadOrderPath.empty())
+		return std::vector<std::string>();
+
+	std::vector<std::string> loadOrder;
+	std::ifstream file(loadOrderPath);
+	if (file.is_open())
 	{
-		// Append the rest of the path
-		std::wstring loadOrderPath = userDir;
-
-		if (REL::Module::IsVR())
+		std::string line;
+		while (std::getline(file, line))
 		{
-			loadOrderPath += L"\\AppData\\Local\\Skyrim VR\\plugins.txt";
-
-			SKSE::log::debug("Directory: Skyrim VR");
-		}
-		else
-		{
-			std::wstring name = std::filesystem::exists("steam_api64.dll") ? L"Skyrim Special Edition" : L"Skyrim Special Edition GOG";
-			loadOrderPath += L"\\AppData\\Local\\" + name + L"\\plugins.txt";
-
-			if (EnableDebugLog)
+			if (line[0] == '*') //Check if line starts with *
 			{
-				std::string_view skyrim = std::filesystem::exists("steam_api64.dll") ? "Skyrim Special Edition" : "Skyrim Special Edition GOG";
-				SKSE::log::debug("Directory: {} - Version: {}", skyrim, REL::Module::get().version());
+				loadOrder.emplace_back(line.substr(1)); //Add lines without the *
 			}
 		}
+		file.close();
 
-		std::vector<std::string> loadOrder;
-		std::ifstream file(loadOrderPath);
-		if (file.is_open())
-		{
-			std::string line;
-			while (std::getline(file, line))
-			{
-				if (line[0] == '*') //Check if line starts with *
-				{
-					loadOrder.emplace_back(line.substr(1)); //Add lines without the *
-				}
-			}
-			file.close();
-
-		}
-		else
-		{
-			SKSE::log::error("The plugins.txt file could not be opened.");
-		}
-
-		m_BaseGamePlugins.erase( //Just in case a BaseGamePlugin is inside the plugins.txt
-			std::remove_if(m_BaseGamePlugins.begin(), m_BaseGamePlugins.end(), [&](const std::string& BaseGamePlugin)
-			{
-				return Utils::SearchCompare(loadOrder, BaseGamePlugin);
-			}),
-			m_BaseGamePlugins.end()
-		);
-
-		std::vector<std::string> activePlugins;
-
-		if (!std::filesystem::exists("Data"sv))
-		{
-			SKSE::log::error("Data folder not found. Please make sure your Skyrim is even installed.");
-			return std::vector<std::string>();
-		}
-
-		for (const auto& entry : std::filesystem::directory_iterator("Data"))
-		{
-			if (entry.is_regular_file() && (entry.path().extension() == L".esp" || entry.path().extension() == L".esm" || entry.path().extension() == L".esl"))
-			{
-				activePlugins.emplace_back(entry.path().filename().string());
-			}
-		}
-
-		m_BaseGamePlugins.erase(
-			std::remove_if(m_BaseGamePlugins.begin(), m_BaseGamePlugins.end(), [&](const std::string& BaseGamePlugin) //Remove plugins not found in data folder from the BaseGamePlugin list.
-			{
-				return !Utils::SearchCompare(activePlugins, BaseGamePlugin);
-			}),
-			m_BaseGamePlugins.end()
-		);
-
-		loadOrder.insert(loadOrder.begin(), m_BaseGamePlugins.begin(), m_BaseGamePlugins.end());
-
-
-		//Most of this is actually a big and cruel workaround since I can't find a better way through CLib to get all loaded plugins. It seems random, what's counted as loaded in TESDataHandler
-
-		return loadOrder;
 	}
 	else
 	{
-		SKSE::log::error("User directory not found!");
+		SKSE::log::error("The plugins.txt file could not be opened.");
 	}
 
-	return std::vector<std::string>();
+	m_BaseGamePlugins.erase( //Just in case a BaseGamePlugin is inside the plugins.txt
+		std::remove_if(m_BaseGamePlugins.begin(), m_BaseGamePlugins.end(), [&](const std::string& BaseGamePlugin)
+		{
+			return Utils::SearchCompare(loadOrder, BaseGamePlugin);
+		}),
+		m_BaseGamePlugins.end()
+	);
+
+	std::vector<std::string> activePlugins;
+
+	if (!std::filesystem::exists("Data"sv))
+	{
+		SKSE::log::error("Data folder not found. Please make sure your Skyrim is even installed.");
+		return std::vector<std::string>();
+	}
+
+	for (const auto& entry : std::filesystem::directory_iterator("Data"))
+	{
+		if (entry.is_regular_file() && (entry.path().extension() == L".esp" || entry.path().extension() == L".esm" || entry.path().extension() == L".esl"))
+		{
+			activePlugins.emplace_back(entry.path().filename().string());
+		}
+	}
+
+	m_BaseGamePlugins.erase(
+		std::remove_if(m_BaseGamePlugins.begin(), m_BaseGamePlugins.end(), [&](const std::string& BaseGamePlugin) //Remove plugins not found in data folder from the BaseGamePlugin list.
+		{
+			return !Utils::SearchCompare(activePlugins, BaseGamePlugin);
+		}),
+		m_BaseGamePlugins.end()
+	);
+
+	loadOrder.insert(loadOrder.begin(), m_BaseGamePlugins.begin(), m_BaseGamePlugins.end());
+
+	return loadOrder;
 }
 
 void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor directory
 {
-	const std::filesystem::path Directory = L"Data\\SKSE\\Plugins\\DynamicStringDistributor\\";
+	constexpr auto Directory = L"Data\\SKSE\\Plugins\\DynamicStringDistributor\\";
 	bool foundOverwriteFolder = false;  // To check if Overwrite folder is found
 
 	if (!std::filesystem::exists(Directory))
