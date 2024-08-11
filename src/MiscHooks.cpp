@@ -48,7 +48,7 @@ namespace Hook
 		static void TESFullName__sub_140196D80(RE::TESFullName* a_fullname, RE::TESFile* a_file)
 		{
 			using func_t = decltype(&TESFullName__sub_140196D80);
-			REL::Relocation<func_t> func{ RELOCATION_ID(14546, 14718) };
+			static REL::Relocation<func_t> func{ RELOCATION_ID(14546, 14718) };
 			return func(a_fullname, a_file);
 		}
 
@@ -82,7 +82,7 @@ namespace Hook
 			}
 		};
 
-		static void thunk(RE::TESFullName* a_npcFullname, RE::TESFile* a_file, RE::TESNPC* a_npc)
+		static void thunk(RE::TESFullName* a_npcFullname, RE::TESFile* a_file, RE::TESNPC* a_npc) // TODO: Rewrite
 		{
 			TESFullName__sub_140196D80(a_npcFullname, a_file); //Invoke and get original output
 

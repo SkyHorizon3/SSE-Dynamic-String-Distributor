@@ -8,10 +8,10 @@ namespace Hook
 {
 	struct DialogueResponseHook //INFO NAM1
 	{
-		static bool SetBSString(RE::BSString& a_str, char* a_buffer, int32_t a3)
+		static bool SetBSString(RE::BSString& a_str, char* a_buffer, std::int32_t a3)
 		{
 			using func_t = decltype(&SetBSString);
-			REL::Relocation<func_t> func{ RELOCATION_ID(10979, AE_CHECK(SKSE::RUNTIME_SSE_1_6_1130, 11044, 439876)) };
+			static REL::Relocation<func_t> func{ RELOCATION_ID(10979, AE_CHECK(SKSE::RUNTIME_SSE_1_6_1130, 11044, 439876)) };
 			return func(a_str, a_buffer, a3);
 		}
 
@@ -39,6 +39,7 @@ namespace Hook
 			}
 		};
 
+		//TODO: Rewrite
 		static void thunk(RE::BSString& a_str, char* a_buffer, RE::TESTopicInfo* a_topicInfo, RE::TESTopicInfo::ResponseData* a_response)
 		{
 			const std::string& fileName = Utils::GetModName(a_topicInfo);

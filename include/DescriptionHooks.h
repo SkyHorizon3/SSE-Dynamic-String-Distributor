@@ -2,6 +2,6 @@
 
 namespace Hook
 {
-	std::string GetItemDescription(RE::FormID& formID, Config::SubrecordType subrecord);
+	std::string GetItemDescription(const RE::FormID& formID, const Config::SubrecordType& subrecord);
 	void InstallDescriptionHooks();
 }
