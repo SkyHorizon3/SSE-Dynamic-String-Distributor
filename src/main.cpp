@@ -37,7 +37,11 @@ void LoadINI()
 	ini.SetUnicode(false);
 	ini.LoadFile(L"Data\\SKSE\\Plugins\\DynamicStringDistributor.ini");
 
-	Config::EnableDebugLog = ini.GetBoolValue("Debug", "EnableDebugLog");
+    Config::EnableDebugLog = ini.GetBoolValue("Debug", "EnableDebugLog");
+    Config::OverwritingLanguage = ini.GetStringValue("Language", "OverwritingLanguage");
+    if (Config::OverwritingLanguage == "auto") {
+        Config::OverwritingLanguage = RE::INISettingCollection::GetSingleton()->GetSetting("Language");
+    }
 }
 
 void MessageListener(SKSE::MessagingInterface::Message* message)

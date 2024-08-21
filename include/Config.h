@@ -48,6 +48,7 @@ public:
 	};
 
 	static inline bool EnableDebugLog = false;
+    static inline std:::string OverwritingLanguage = "auto";
 
 private:
 	std::vector<std::string> GetLoadOrder();
