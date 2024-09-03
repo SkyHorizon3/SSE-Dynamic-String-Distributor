@@ -190,15 +190,16 @@ void Config::EnumerateFilesInFolders(const std::string& folders) //Get all files
 
 	for (const auto& entry : std::filesystem::recursive_directory_iterator(folderPath))
 	{
-        if (entry.is_regular_file() && entry.path().extension() == L".json")
-        {
-            files.emplace_back(entry.path().filename().string());
+        if (entry.is_regular_file()) {
+            if (entry.path().extension() == L".json")
+            {
+                files.emplace_back(entry.path().filename().string());
+            }
+            else if (entry.path().extension() == L"." + Config::OverwritingLanguage)
+            {
+                translatedFiles.emplace_back(entry.path().filename().string());
+            }
         }
-        else if (entry.is_regular_file() && entry.path().extension() == L"." + Config::OverwritingLanguage)
-        {
-            translatedFiles.emplace_back(entry.path().filename().string());
-        }
-
 	}
 
     //Alphabetic order, just to make sure.
