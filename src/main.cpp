@@ -42,6 +42,7 @@ void LoadINI()
     if (Config::OverwritingLanguage == "auto"  || Config::OverwritingLanguage.empty()) {
         Config::OverwritingLanguage = RE::INISettingCollection::GetSingleton()->GetSetting("Language")->GetString();
     }
+    SKSE::log::info("Using %s as language override", Config::OverwritingLanguage);
 }
 
 void MessageListener(SKSE::MessagingInterface::Message* message)
