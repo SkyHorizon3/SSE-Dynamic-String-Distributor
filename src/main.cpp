@@ -38,9 +38,9 @@ void LoadINI()
 	ini.LoadFile(L"Data\\SKSE\\Plugins\\DynamicStringDistributor.ini");
 
     Config::EnableDebugLog = ini.GetBoolValue("Debug", "EnableDebugLog");
-    Config::OverwritingLanguage = ini.GetStringValue("Language", "OverwritingLanguage");
-    if (Config::OverwritingLanguage == "auto") {
-        Config::OverwritingLanguage = RE::INISettingCollection::GetSingleton()->GetSetting("Language");
+    Config::OverwritingLanguage = ini.GetValue("Language", "OverwritingLanguage");
+    if (Config::OverwritingLanguage == "auto"  || Config::OverwritingLanguage.empty()) {
+        Config::OverwritingLanguage = RE::INISettingCollection::GetSingleton()->GetSetting("Language")->GetString();
     }
 }
 

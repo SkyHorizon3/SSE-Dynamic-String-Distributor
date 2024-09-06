@@ -196,7 +196,7 @@ void Config::EnumerateFilesInFolders(const std::string& folders) //Get all files
             {
                 files.emplace_back(entry.path().filename().string());
             }
-            else if (entry.path().extension() == L"." + Config::OverwritingLanguage)
+            else if (entry.path().extension().generic_string() == "." + Config::OverwritingLanguage)
             {
                 translatedFiles.emplace_back(entry.path().filename().string());
             }
