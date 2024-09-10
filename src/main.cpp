@@ -37,7 +37,18 @@ void LoadINI()
 	ini.SetUnicode(false);
 	ini.LoadFile(L"Data\\SKSE\\Plugins\\DynamicStringDistributor.ini");
 
-	Config::EnableDebugLog = ini.GetBoolValue("Debug", "EnableDebugLog");
+    if (ini.KeyExists("Debug", "EnableDebugLog")) {
+        Config::EnableDebugLog = ini.GetBoolValue("Debug", "EnableDebugLog");
+    }
+    if (ini.KeyExists("Language", "OverwritingLanguage")) {
+        Config::OverwritingLanguage = ini.GetValue("Language", "OverwritingLanguage");
+    }
+    if (Config::OverwritingLanguage == "auto" || Config::OverwritingLanguage.empty()) {
+        auto lang = RE::INISettingCollection::GetSingleton()->GetSetting("sLanguage:General");
+        if (lang) {
+            Config::OverwritingLanguage = lang->GetString();
+        }
+    }
 }
 
 void MessageListener(SKSE::MessagingInterface::Message* message)
@@ -101,6 +112,8 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 
 	SKSE::GetMessagingInterface()->RegisterListener(MessageListener);
 	SKSE::log::info("{} v{} loaded", Plugin::NAME, Plugin::VERSION);
+    SKSE::log::info("Using {} as language override", Config::OverwritingLanguage);
+    SKSE::log::info("Debug log is {}", Config::EnableDebugLog);
 
 	return true;
 }

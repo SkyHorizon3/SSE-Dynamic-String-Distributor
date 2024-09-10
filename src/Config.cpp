@@ -185,28 +185,39 @@ void Config::EnumerateFilesInFolders(const std::string& folders) //Get all files
 	if (!std::filesystem::exists(folderPath))
 		return;
 
-	std::vector<std::string> files;
+    std::vector<std::string> files;
+    std::vector<std::string> translatedFiles;
 
 	for (const auto& entry : std::filesystem::recursive_directory_iterator(folderPath))
 	{
-		if (entry.is_regular_file() && entry.path().extension() == L".json")
-		{
-			files.emplace_back(entry.path().filename().string());
-		}
-
+        if (entry.is_regular_file())
+        {
+            if (entry.path().extension() == L".json")
+            {
+                files.emplace_back(entry.path().filename().string());
+            }
+            else if (entry.path().extension().generic_string() == "." + Config::OverwritingLanguage)
+            {
+                translatedFiles.emplace_back(entry.path().filename().string());
+            }
+        }
 	}
 
-	if (files.empty())
-		return;
-
-	std::sort(files.begin(), files.end());//Alphatbet order, just to make sure.
+    //Alphabetic order, just to make sure.
+    std::sort(files.begin(), files.end());
+    std::sort(translatedFiles.begin(), translatedFiles.end());
 
 	static int num = 0;
-	for (const auto& file : files)
-	{
-		m_FilesInPluginFolder.emplace_back(folderPath + "\\" + file);
-		SKSE::log::debug("File{}: {}", num++, (folderPath + "\\" + file));
-	}
+    for (const auto& file : files)
+    {
+        m_FilesInPluginFolder.emplace_back(folderPath + "\\" + file);
+        SKSE::log::debug("File{}: {}", num++, (folderPath + "\\" + file));
+    }
+    for (const auto& file : translatedFiles)
+    {
+        m_FilesInPluginFolder.emplace_back(folderPath + "\\" + file);
+        SKSE::log::debug("File{}: {}", num++, (folderPath + "\\" + file));
+    }
 
 }
 
