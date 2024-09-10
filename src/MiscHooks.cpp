@@ -97,8 +97,7 @@ namespace Hook
 
 		static void Install()
 		{
-			constexpr auto targetAddress = RELOCATION_ID(24159, 24663);
-			REL::Relocation<std::uintptr_t> target{ targetAddress, REL::Relocate(0x7CE, 0x924) };
+			REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(24159, 24663), REL::Relocate(0x7CE, 0x924) };
 			auto trampolineJmp = TrampolineCall(target.address() + 0x5, stl::unrestricted_cast<std::uintptr_t>(thunk));
 
 			auto& trampoline = SKSE::GetTrampoline();
@@ -154,7 +153,7 @@ namespace Hook
 	{
 		static char** thunk(char** a_this, RE::BSFixedString& a_str)
 		{
-			if (IsACTI && !a_str.empty())
+			if (IsACTI)
 			{
 				a_str = SetActivationText;
 			}
