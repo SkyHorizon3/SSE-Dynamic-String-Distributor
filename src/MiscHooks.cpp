@@ -26,7 +26,7 @@ namespace Hook
 			const auto it = g_REFR_FULL_Map.find(key);
 			if (result && it != g_REFR_FULL_Map.end())
 			{
-				result->fullName = it->second;
+				result->SetFullName(it->second.c_str());
 			}
 
 			return result;
@@ -91,8 +91,9 @@ namespace Hook
 			const auto it = g_NPC_FULL_Map.find(key);
 			if (it != g_NPC_FULL_Map.end())
 			{
-				a_npcFullname->fullName = it->second;
+				a_npcFullname->SetFullName(it->second.c_str());
 			}
+
 		}
 
 		static void Install()

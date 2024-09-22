@@ -14,7 +14,7 @@ void Processor::RunConstTranslation()
 		{
 		case Config::SubrecordType::kFULL: //DIAL FULL, REFR FULL aren't working like this.
 		{
-			SetConstStrings<RE::TESFullName>(Information.Form, Information.ReplacerText, &RE::TESFullName::fullName);
+			SetFullnameStrings(Information.Form, Information.ReplacerText);
 		}
 		break;
 		case Config::SubrecordType::kDESC: //Only LSCR DESC
@@ -78,18 +78,30 @@ void Processor::RunConstTranslation()
 }
 
 template <typename T>
-void Processor::SetConstStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, RE::BSFixedString T::* memberPtr)
+void Processor::SetConstStrings(RE::TESForm* form, const RE::BSFixedString& newString, RE::BSFixedString T::* memberPtr)
 {
-	T* OrigString = skyrim_cast<T*>(Form);
+	T* OrigString = static_cast<T*>(form);
 
 	if (!OrigString)
 	{
-		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", Form->formID);
-		SKSE::log::error("out of plugin {}.", Utils::GetModName(Form));
+		Report(form);
 		return;
 	}
 
-	OrigString->*memberPtr = std::move(NewString);
+	OrigString->*memberPtr = std::move(newString);
+}
+
+void Processor::SetFullnameStrings(RE::TESForm* form, const std::string& newString)
+{
+	RE::TESFullName* OrigString = skyrim_cast<RE::TESFullName*>(form);
+
+	if (!OrigString)
+	{
+		Report(form);
+		return;
+	}
+
+	OrigString->SetFullName(newString.c_str());
 }
 
 void Processor::SetGameSettingString(const std::string& a_name, const std::string& a_NewString)
@@ -123,19 +135,19 @@ void Processor::SetGameSettingString(const std::string& a_name, const std::strin
 }
 
 
-void Processor::SetMessageBoxButtonStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, const int& index)
+void Processor::SetMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedString& newString, const int& index)
 {
-	RE::BGSMessage* message = Form->As<RE::BGSMessage>(); //MESG ITXT
+	RE::BGSMessage* message = form->As<RE::BGSMessage>(); //MESG ITXT
 	if (message)
 	{
 		int pos = 0;
-		for (auto& button : message->menuButtons)
+		for (const auto& button : message->menuButtons)
 		{
 			//SKSE::log::info("Pos: {} - String: {}", pos, text->text.c_str());
 
 			if (pos == index)
 			{
-				button->text = std::move(NewString);
+				button->text = std::move(newString);
 			}
 
 			pos++;
@@ -144,16 +156,15 @@ void Processor::SetMessageBoxButtonStrings(RE::TESForm* Form, const RE::BSFixedS
 	}
 	else
 	{
-		RE::BGSPerk* perk = Form->As<RE::BGSPerk>(); //PERK EPF2
+		RE::BGSPerk* perk = form->As<RE::BGSPerk>(); //PERK EPF2
 
 		if (!perk)
 		{
-			SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", Form->formID);
-			SKSE::log::error("out of plugin {}.", Utils::GetModName(Form));
+			Report(form);
 			return;
 		}
 
-		for (auto& entry : perk->perkEntries)
+		for (const auto& entry : perk->perkEntries)
 		{
 			if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
 			{
@@ -167,7 +178,7 @@ void Processor::SetMessageBoxButtonStrings(RE::TESForm* Form, const RE::BSFixedS
 
 					if (func->id == index)
 					{
-						func->label = std::move(NewString);
+						func->label = std::move(newString);
 					}
 
 				}
@@ -179,14 +190,13 @@ void Processor::SetMessageBoxButtonStrings(RE::TESForm* Form, const RE::BSFixedS
 
 }
 
-void Processor::SetRegionDataStrings(RE::TESForm* Form, const RE::BSFixedString& NewString) //REGN RDMP
+void Processor::SetRegionDataStrings(RE::TESForm* form, const RE::BSFixedString& newString) //REGN RDMP
 {
-	RE::TESRegion* regionData = Form->As<RE::TESRegion>();
+	RE::TESRegion* regionData = form->As<RE::TESRegion>();
 
 	if (!regionData || !regionData->dataList)
 	{
-		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", Form->formID);
-		SKSE::log::error("out of plugin {}.", Utils::GetModName(Form));
+		Report(form);
 		return;
 	}
 
@@ -195,26 +205,25 @@ void Processor::SetRegionDataStrings(RE::TESForm* Form, const RE::BSFixedString&
 		if (region->GetType() == RE::TESRegionData::Type::kMap)
 		{
 			RE::TESRegionDataMap* mapData = static_cast<RE::TESRegionDataMap*>(region);
-			mapData->mapName = std::move(NewString);
+			mapData->mapName = std::move(newString);
 		}
 	}
 
 }
 
-void Processor::SetEntryPointStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, const int& index) //PERK EPFD
+void Processor::SetEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& newString, const int& index) //PERK EPFD
 {
-	RE::BGSPerk* perk = Form->As<RE::BGSPerk>();
+	RE::BGSPerk* perk = form->As<RE::BGSPerk>();
 	if (!perk)
 	{
-		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", Form->formID);
-		SKSE::log::error("out of plugin {}.", Utils::GetModName(Form));
+		Report(form);
 		return;
 	}
 
 	int entryCount = perk->perkEntries.size();
 	for (int i = entryCount - 1; i >= 0; --i)
 	{
-		auto& entry = perk->perkEntries[i];
+		const auto& entry = perk->perkEntries[i];
 
 		if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
 		{
@@ -226,7 +235,7 @@ void Processor::SetEntryPointStrings(RE::TESForm* Form, const RE::BSFixedString&
 
 				if (entryCount - 1 - i == index)
 				{
-					func->text = std::move(NewString);
+					func->text = std::move(newString);
 				}
 			}
 		}
@@ -235,14 +244,13 @@ void Processor::SetEntryPointStrings(RE::TESForm* Form, const RE::BSFixedString&
 }
 
 
-void Processor::SetQuestObjectiveStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, const int& index) //QUST NNAM
+void Processor::SetQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedString& newString, const int& index) //QUST NNAM
 {
-	RE::TESQuest* quest = Form->As<RE::TESQuest>();
+	RE::TESQuest* quest = form->As<RE::TESQuest>();
 
 	if (!quest)
 	{
-		SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", Form->formID);
-		SKSE::log::error("out of plugin {}.", Utils::GetModName(Form));
+		Report(form);
 		return;
 	}
 
@@ -250,7 +258,13 @@ void Processor::SetQuestObjectiveStrings(RE::TESForm* Form, const RE::BSFixedStr
 	{
 		if (objective->index == index)
 		{
-			objective->displayText = std::move(NewString);
+			objective->displayText = std::move(newString);
 		}
 	}
+}
+
+void Processor::Report(const RE::TESForm* form)
+{
+	SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", form->formID);
+	SKSE::log::error("out of plugin {}.", Utils::GetModName(form));
 }

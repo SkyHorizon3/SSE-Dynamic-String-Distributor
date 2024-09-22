@@ -42,7 +42,7 @@ namespace Hook
 		//TODO: Rewrite
 		static void thunk(RE::BSString& a_str, char* a_buffer, RE::TESTopicInfo* a_topicInfo, RE::TESTopicInfo::ResponseData* a_response)
 		{
-			const std::string& fileName = Utils::GetModName(a_topicInfo);
+			const std::string fileName = Utils::GetModName(a_topicInfo);
 			const RE::FormID trimmedFormID = Utils::GetTrimmedFormID(a_topicInfo);
 
 			SKSE::log::debug("Original string: {}", a_response->responseText.c_str());

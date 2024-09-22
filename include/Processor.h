@@ -22,17 +22,21 @@ public:
 private:
 
 	template <typename T>
-	void SetConstStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, RE::BSFixedString T::* memberPtr);
+	void SetConstStrings(RE::TESForm* form, const RE::BSFixedString& newString, RE::BSFixedString T::* memberPtr);
 
-	void SetGameSettingString(const std::string& a_name, const std::string& a_NewString);
+	void SetFullnameStrings(RE::TESForm* form, const std::string& newString);
 
-	void SetMessageBoxButtonStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, const int& index);
+	void SetGameSettingString(const std::string& name, const std::string& newString);
 
-	void SetRegionDataStrings(RE::TESForm* Form, const RE::BSFixedString& NewString);
+	void SetMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedString& newString, const int& index);
 
-	void SetEntryPointStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, const int& index);
+	void SetRegionDataStrings(RE::TESForm* form, const RE::BSFixedString& newString);
 
-	void SetQuestObjectiveStrings(RE::TESForm* Form, const RE::BSFixedString& NewString, const int& index);
+	void SetEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& newString, const int& index);
+
+	void SetQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedString& newString, const int& index);
+
+	void Report(const RE::TESForm* form);
 
 	struct ConstConfigurationInformation
 	{

@@ -26,7 +26,7 @@ namespace Hook
 		{
 			if (a_item->formID)
 			{
-				const std::string& newDescription = GetItemDescription(a_item->formID, Config::SubrecordType::kCNAM);
+				const std::string newDescription = GetItemDescription(a_item->formID, Config::SubrecordType::kCNAM);
 
 				if (!newDescription.empty())
 				{

@@ -52,7 +52,7 @@ namespace Hook
 		{
 			if (a_parent && a_parent->formID)
 			{
-				const std::string& newDescription = GetItemDescription(a_parent->formID, Config::SubrecordType::kDESC);
+				const std::string newDescription = GetItemDescription(a_parent->formID, Config::SubrecordType::kDESC);
 
 				if (!newDescription.empty())
 				{
@@ -125,7 +125,7 @@ namespace Hook
 
 			if (a_parent && !a_out.empty() && a_parent->formID)
 			{
-				const std::string& newDescription = GetItemDescription(a_parent->formID, Config::SubrecordType::kDESC);
+				const std::string newDescription = GetItemDescription(a_parent->formID, Config::SubrecordType::kDESC);
 
 				if (!newDescription.empty())
 				{
