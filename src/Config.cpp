@@ -41,13 +41,6 @@ std::vector<std::string> Config::GetLoadOrder()
 	);
 
 	std::vector<std::string> activePlugins;
-
-	if (!std::filesystem::exists("Data"sv))
-	{
-		SKSE::log::error("Data folder not found. Please make sure your Skyrim is even installed.");
-		return std::vector<std::string>();
-	}
-
 	for (const auto& entry : std::filesystem::directory_iterator("Data"))
 	{
 		if (entry.is_regular_file() && (entry.path().extension() == L".esp" || entry.path().extension() == L".esm" || entry.path().extension() == L".esl"))
@@ -125,17 +118,6 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 		}
 	}
 
-	/*
-	if (EnableDebugLog)
-	{
-		static int position = 0;
-		for (const auto& Plugin : m_LoadOrder)
-		{
-			SKSE::log::debug("Plugin{}: {}", position++, Plugin);
-		}
-	}
-	*/
-
 	// Sort folders based on load order of plugins
 	std::sort(m_Folders.begin(), m_Folders.end(), [this](const std::string& a, const std::string& b)
 		{
@@ -173,52 +155,56 @@ void Config::EnumerateFolder() //Get all folders in DynamicStringDistributor dir
 		}
 	}
 
-	for (const auto& folders : m_Folders)
-		EnumerateFilesInFolders(folders);
+	for (const auto& folder : m_Folders)
+	{
+		const auto files = EnumerateFilesInFolders(folder);
+		m_FilesInPluginFolder.insert(m_FilesInPluginFolder.end(), files.begin(), files.end());
+	}
 
+	if (EnableDebugLog)
+	{
+		static int num = 0;
+		for (const auto& file : m_FilesInPluginFolder)
+		{
+			SKSE::log::debug("File{}: {}", num++, file);
+		}
+	}
 }
 
-
-void Config::EnumerateFilesInFolders(const std::string& folders) //Get all files in each of the folders directory
+std::vector<std::string> Config::EnumerateFilesInFolders(const std::string& folders) //Get all files in each of the folders directory
 {
-	const std::string& folderPath = "Data\\SKSE\\Plugins\\DynamicStringDistributor\\" + folders;
+	std::vector<std::string> files;
+	const std::string folderPath = "Data\\SKSE\\Plugins\\DynamicStringDistributor\\" + folders;
 	if (!std::filesystem::exists(folderPath))
-		return;
-
-    std::vector<std::string> files;
-    std::vector<std::string> translatedFiles;
+		return files;
 
 	for (const auto& entry : std::filesystem::recursive_directory_iterator(folderPath))
 	{
-        if (entry.is_regular_file())
-        {
-            if (entry.path().extension() == L".json")
-            {
-                files.emplace_back(entry.path().filename().string());
-            }
-            else if (entry.path().extension().generic_string() == "." + Config::OverwritingLanguage)
-            {
-                translatedFiles.emplace_back(entry.path().filename().string());
-            }
-        }
+		if (entry.is_regular_file())
+		{
+			const auto ext = entry.path().extension();
+			if (ext == L".json" || ext == "." + Config::OverwritingLanguage)
+			{
+				files.emplace_back(entry.path().string());
+			}
+		}
 	}
 
-    //Alphabetic order, just to make sure.
-    std::sort(files.begin(), files.end());
-    std::sort(translatedFiles.begin(), translatedFiles.end());
+	std::sort(files.begin(), files.end(),
+		[](const std::string& a, const std::string& b) {
+			auto aExt = std::filesystem::path(a).extension().string();
+			auto bExt = std::filesystem::path(b).extension().string();
 
-	static int num = 0;
-    for (const auto& file : files)
-    {
-        m_FilesInPluginFolder.emplace_back(folderPath + "\\" + file);
-        SKSE::log::debug("File{}: {}", num++, (folderPath + "\\" + file));
-    }
-    for (const auto& file : translatedFiles)
-    {
-        m_FilesInPluginFolder.emplace_back(folderPath + "\\" + file);
-        SKSE::log::debug("File{}: {}", num++, (folderPath + "\\" + file));
-    }
+			// JSON files to the front, other files to the end
+			if (aExt == ".json" && bExt != ".json")
+				return true;
+			if (aExt != ".json" && bExt == ".json")
+				return false;
 
+			return std::filesystem::path(a).filename().string() < std::filesystem::path(b).filename().string();
+		});
+
+	return files;
 }
 
 std::string Config::GetSubrecordType(const std::string& types) const

@@ -48,11 +48,11 @@ public:
 	};
 
 	static inline bool EnableDebugLog = false;
-    static inline std::string OverwritingLanguage = "auto";
+	static inline std::string OverwritingLanguage = "auto";
 
 private:
 	std::vector<std::string> GetLoadOrder();
-	void EnumerateFilesInFolders(const std::string& folders);
+	std::vector<std::string> EnumerateFilesInFolders(const std::string& folders);
 	std::string GetSubrecordType(const std::string& types) const;
 	std::tuple<RE::FormID, std::string> ExtractFormIDAndPlugin(const std::string& formIDWithPlugin);
 	RE::FormID ConvertToFormID(std::string input);
