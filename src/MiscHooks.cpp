@@ -37,56 +37,21 @@ namespace Hook
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(18755, 19216), REL::Relocate(0xA6, 0xE4) }; //Theres also 40750, 0x176 on AE. But that's leading to random crashes
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(18755, 19216), REL::Relocate(0xA6, 0xE4) };
 			stl::write_thunk_call<MapMarkerDataHook>(target1.address());
 		}
 
 	};
 
-	struct NpcNameFileStreamHook //NPC FULL - Why this way? Because templates use one of their templates names and it's horrible to change it
+	struct NpcNameFileStreamHook //NPC FULL - Why this way? Because templates use one of their templates names and it's horrible to change it based on formID
 	{
-		static void TESFullName__sub_140196D80(RE::TESFullName* a_fullname, RE::TESFile* a_file)
+		static void thunk(RE::TESFullName* a_npcFullname, RE::TESFile* a_file)
 		{
-			using func_t = decltype(&TESFullName__sub_140196D80);
-			static REL::Relocation<func_t> func{ RELOCATION_ID(14546, 14718) };
-			return func(a_fullname, a_file);
-		}
+			func(a_npcFullname, a_file);
 
-		struct TrampolineCall : Xbyak::CodeGenerator
-		{
-			TrampolineCall(std::uintptr_t retn, std::uintptr_t func)
-			{
-				Xbyak::Label funcLabel;
-				Xbyak::Label retnLabel;
+			auto* npc = skyrim_cast<const RE::TESForm*>(a_npcFullname);
 
-				if (REL::Module::IsAE())
-				{
-					mov(r8, r12); //TESNPC as 3rd parameter
-				}
-				else
-				{
-					mov(r8, r15);
-				}
-
-				sub(rsp, 0x20); //allocate for call
-				call(ptr[rip + funcLabel]); //call thunk
-				add(rsp, 0x20);
-
-				jmp(ptr[rip + retnLabel]); //jump back to original code
-
-				L(funcLabel);
-				dq(func);
-
-				L(retnLabel);
-				dq(retn);
-			}
-		};
-
-		static void thunk(RE::TESFullName* a_npcFullname, RE::TESFile* a_file, RE::TESNPC* a_npc) // TODO: Rewrite
-		{
-			TESFullName__sub_140196D80(a_npcFullname, a_file); //Invoke and get original output
-
-			const auto key = Utils::combineHash(Utils::GetTrimmedFormID(a_npc), Utils::GetModName(a_npc));
+			const auto key = Utils::combineHash(Utils::GetTrimmedFormID(npc), Utils::GetModName(npc));
 
 			const auto it = g_NPC_FULL_Map.find(key);
 			if (it != g_NPC_FULL_Map.end())
@@ -95,17 +60,12 @@ namespace Hook
 			}
 
 		}
+		static inline REL::Relocation<decltype(thunk)> func;
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(24159, 24663), REL::Relocate(0x7CE, 0x924) };
-			auto trampolineJmp = TrampolineCall(target.address() + 0x5, stl::unrestricted_cast<std::uintptr_t>(thunk));
-
-			auto& trampoline = SKSE::GetTrampoline();
-			SKSE::AllocTrampoline(trampolineJmp.getSize());
-			auto result = trampoline.allocate(trampolineJmp);
-			SKSE::AllocTrampoline(14);
-			trampoline.write_branch<5>(target.address(), (std::uintptr_t)result);
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(24159, 24663), REL::Relocate(0x7CE, 0x924) };
+			stl::write_thunk_call<NpcNameFileStreamHook>(target1.address());
 		}
 	};
 
