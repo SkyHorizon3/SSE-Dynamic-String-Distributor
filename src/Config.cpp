@@ -183,7 +183,7 @@ std::vector<std::string> Config::EnumerateFilesInFolders(const std::string& fold
 		if (entry.is_regular_file())
 		{
 			const auto ext = entry.path().extension();
-			if (ext == L".json" || ext == "." + Config::OverwritingLanguage)
+			if (ext == L".json")
 			{
 				files.emplace_back(entry.path().string());
 			}
@@ -382,7 +382,7 @@ Config::SubrecordType Config::GetSubrecordType_map(std::string_view type)
 	return (it != typeMap.end()) ? it->second : SubrecordType::kUnknown;
 }
 
-void Config::ProcessEntry(const std::string& files, const json& entry, const RecordType& recordType)
+void Config::ProcessEntry(const std::string& file, const json& entry, const RecordType& recordType)
 {
 	const std::string& formIDEntry = entry["form_id"].get<std::string>();
 	auto [formID, plugin] = ExtractFormIDAndPlugin(formIDEntry);
@@ -407,7 +407,7 @@ void Config::ProcessEntry(const std::string& files, const json& entry, const Rec
 
 		if (form == nullptr)
 		{
-			SKSE::log::error("Couldn't find FormID {} with record type {} in file: {}", formIDEntry, entry["type"].get<std::string>(), files);
+			SKSE::log::error("Couldn't find FormID {} with record type {} in file: {}", formIDEntry, entry["type"].get<std::string>(), file);
 			return;
 		}
 	}
@@ -437,10 +437,10 @@ void Config::ProcessEntry(const std::string& files, const json& entry, const Rec
 	}
 	break;
 	case RecordType::kNotVisible:
-		SKSE::log::info("File {} contains not visible type: {}", files, entry["type"].get<std::string>());
+		SKSE::log::info("File {} contains not visible type: {}", file, entry["type"].get<std::string>());
 		break;
 	case RecordType::kUnknown:
-		SKSE::log::info("File {} contains unknown type: {}", files, entry["type"].get<std::string>());
+		SKSE::log::info("File {} contains unknown type: {}", file, entry["type"].get<std::string>());
 		break;
 
 	default: break;

@@ -48,7 +48,6 @@ public:
 	};
 
 	static inline bool EnableDebugLog = false;
-	static inline std::string OverwritingLanguage = "auto";
 
 private:
 	std::vector<std::string> GetLoadOrder();
@@ -58,7 +57,7 @@ private:
 	RE::FormID ConvertToFormID(std::string input);
 	RecordType GetRecordType_map(std::string_view type);
 	SubrecordType GetSubrecordType_map(std::string_view type);
-	void ProcessEntry(const std::string& files, const json& entry, const RecordType& recordType);
+	void ProcessEntry(const std::string& file, const json& entry, const RecordType& recordType);
 	void ProcessEntryPreload(const json& entry, const RecordType& recordType);
 	void ParseTranslationFiles(bool preload);
 
