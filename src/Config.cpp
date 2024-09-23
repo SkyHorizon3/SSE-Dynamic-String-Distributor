@@ -273,7 +273,7 @@ RE::FormID Config::ConvertToFormID(std::string input)
 	return std::stoul(input, nullptr, 16);
 }
 
-Config::RecordType Config::GetRecordType_map(const std::string& type)
+Config::RecordType Config::GetRecordType_map(std::string_view type)
 {
 	static const ankerl::unordered_dense::map<std::string_view, RecordType> typeMap = {
 		{"ACTI FULL"sv, RecordType::kConst_Translation},
@@ -360,7 +360,7 @@ Config::RecordType Config::GetRecordType_map(const std::string& type)
 	return (it != typeMap.end()) ? it->second : RecordType::kUnknown;
 }
 
-Config::SubrecordType Config::GetSubrecordType_map(const std::string& type)
+Config::SubrecordType Config::GetSubrecordType_map(std::string_view type)
 {
 	static const ankerl::unordered_dense::map<std::string_view, SubrecordType> typeMap = {
 		{"FULL"sv, SubrecordType::kFULL},
@@ -417,17 +417,9 @@ void Config::ProcessEntry(const std::string& files, const json& entry, const Rec
 	switch (recordType)
 	{
 	case RecordType::kREFR_FULL:
-	case RecordType::kDIAL_FULL:
 	{
 		const size_t key = Utils::combineHash(form->formID, plugin);
-		if (recordType == RecordType::kREFR_FULL)
-		{
-			Hook::g_REFR_FULL_Map.insert_or_assign(key, stringValue);
-		}
-		else if (recordType == RecordType::kDIAL_FULL)
-		{
-			Hook::g_DIAL_FULL_Map.insert_or_assign(key, stringValue);
-		}
+		Hook::g_REFR_FULL_Map.insert_or_assign(key, stringValue);
 	}
 	break;
 	case RecordType::kQUST_NNAM:
@@ -441,7 +433,7 @@ void Config::ProcessEntry(const std::string& files, const json& entry, const Rec
 	case RecordType::kNormal_Translation:
 	{
 		const size_t key = Utils::combineHashSubrecord(form->formID, GetSubrecordType_map(GetSubrecordType(entry["type"])));
-		Hook::g_DESC_CNAM_Map.emplace(key, stringValue);
+		Hook::g_DESC_CNAM_Map.insert_or_assign(key, stringValue);
 	}
 	break;
 	case RecordType::kNotVisible:
@@ -481,6 +473,9 @@ void Config::ProcessEntryPreload(const json& entry, const RecordType& recordType
 		break;
 	case RecordType::kINFO_RNAM:
 		insertIntoMap(Hook::g_INFO_RNAM_Map);
+		break;
+	case RecordType::kDIAL_FULL:
+		insertIntoMap(Hook::g_DIAL_FULL_Map);
 		break;
 	case RecordType::kINFO_NAM1:
 	{
@@ -534,7 +529,7 @@ void Config::ParseTranslationFiles(bool preload)
 			{
 				try
 				{
-					RecordType recordType = GetRecordType_map(entry["type"]);
+					const auto recordType = GetRecordType_map(entry["type"]);
 
 					if (preload)
 					{

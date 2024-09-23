@@ -56,8 +56,8 @@ private:
 	std::string GetSubrecordType(const std::string& types) const;
 	std::tuple<RE::FormID, std::string> ExtractFormIDAndPlugin(const std::string& formIDWithPlugin);
 	RE::FormID ConvertToFormID(std::string input);
-	RecordType GetRecordType_map(const std::string& type);
-	SubrecordType GetSubrecordType_map(const std::string& type);
+	RecordType GetRecordType_map(std::string_view type);
+	SubrecordType GetSubrecordType_map(std::string_view type);
 	void ProcessEntry(const std::string& files, const json& entry, const RecordType& recordType);
 	void ProcessEntryPreload(const json& entry, const RecordType& recordType);
 	void ParseTranslationFiles(bool preload);

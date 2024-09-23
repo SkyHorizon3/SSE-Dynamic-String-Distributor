@@ -163,7 +163,7 @@ namespace Hook
 		{
 			func(a_out, a2, a3);
 
-			const auto key1 = Utils::combineHash(a_out.parentTopic->formID, Utils::GetModName(a_out.parentTopic));
+			const auto key1 = Utils::combineHash(Utils::GetTrimmedFormID(a_out.parentTopic), Utils::GetModName(a_out.parentTopic));
 			const auto it1 = g_DIAL_FULL_Map.find(key1);
 
 			if (it1 != g_DIAL_FULL_Map.end())
@@ -171,7 +171,7 @@ namespace Hook
 				a_out.topicText = it1->second;
 			}
 
-			const auto key2 = Utils::combineHash(a_out.parentTopicInfo->formID, Utils::GetModName(a_out.parentTopicInfo));
+			const auto key2 = Utils::combineHash(Utils::GetTrimmedFormID(a_out.parentTopicInfo), Utils::GetModName(a_out.parentTopicInfo));
 			const auto it2 = g_INFO_RNAM_Map.find(key2); //INFO RNAM always overwrites DIAL FULL of parenttopic
 
 			if (it2 != g_INFO_RNAM_Map.end())
