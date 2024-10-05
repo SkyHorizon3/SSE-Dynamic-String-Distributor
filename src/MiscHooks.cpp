@@ -49,6 +49,9 @@ namespace Hook
 		{
 			func(a_npcFullname, a_file);
 
+			if (!a_npcFullname)
+				return;
+
 			auto* npc = skyrim_cast<const RE::TESForm*>(a_npcFullname);
 
 			const auto key = Utils::combineHash(Utils::GetTrimmedFormID(npc), Utils::GetModName(npc));

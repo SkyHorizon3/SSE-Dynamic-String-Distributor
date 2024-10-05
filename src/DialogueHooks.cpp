@@ -1,6 +1,7 @@
 #include "MiscHooks.h"
 #include "DialogueHooks.h"
 #include "Utils.h"
+#include "Config.h"
 #include "Processor.h"
 
 
@@ -8,48 +9,24 @@ namespace Hook
 {
 	struct DialogueResponseHook //INFO NAM1
 	{
-		static bool SetBSString(RE::BSString& a_str, char* a_buffer, std::int32_t a3)
+		static RE::DialogueResponse* thunk(RE::DialogueResponse* a_item, RE::TESTopic* a_topic, RE::TESTopicInfo* a_topicInfo, RE::TESObjectREFR* a_speaker, RE::TESTopicInfo::ResponseData* a_response)
 		{
-			using func_t = decltype(&SetBSString);
-			static REL::Relocation<func_t> func{ RELOCATION_ID(10979, AE_CHECK(SKSE::RUNTIME_SSE_1_6_1130, 11044, 439876)) };
-			return func(a_str, a_buffer, a3);
-		}
+			auto result = func(a_item, a_topic, a_topicInfo, a_speaker, a_response);
 
-		struct TrampolineCall : Xbyak::CodeGenerator
-		{
-			TrampolineCall(std::uintptr_t ret, std::uintptr_t func)
-			{
-				Xbyak::Label funcLabel;
-				Xbyak::Label retnLabel;
-
-				mov(r8, rbp); //r8 would always be 0. So use it for a_topicInfo
-				mov(r9, rsi); //a_response
-
-				sub(rsp, 0x20); //allocate for call
-				call(ptr[rip + funcLabel]); //call thunk
-				add(rsp, 0x20);
-
-				jmp(ptr[rip + retnLabel]); //jump back to original code
-
-				L(funcLabel);
-				dq(func);
-
-				L(retnLabel);
-				dq(ret);
-			}
-		};
-
-		//TODO: Rewrite
-		static void thunk(RE::BSString& a_str, char* a_buffer, RE::TESTopicInfo* a_topicInfo, RE::TESTopicInfo::ResponseData* a_response)
-		{
 			const std::string fileName = Utils::GetModName(a_topicInfo);
 			const RE::FormID trimmedFormID = Utils::GetTrimmedFormID(a_topicInfo);
 
-			SKSE::log::debug("Original string: {}", a_response->responseText.c_str());
-			SKSE::log::debug("FormID: {0:08X}", a_topicInfo->formID);
-			SKSE::log::debug("TrimmedFormID: {0:08X}", trimmedFormID);
-			SKSE::log::debug("Number: {}", a_response->responseNumber);
-			SKSE::log::debug("Plugin: {}", fileName);
+			if (Config::EnableDebugLog)
+			{
+				std::stringstream ss;
+				ss << "Original string: " << a_response->responseText.c_str()
+					<< " - FormID: " << std::format("{0:08X}", a_topicInfo->formID)
+					<< " - TrimmedFormID: " << std::format("{0:08X}", trimmedFormID)
+					<< " - Number: " << static_cast<int>(a_response->responseNumber)
+					<< " - Plugin: " << fileName;
+
+				SKSE::log::debug("{}", ss.str());
+			}
 
 			const auto it = g_INFO_NAM1_Map.find(std::to_string(trimmedFormID) + fileName);
 			if (it != g_INFO_NAM1_Map.end())
@@ -62,30 +39,28 @@ namespace Hook
 
 				if (contains != value.end())
 				{
-					a_str = contains->second;
-					char* newText = const_cast<char*>(a_str.c_str());
-					SetBSString(a_str, newText, 0);
-					return;
+					a_item->text = contains->second;
+					return result;
 				}
 			}
 
-			SetBSString(a_str, a_buffer, 0);
-
+			return result;
 		}
+		static inline REL::Relocation<decltype(thunk)> func;
 
 		static void Install()
 		{
-			constexpr auto targetAddress = RELOCATION_ID(34429, 35249);
-			REL::Relocation<std::uintptr_t> target{ targetAddress, 0x61 }; //same for all
-			auto trampolineJmp = TrampolineCall(target.address() + 0x5, stl::unrestricted_cast<std::uintptr_t>(thunk));
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(34413, 35220), 0xE4 };
+			stl::write_thunk_call<DialogueResponseHook>(target1.address());
 
-			auto& trampoline = SKSE::GetTrampoline();
-			SKSE::AllocTrampoline(trampolineJmp.getSize());
-			auto result = trampoline.allocate(trampolineJmp);
-			SKSE::AllocTrampoline(14);
-			trampoline.write_branch<5>(target.address(), (std::uintptr_t)result);
+			REL::Relocation<std::uintptr_t> target2{ REL::VariantID(34436, 35256, 0x574360), 0xCD };
+			stl::write_thunk_call<DialogueResponseHook>(target2.address());
 
-			REL::safe_write(targetAddress.address() + 0x5B, REL::NOP3, 0x3); // just in case
+			if (REL::Module::IsAE())
+			{
+				REL::Relocation<std::uintptr_t> target3{ REL::ID(35254), 0x2ED };
+				stl::write_thunk_call<DialogueResponseHook>(target3.address());
+			}
 		}
 	};
 
@@ -190,7 +165,7 @@ namespace Hook
 
 			if (REL::Module::IsAE())
 			{
-				REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(0, 35254), REL::VariantOffset(0x0, 0x115, 0x0) };
+				REL::Relocation<std::uintptr_t> target2{ REL::ID(35254), 0x115 };
 				stl::write_thunk_call<DialogueMenuTextHook>(target2.address());
 			}
 		}
