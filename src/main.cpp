@@ -3,39 +3,13 @@
 #include "Processor.h"
 #include "MergeMapperPluginAPI.h"
 
-// Setup logger for plugin
-void SetupLog()
-{
-	auto logsFolder = SKSE::log::log_directory();
-	if (!logsFolder)
-	{
-		SKSE::stl::report_and_fail("SKSE log_directory not provided, logs disabled.");
-	}
-
-	auto pluginName = SKSE::PluginDeclaration::GetSingleton()->GetName();
-	auto logFilePath = *logsFolder / std::format("{}.log", pluginName);
-	auto fileLoggerPtr = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFilePath.string(), true);
-	auto loggerPtr = std::make_shared<spdlog::logger>("log", std::move(fileLoggerPtr));
-
-	if (Config::EnableDebugLog)
-	{
-		loggerPtr->set_level(spdlog::level::trace);
-		loggerPtr->flush_on(spdlog::level::trace);
-	}
-	else
-	{
-		loggerPtr->set_level(spdlog::level::info);
-		loggerPtr->flush_on(spdlog::level::info);
-	}
-
-	spdlog::set_default_logger(std::move(loggerPtr));
-}
-
 void LoadINI()
 {
+	const auto path = std::format("Data/SKSE/Plugins/{}.ini", Plugin::NAME);
+
 	CSimpleIniA ini;
-	ini.SetUnicode(false);
-	ini.LoadFile(L"Data\\SKSE\\Plugins\\DynamicStringDistributor.ini");
+	ini.SetUnicode();
+	ini.LoadFile(path.c_str());
 
 	Config::EnableDebugLog = ini.GetBoolValue("Debug", "EnableDebugLog");
 }
@@ -92,19 +66,6 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 	}
 }
 
-SKSEPluginLoad(const SKSE::LoadInterface* skse)
-{
-	SKSE::Init(skse, false);
-
-	LoadINI();
-	SetupLog();
-
-	SKSE::GetMessagingInterface()->RegisterListener(MessageListener);
-	SKSE::log::info("{} v{} loaded", Plugin::NAME, Plugin::VERSION);
-
-	return true;
-}
-
 #define DLLEXPORT __declspec(dllexport)
 
 extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []()
@@ -124,5 +85,30 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface*, 
 	pluginInfo->name = SKSEPlugin_Version.pluginName;
 	pluginInfo->infoVersion = SKSE::PluginInfo::kVersion;
 	pluginInfo->version = SKSEPlugin_Version.pluginVersion;
+	return true;
+}
+
+SKSEPluginLoad(const SKSE::LoadInterface* skse)
+{
+	SKSE::Init(skse, true);
+
+	LoadINI();
+
+	spdlog::set_pattern("[%H:%M:%S:%e] [%l] %v"s);
+
+	if (Config::EnableDebugLog)
+	{
+		spdlog::set_level(spdlog::level::trace);
+		spdlog::flush_on(spdlog::level::trace);
+	}
+	else
+	{
+		spdlog::set_level(spdlog::level::info);
+		spdlog::flush_on(spdlog::level::info);
+	}
+
+	SKSE::GetMessagingInterface()->RegisterListener(MessageListener);
+	SKSE::log::info("{} v{} loaded", Plugin::NAME, Plugin::VERSION);
+
 	return true;
 }
