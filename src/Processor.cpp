@@ -72,7 +72,7 @@ void Processor::RunConstTranslation()
 		default: break;
 		}
 	}
-	m_ConstConfigurationInformationStruct.clear(); //Structs only used once, so no need to keep them for fun
+	m_ConstConfigurationInformationStruct.clear();
 	m_ConstConfigurationInformationStruct.shrink_to_fit();
 
 }
@@ -80,15 +80,14 @@ void Processor::RunConstTranslation()
 template <typename T>
 void Processor::SetConstStrings(RE::TESForm* form, const RE::BSFixedString& newString, RE::BSFixedString T::* memberPtr)
 {
-	T* OrigString = static_cast<T*>(form);
-
-	if (!OrigString)
+	if (auto* OrigString = static_cast<T*>(form); OrigString && OrigString->*memberPtr != nullptr)
+	{
+		OrigString->*memberPtr = std::move(newString);
+	}
+	else
 	{
 		Report(form);
-		return;
 	}
-
-	OrigString->*memberPtr = std::move(newString);
 }
 
 void Processor::SetFullnameStrings(RE::TESForm* form, const std::string& newString)
@@ -116,21 +115,7 @@ void Processor::SetGameSettingString(const std::string& a_name, const std::strin
 
 	if (setting->GetType() == RE::Setting::Type::kString)
 	{
-		//if (setting->data.s)
-			//RE::free(setting->data.s);
-
-		auto length = a_NewString.length() + 1;
-		char* NewChar = (char*)RE::MemoryManager::GetSingleton()->Allocate(length, 0, 0);
-
-		if (!NewChar)
-		{
-			SKSE::log::error("Failed to allocate memory for a new string when setting game setting '{}'. Upgrade your RAM and get rid of Windows XP!", a_name);
-			return;
-		}
-
-		memcpy(NewChar, a_NewString.c_str(), length);
-
-		setting->data.s = NewChar;
+		changeSettingString(setting, a_NewString.c_str());
 	}
 }
 
@@ -265,6 +250,14 @@ void Processor::SetQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedStr
 
 void Processor::Report(const RE::TESForm* form)
 {
-	SKSE::log::error("Issue during ConstTranslation with FormID: {0:08X}", form->formID);
-	SKSE::log::error("out of plugin {}.", Utils::GetModName(form));
+	if (!form) // Should not happen, because it's only added if valid
+		return;
+
+	std::stringstream ss;
+	ss << "Issue during ConstTranslation with FormID: " << std::format("{0:08X}", form->formID)
+		<< " - Formtype: " << RE::FormTypeToString(form->GetFormType())
+		<< " - Plugin: " << Utils::GetModName(form);
+
+	SKSE::log::error("{}", ss.str());
+
 }

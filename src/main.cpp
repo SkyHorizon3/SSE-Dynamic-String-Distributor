@@ -94,7 +94,7 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
-	SKSE::Init(skse);
+	SKSE::Init(skse, false);
 
 	LoadINI();
 	SetupLog();
@@ -107,13 +107,15 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 
 #define DLLEXPORT __declspec(dllexport)
 
-extern "C" DLLEXPORT const auto SKSEPlugin_Version = []() noexcept {
-	SKSE::PluginVersionData v;
-	v.PluginName(Plugin::NAME.data());
-	v.PluginVersion(Plugin::VERSION);
-	v.UsesAddressLibrary(true);
-	v.HasNoStructUse();
-	return v;
+extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []()
+	{
+		SKSE::PluginVersionData v;
+		v.PluginName(Plugin::NAME);
+		v.PluginVersion(Plugin::VERSION);
+		v.AuthorName("SkyHorizon");
+		v.UsesAddressLibrary();
+		v.UsesNoStructs();
+		return v;
 	}
 ();
 

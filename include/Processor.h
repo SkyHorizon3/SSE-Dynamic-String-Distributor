@@ -38,6 +38,13 @@ private:
 
 	void Report(const RE::TESForm* form);
 
+	static RE::Setting* changeSettingString(RE::Setting* a_setting, const char* a_str)
+	{
+		using func_t = decltype(&changeSettingString);
+		static REL::Relocation<func_t> func{ RELOCATION_ID(73882, 75619) };
+		return func(a_setting, a_str);
+	}
+
 	struct ConstConfigurationInformation
 	{
 		RE::TESForm* Form;
