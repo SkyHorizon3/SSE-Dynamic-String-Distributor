@@ -92,6 +92,8 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
 	SKSE::Init(skse, true);
 
+	SKSE::AllocTrampoline(140);
+
 	LoadINI();
 
 	spdlog::set_pattern("[%H:%M:%S:%e] [%l] %v"s);
@@ -108,7 +110,6 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 	}
 
 	SKSE::GetMessagingInterface()->RegisterListener(MessageListener);
-	SKSE::log::info("{} v{} loaded", Plugin::NAME, Plugin::VERSION);
 
 	return true;
 }

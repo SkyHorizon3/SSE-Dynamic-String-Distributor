@@ -80,9 +80,17 @@ void Processor::RunConstTranslation()
 template <typename T>
 void Processor::SetConstStrings(RE::TESForm* form, const RE::BSFixedString& newString, RE::BSFixedString T::* memberPtr)
 {
-	if (auto* OrigString = static_cast<T*>(form); OrigString && OrigString->*memberPtr != nullptr)
+	if (auto* OrigString = static_cast<T*>(form); OrigString)
 	{
-		OrigString->*memberPtr = std::move(newString);
+		try
+		{
+			OrigString->*memberPtr = std::move(newString);
+		}
+		catch (const std::exception& e)
+		{
+			Report(form);
+			SKSE::log::error("Exception occured while changing string above: {}", e.what());
+		}
 	}
 	else
 	{
