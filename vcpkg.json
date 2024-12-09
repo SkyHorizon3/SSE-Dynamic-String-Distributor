@@ -4,7 +4,6 @@
   "description": "",
   "license": "GPL-3.0",
   "dependencies": [
-    "glaze",
     "xbyak",
     "spdlog",
     "directxtk",

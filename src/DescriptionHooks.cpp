@@ -5,16 +5,17 @@
 
 namespace Hook
 {
-	std::string GetItemDescription(const RE::FormID& formID, const Config::SubrecordType& subrecord)
+	bool getItemDescription(const RE::FormID& formID, const Config::SubrecordType& subrecord, std::string& description)
 	{
 		const auto key = Utils::combineHashSubrecord(formID, subrecord);
 		const auto it = g_DESC_CNAM_Map.find(key);
 		if (it != g_DESC_CNAM_Map.end())
 		{
-			return it->second;
+			description = it->second;
+			return true;
 		}
 
-		return "";
+		return false;
 	}
 
 	// Track if an object is valid between the two AE hooks
@@ -50,11 +51,11 @@ namespace Hook
 
 		static void thunk(RE::TESForm* a_parent)
 		{
-			if (a_parent && a_parent->formID)
+			if (a_parent)
 			{
-				const std::string newDescription = GetItemDescription(a_parent->formID, Config::SubrecordType::kDESC);
+				std::string newDescription{};
 
-				if (!newDescription.empty())
+				if (getItemDescription(a_parent->formID, Config::SubrecordType::kDESC, newDescription))
 				{
 					IsDESC = true;
 					SetDescription = newDescription;
@@ -120,11 +121,11 @@ namespace Hook
 		{
 			func(a_description, a_out, a_parent, unk);  // invoke original to get original description string output
 
-			if (a_parent && !a_out.empty() && a_parent->formID)
+			if (a_parent && !a_out.empty())
 			{
-				const std::string newDescription = GetItemDescription(a_parent->formID, Config::SubrecordType::kDESC);
+				std::string newDescription{};
 
-				if (!newDescription.empty())
+				if (getItemDescription(a_parent->formID, Config::SubrecordType::kDESC, newDescription))
 				{
 					a_out = newDescription;
 

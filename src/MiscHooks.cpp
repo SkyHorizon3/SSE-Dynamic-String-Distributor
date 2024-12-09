@@ -119,7 +119,7 @@ namespace Hook
 		{
 			if (IsACTI)
 			{
-				a_str = SetActivationText;
+				a_str = Utils::validateString(SetActivationText);
 			}
 			IsACTI = false;
 

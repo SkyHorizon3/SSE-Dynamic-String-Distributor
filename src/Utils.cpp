@@ -108,4 +108,9 @@ namespace Utils
 		return loadOrderPath;
 	}
 
+	RE::BSFixedString validateString(const RE::BSFixedString& toplace)
+	{
+		return toplace.empty() ? RE::BSFixedString(" ") : toplace;
+	}
+
 }

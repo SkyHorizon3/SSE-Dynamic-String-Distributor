@@ -28,14 +28,29 @@ public:
 	static inline bool enableDebugLog = false;
 
 private:
+	template <class T>
+	struct custom_nullable_t
+	{
+		std::optional<T> val{};
+		bool has_value() const { return val.has_value(); }
+
+		T& value() { return *val; }
+		const T& value() const { return *val; }
+
+		template <class... Args>
+		void emplace(Args&&... args) {
+			val.emplace(std::forward<Args>(args)...);
+		}
+	};
+
 	struct Data
 	{
 		std::string form_id{};
 		std::string type{};
 		std::string string{};
 		std::string original{};
-		int index{};
-		std::string editor_id{};
+		custom_nullable_t<int> index{};
+		custom_nullable_t<std::string> editor_id{};
 	};
 
 	std::vector<std::string> getLoadOrder();

@@ -320,16 +320,14 @@ std::tuple<RE::FormID, std::string> Config::extractFormIDAndPlugin(const std::st
 		formID = mergeForm.second;
 	}
 
+	plugin = Utils::tolower(plugin);
+
 	if (std::find(m_loadOrder.begin(), m_loadOrder.end(), plugin) == m_loadOrder.end())
 	{
 		return std::make_tuple(0, "");
 	}
 
-
-	//SKSE::log::info("FormID: {0:08X}.", formID);
-
-
-	return std::make_tuple(formID, Utils::tolower(plugin));
+	return std::make_tuple(formID, plugin);
 }
 
 RE::FormID Config::convertToFormID(std::string input)
@@ -388,6 +386,8 @@ void Config::onDataLoad()
 		if (formID == 0 && plugin.empty())
 			continue;
 
+		//SKSE::log::info("FormID: {} - switch: {} - type: {} - string: {}", entry.form_id, entry.original, entry.type, entry.string);
+
 		const auto form = RE::TESDataHandler::GetSingleton()->LookupForm(formID, plugin);
 		if (form == nullptr)
 		{
@@ -404,7 +404,7 @@ void Config::onDataLoad()
 		break;
 		case "index"_h:
 		{
-			Processor::AddToConstTranslationStruct(form, entry.string, getSubrecordType_map(getSubrecordType(entry.type)), entry.index, "");
+			Processor::AddToConstTranslationStruct(form, entry.string, getSubrecordType_map(getSubrecordType(entry.type)), entry.index.value(), "");
 		}
 		break;
 		case "refr"_h:
@@ -498,7 +498,7 @@ void Config::processEntry(Data& entry, const std::string& file)
 	break;
 	case "GMST DATA"_h:
 	{
-		Processor::AddToConstTranslationStruct(nullptr, entry.string, getSubrecordType_map(getSubrecordType(entry.type)), 0, entry.editor_id);
+		Processor::AddToConstTranslationStruct(nullptr, entry.string, getSubrecordType_map(getSubrecordType(entry.type)), 0, entry.editor_id.value());
 	}
 	break;
 	case "INFO RNAM"_h:
@@ -534,7 +534,7 @@ void Config::processEntry(Data& entry, const std::string& file)
 	case "INFO NAM1"_h:
 	{
 		auto& valueList = Hook::g_INFO_NAM1_Map[std::to_string(formID) + plugin];
-		Hook::Value value = { entry.index, entry.string };
+		Hook::Value value = { entry.index.value(), entry.string };
 
 		auto it = std::find_if(valueList.begin(), valueList.end(),
 			[&value](const Hook::Value& v) { return v.first == value.first; });
@@ -580,7 +580,7 @@ void Config::parseTranslationFiles()
 		std::string buffer{};
 		std::vector<Data> jsonData{};
 
-		auto err = glz::read_file_json < glz::opts{ .error_on_unknown_keys = false } > (jsonData, file, buffer);
+		auto err = glz::read_file_json < glz::opts{ .partial_read_nested = true } > (jsonData, file, buffer);
 		if (err)
 		{
 			const std::string descriptive_error = glz::format_error(err, buffer);

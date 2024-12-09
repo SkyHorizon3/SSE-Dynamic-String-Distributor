@@ -62,6 +62,7 @@ endif()
 
 # Find required packages (adjust as needed)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/CommonLibSSE-NG CommonLibSSE)
+add_subdirectory(${CMAKE_SOURCE_DIR}/extern/glazejson glaze)
 find_package(spdlog CONFIG REQUIRED)
 find_package(unordered_dense CONFIG REQUIRED)
 
@@ -71,4 +72,4 @@ target_include_directories("${PROJECT_NAME}" PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
 
 # Link libraries
 target_link_libraries("${PROJECT_NAME}" PUBLIC CommonLibSSE::CommonLibSSE)
-target_link_libraries("${PROJECT_NAME}" PRIVATE unordered_dense::unordered_dense)
+target_link_libraries("${PROJECT_NAME}" PRIVATE unordered_dense::unordered_dense glaze::glaze)

@@ -95,7 +95,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
 	SKSE::Init(skse, true);
 
-	if (REL::Module::IsAE)
+	if (REL::Module::IsAE())
 	{
 		SKSE::AllocTrampoline(200);
 	}

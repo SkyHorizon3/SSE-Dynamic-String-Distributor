@@ -10,6 +10,7 @@ namespace Utils
 	std::string getModName(const RE::TESForm* form);
 	RE::FormID getTrimmedFormID(const RE::TESForm* form);
 	std::wstring getPluginTXTFilePath();
+	RE::BSFixedString validateString(const RE::BSFixedString& toplace);
 
 
 	// https://github.com/powerof3/CLibUtil/blob/master/include/CLIBUtil/hash.hpp

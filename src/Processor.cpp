@@ -82,7 +82,7 @@ void Processor::SetConstStrings(RE::TESForm* form, const RE::BSFixedString& newS
 {
 	if (auto* OrigString = static_cast<T*>(form); OrigString)
 	{
-		OrigString->*memberPtr = std::move(newString);
+		OrigString->*memberPtr = std::move(Utils::validateString(newString));
 	}
 	else
 	{
@@ -132,7 +132,7 @@ void Processor::SetMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedS
 
 			if (pos == index)
 			{
-				button->text = std::move(newString);
+				button->text = std::move(Utils::validateString(newString));
 			}
 
 			pos++;
@@ -163,7 +163,7 @@ void Processor::SetMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedS
 
 					if (func->id == index)
 					{
-						func->label = std::move(newString);
+						func->label = std::move(Utils::validateString(newString));
 					}
 
 				}
@@ -190,7 +190,7 @@ void Processor::SetRegionDataStrings(RE::TESForm* form, const RE::BSFixedString&
 		if (region->GetType() == RE::TESRegionData::Type::kMap)
 		{
 			RE::TESRegionDataMap* mapData = static_cast<RE::TESRegionDataMap*>(region);
-			mapData->mapName = std::move(newString);
+			mapData->mapName = std::move(Utils::validateString(newString));
 		}
 	}
 
@@ -220,7 +220,7 @@ void Processor::SetEntryPointStrings(RE::TESForm* form, const RE::BSFixedString&
 
 				if (entryCount - 1 - i == index)
 				{
-					func->text = std::move(newString);
+					func->text = std::move(Utils::validateString(newString));
 				}
 			}
 		}
@@ -243,7 +243,7 @@ void Processor::SetQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedStr
 	{
 		if (objective->index == index)
 		{
-			objective->displayText = std::move(newString);
+			objective->displayText = std::move(Utils::validateString(newString));
 		}
 	}
 }

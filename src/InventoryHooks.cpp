@@ -26,15 +26,15 @@ namespace Hook
 		{
 			if (a_item->formID)
 			{
-				const std::string newDescription = GetItemDescription(a_item->formID, Config::SubrecordType::kCNAM);
+				std::string newDescription{};
 
-				if (!newDescription.empty())
+				if (getItemDescription(a_item->formID, Config::SubrecordType::kCNAM, newDescription))
 				{
 					auto descriptionValue = RE::GFxValue(newDescription);
 					itemCard->obj.SetMember("description", descriptionValue);
 
 					SKSE::log::debug("Replaced BOOK CNAM {0:08X} with:", a_item->formID);
-					SKSE::log::debug("{}", newDescription);;
+					SKSE::log::debug("{}", newDescription);
 				}
 			}
 		}
