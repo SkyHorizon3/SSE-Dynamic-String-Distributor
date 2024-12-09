@@ -30,7 +30,14 @@ namespace Utils
 		return combineHashes(formID, static_cast<size_t>(subrecord));
 	}
 
-	std::string GetModName(const RE::TESForm* form)
+	std::string tolower(std::string_view a_str)
+	{
+		std::string result(a_str);
+		std::ranges::transform(result, result.begin(), [](unsigned char ch) { return static_cast<unsigned char>(std::tolower(ch)); });
+		return result;
+	}
+
+	std::string getModName(const RE::TESForm* form)
 	{
 		if (!form)
 		{
@@ -46,10 +53,10 @@ namespace Utils
 		const auto file = array->front();
 		std::string_view filename = file ? file->GetFilename() : "";
 
-		return filename.data();
+		return tolower(filename.data());
 	}
 
-	RE::FormID GetTrimmedFormID(const RE::TESForm* form)
+	RE::FormID getTrimmedFormID(const RE::TESForm* form)
 	{
 		if (!form)
 		{
@@ -65,32 +72,13 @@ namespace Utils
 		RE::FormID formID = form->GetFormID() & 0xFFFFFF; // remove file index -> 0x00XXXXXX
 		if (array->front()->IsLight())
 		{
-			formID = formID & 0xFFF; // remove ESL index -> 0x00000XXX
+			formID &= 0xFFF; // remove ESL index -> 0x00000XXX
 		}
 
 		return formID;
 	}
 
-	bool char_equals(char a, char b)
-	{
-		return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
-	}
-
-	bool CaseInsensitiveStringCompare(std::string_view a, std::string_view b)
-	{
-		return a.size() == b.size() && std::ranges::equal(a, b, char_equals);
-	}
-
-	//return true if str is found in list.
-	bool SearchCompare(const std::vector<std::string>& list, const std::string& str)
-	{
-		return std::any_of(list.begin(), list.end(), [&](const std::string& loadedPlugin)
-			{
-				return CaseInsensitiveStringCompare(str, loadedPlugin);
-			});
-	}
-
-	std::wstring GetPluginTXTFilePath()
+	std::wstring getPluginTXTFilePath()
 	{
 		wchar_t userDir[MAX_PATH];
 		if (FAILED(SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, userDir)))
@@ -110,7 +98,7 @@ namespace Utils
 			std::wstring name = std::filesystem::exists("steam_api64.dll") ? L"Skyrim Special Edition" : L"Skyrim Special Edition GOG";
 			loadOrderPath += L"\\AppData\\Local\\" + name + L"\\plugins.txt";
 
-			if (Config::EnableDebugLog)
+			if (Config::enableDebugLog)
 			{
 				std::string_view skyrim = std::filesystem::exists("steam_api64.dll") ? "Skyrim Special Edition" : "Skyrim Special Edition GOG";
 				SKSE::log::debug("Directory: {} - Version: {}", skyrim, REL::Module::get().version());

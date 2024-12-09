@@ -65,7 +65,7 @@ void Processor::RunConstTranslation()
 		case Config::SubrecordType::kUnknown:
 		{
 			SKSE::log::info("Unknown record {0:08X} in ConstTranslation", Information.Form->formID);
-			SKSE::log::error("out of plugin {}.", Utils::GetModName(Information.Form));
+			SKSE::log::error("out of plugin {}.", Utils::getModName(Information.Form));
 		}
 		break;
 
@@ -82,15 +82,7 @@ void Processor::SetConstStrings(RE::TESForm* form, const RE::BSFixedString& newS
 {
 	if (auto* OrigString = static_cast<T*>(form); OrigString)
 	{
-		try
-		{
-			OrigString->*memberPtr = std::move(newString);
-		}
-		catch (const std::exception& e)
-		{
-			Report(form);
-			SKSE::log::error("Exception occured while changing string above: {}", e.what());
-		}
+		OrigString->*memberPtr = std::move(newString);
 	}
 	else
 	{
@@ -264,7 +256,7 @@ void Processor::Report(const RE::TESForm* form)
 	std::stringstream ss;
 	ss << "Issue during ConstTranslation with FormID: " << std::format("{0:08X}", form->formID)
 		<< " - Formtype: " << RE::FormTypeToString(form->GetFormType())
-		<< " - Plugin: " << Utils::GetModName(form);
+		<< " - Plugin: " << Utils::getModName(form);
 
 	SKSE::log::error("{}", ss.str());
 

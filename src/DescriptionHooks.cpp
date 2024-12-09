@@ -67,7 +67,6 @@ namespace Hook
 
 		static void Install()
 		{
-
 			constexpr auto targetAddress = REL::ID(14552);
 
 			REL::safe_fill(targetAddress.address() + 0x84, REL::NOP, 0x7); // just in case
@@ -76,9 +75,7 @@ namespace Hook
 			auto trampolineJmp = TrampolineCall(target.address() + 0x7, stl::unrestricted_cast<std::uintptr_t>(thunk));
 
 			auto& trampoline = SKSE::GetTrampoline();
-			SKSE::AllocTrampoline(trampolineJmp.getSize());
 			auto result = trampoline.allocate(trampolineJmp);
-			SKSE::AllocTrampoline(14);
 			trampoline.write_branch<6>(target.address(), (std::uintptr_t)result);
 		}
 	};

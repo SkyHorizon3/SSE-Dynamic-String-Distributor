@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Hide useless warnings...
+set(BUILD_TESTS OFF)
 add_definitions(-D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 
 add_compile_definitions(SKSE_SUPPORT_XBYAK)

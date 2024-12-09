@@ -21,7 +21,7 @@ namespace Hook
 
 			auto result = func(marker);
 
-			const auto key = Utils::combineHash(marker->formID, Utils::GetModName(marker));
+			const auto key = Utils::combineHash(marker->formID, Utils::getModName(marker));
 
 			const auto it = g_REFR_FULL_Map.find(key);
 			if (result && it != g_REFR_FULL_Map.end())
@@ -54,7 +54,7 @@ namespace Hook
 
 			auto* npc = skyrim_cast<const RE::TESForm*>(a_npcFullname);
 
-			const auto key = Utils::combineHash(Utils::GetTrimmedFormID(npc), Utils::GetModName(npc));
+			const auto key = Utils::combineHash(Utils::getTrimmedFormID(npc), Utils::getModName(npc));
 
 			const auto it = g_NPC_FULL_Map.find(key);
 			if (it != g_NPC_FULL_Map.end())
@@ -80,7 +80,7 @@ namespace Hook
 		{
 			IsACTI = false;
 
-			const auto key = Utils::combineHash(Utils::GetTrimmedFormID(a_this), Utils::GetModName(a_this));
+			const auto key = Utils::combineHash(Utils::getTrimmedFormID(a_this), Utils::getModName(a_this));
 			const auto it = g_ACTI_Map.find(key);
 
 			if (it != g_ACTI_Map.end())

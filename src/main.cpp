@@ -11,7 +11,7 @@ void LoadINI()
 	ini.SetUnicode();
 	ini.LoadFile(path.c_str());
 
-	Config::EnableDebugLog = ini.GetBoolValue("Debug", "EnableDebugLog");
+	Config::enableDebugLog = ini.GetBoolValue("Debug", "EnableDebugLog");
 }
 
 void MessageListener(SKSE::MessagingInterface::Message* message)
@@ -21,15 +21,18 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 		// https://github.com/ianpatt/skse64/blob/09f520a2433747f33ae7d7c15b1164ca198932c3/skse64/PluginAPI.h#L193-L212
 	case SKSE::MessagingInterface::kPostPostLoad:
 	{
+		/*
 		if (!GetModuleHandle(L"po3_Tweaks"))
 		{
 			SKSE::log::critical("po3_Tweaks not found, mod won't work!");
 		}
+		*/
 
 		MergeMapperPluginAPI::GetMergeMapperInterface001();
 		if (g_mergeMapperInterface)
 		{
-			SKSE::log::info("Got MergeMapper interface buildnumber {}", g_mergeMapperInterface->GetBuildNumber());
+			const auto version = g_mergeMapperInterface->GetBuildNumber();
+			SKSE::log::info("Got MergeMapper interface buildnumber {}", version);
 		}
 		else
 		{
@@ -38,15 +41,15 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 
 		Hook::InstallPostLoadHooks();
 
-		Config::GetSingleton()->EnumerateFolder();
-		Config::GetSingleton()->LoadFiles(true);
+		Config::GetSingleton()->enumerateFolder();
+		Config::GetSingleton()->parseTranslationFiles();
 	}
 	break;
 	case SKSE::MessagingInterface::kDataLoaded:
 	{
 		auto startTime = std::chrono::high_resolution_clock::now();
 
-		Config::GetSingleton()->LoadFiles(false);
+		Config::GetSingleton()->onDataLoad();
 
 		Processor::GetSingleton()->RunConstTranslation();
 
@@ -54,7 +57,7 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 
 		auto endTime = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-		SKSE::log::info("The parsing of jsons, the execution of ConstTranslation and the installation of hooks took {} milliseconds.", duration.count());
+		SKSE::log::info("The form lookup, the execution of ConstTranslation and the installation of hooks took {} milliseconds.", duration.count());
 
 	}
 	break;
@@ -73,14 +76,14 @@ extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []()
 		SKSE::PluginVersionData v;
 		v.PluginName(Plugin::NAME);
 		v.PluginVersion(Plugin::VERSION);
-		v.AuthorName("SkyHorizon");
+		v.AuthorName("SkyHorizon"sv);
 		v.UsesAddressLibrary();
 		v.UsesNoStructs();
 		return v;
 	}
 ();
 
-extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface*, SKSE::PluginInfo * pluginInfo)
+extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface*, SKSE::PluginInfo* pluginInfo)
 {
 	pluginInfo->name = SKSEPlugin_Version.pluginName;
 	pluginInfo->infoVersion = SKSE::PluginInfo::kVersion;
@@ -92,13 +95,20 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
 	SKSE::Init(skse, true);
 
-	SKSE::AllocTrampoline(140);
+	if (REL::Module::IsAE)
+	{
+		SKSE::AllocTrampoline(200);
+	}
+	else
+	{
+		SKSE::AllocTrampoline(140);
+	}
 
 	LoadINI();
 
 	spdlog::set_pattern("[%H:%M:%S:%e] [%l] %v"s);
 
-	if (Config::EnableDebugLog)
+	if (Config::enableDebugLog)
 	{
 		spdlog::set_level(spdlog::level::trace);
 		spdlog::flush_on(spdlog::level::trace);
