@@ -1,6 +1,5 @@
 ﻿#include "Config.h"
 #include "MiscHooks.h"
-#include "Processor.h"
 #include "MergeMapperPluginAPI.h"
 
 void LoadINI()
@@ -50,8 +49,7 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 		auto startTime = std::chrono::high_resolution_clock::now();
 
 		Config::GetSingleton()->onDataLoad();
-
-		Processor::GetSingleton()->RunConstTranslation();
+		Manager::GetSingleton()->buildConditions();
 
 		Hook::InstallHooks();
 
@@ -97,7 +95,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 
 	if (REL::Module::IsAE())
 	{
-		SKSE::AllocTrampoline(200);
+		SKSE::AllocTrampoline(250);
 	}
 	else
 	{

@@ -4,32 +4,6 @@
 
 namespace Utils
 {
-	template<typename... HashValues>
-	size_t combineHashes(HashValues... values)
-	{
-		size_t combinedHash = 0;
-		constexpr size_t constant = 0x9e3779b9;
-
-		((combinedHash ^= (std::hash<std::decay_t<HashValues>>{}(values)+constant + (combinedHash << 6) + (combinedHash >> 2))), ...);
-
-		return combinedHash;
-	}
-
-	size_t combineHash(const std::uint32_t formID, const std::string& str)
-	{
-		return combineHashes(str, formID);
-	}
-
-	size_t combineHashWithIndex(const std::uint32_t formID, int value, const std::string& str)
-	{
-		return combineHashes(str, static_cast<size_t>(value), formID);
-	}
-
-	size_t combineHashSubrecord(const std::uint32_t formID, Config::SubrecordType subrecord)
-	{
-		return combineHashes(formID, static_cast<size_t>(subrecord));
-	}
-
 	std::string tolower(std::string_view a_str)
 	{
 		std::string result(a_str);
@@ -113,4 +87,39 @@ namespace Utils
 		return toplace.empty() ? RE::BSFixedString(" ") : toplace;
 	}
 
+	RE::FormID convertToFormID(std::string input)
+	{
+		if (input.find('x') == std::string::npos) // If it does not contain 'x', process it.
+		{
+			if (input.length() == 8)
+			{
+				if (input.compare(0, 2, "FE") == 0)
+				{
+					input = "0x" + input.substr(5);
+				}
+				else
+				{
+					input = "0x" + input.substr(2);
+				}
+			}
+			else
+			{
+				input.insert(0, "0x");
+			}
+		}
+
+		//SKSE::log::info("FormID: {}", input);
+
+		return std::stoul(input, nullptr, 16);
+	}
+
+	std::string getAfterSpace(const std::string& types)
+	{
+		size_t spacePos = types.find(' ');
+		if (spacePos != std::string::npos && spacePos + 1 < types.length())
+		{
+			return types.substr(spacePos + 1);
+		}
+		return "";
+	}
 }

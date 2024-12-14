@@ -1,22 +1,10 @@
 #include "MiscHooks.h"
-#include "Processor.h"
 #include "Utils.h"
 #include "DescriptionHooks.h"
+#include "Manager.h"
 
 namespace Hook
 {
-	bool getItemDescription(const RE::FormID& formID, const Config::SubrecordType& subrecord, std::string& description)
-	{
-		const auto key = Utils::combineHashSubrecord(formID, subrecord);
-		const auto it = g_DESC_CNAM_Map.find(key);
-		if (it != g_DESC_CNAM_Map.end())
-		{
-			description = it->second;
-			return true;
-		}
-
-		return false;
-	}
 
 	// Track if an object is valid between the two AE hooks
 	static bool IsDESC = false;
@@ -55,7 +43,7 @@ namespace Hook
 			{
 				std::string newDescription{};
 
-				if (getItemDescription(a_parent->formID, Config::SubrecordType::kDESC, newDescription))
+				if (Manager::GetSingleton()->getDESC(a_parent->formID, newDescription))
 				{
 					IsDESC = true;
 					SetDescription = newDescription;
@@ -125,7 +113,7 @@ namespace Hook
 			{
 				std::string newDescription{};
 
-				if (getItemDescription(a_parent->formID, Config::SubrecordType::kDESC, newDescription))
+				if (Manager::GetSingleton()->getDESC(a_parent->formID, newDescription))
 				{
 					a_out = newDescription;
 
@@ -147,8 +135,67 @@ namespace Hook
 		}
 	};
 
+	//HUGE Credits to Nightfallstorm this hook!!
+	//https://github.com/Nightfallstorm/DescriptionFramework released under GPL-3.0
+	struct ItemCardPopulateHook //BOOK CNAM
+	{
+		static void thunk(RE::ItemCard* itemCard, RE::TESBoundObject** a_item, char a3)
+		{
+			if (!itemCard || !a_item || !*a_item)
+			{
+				return func(itemCard, a_item, a3);
+			}
+
+			func(itemCard, a_item, a3);
+			handleDescriptionItems(itemCard, *a_item);
+		};
+
+		static void handleDescriptionItems(RE::ItemCard* itemCard, RE::TESBoundObject* a_item)
+		{
+			std::string newDescription{};
+
+			if (Manager::GetSingleton()->getCNAM(a_item->formID, newDescription))
+			{
+				auto descriptionValue = RE::GFxValue(newDescription);
+				itemCard->obj.SetMember("description", descriptionValue);
+
+				SKSE::log::debug("Replaced BOOK CNAM {0:08X} with:", a_item->formID);
+				SKSE::log::debug("{}", newDescription);
+			}
+
+		}
+		static inline REL::Relocation<decltype(thunk)> func;
+
+
+		static void Install()
+		{
+			std::array targets{
+				std::make_pair(RELOCATION_ID(50005, 50949), 0x80),
+				std::make_pair(RELOCATION_ID(50201, 51130), 0xB2),
+				std::make_pair(RELOCATION_ID(50297, 51218), 0x35),
+				std::make_pair(RELOCATION_ID(50674, 51569), REL::Relocate(0x80, 0x7A)),
+				std::make_pair(RELOCATION_ID(50973, 51852), REL::Relocate(0x80, 0x7A)),
+			};
+
+			for (auto& [id, offset] : targets)
+			{
+				REL::Relocation<std::uintptr_t> target(id, offset);
+				stl::write_thunk_call<ItemCardPopulateHook>(target.address());
+			}
+
+			if (REL::Module::IsAE())
+			{
+				REL::Relocation<std::uintptr_t> target{ REL::ID(51458), 0x87 };
+				stl::write_thunk_call<ItemCardPopulateHook>(target.address());
+			}
+		}
+	};
+
+
 	void InstallDescriptionHooks()
 	{
+		ItemCardPopulateHook::Install();
+
 		if (REL::Module::IsAE())
 		{
 			DescriptionHookAE::Install();

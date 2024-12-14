@@ -7,21 +7,11 @@
 #include <tuple>
 
 #include <spdlog/sinks/basic_file_sink.h>
+#include <boost/unordered/unordered_flat_map.hpp>
+#include <frozen/unordered_map.h>
+#include <frozen/bits/elsa_std.h>
 #include <xbyak/xbyak.h>
 #include <SimpleIni.h>
-#include <ankerl/unordered_dense.h>
-
-template <>
-struct ankerl::unordered_dense::hash<std::string>
-{
-	using is_transparent = void;  // enable heterogeneous overloads
-	using is_avalanching = void;  // mark class as high quality avalanching hash
-
-	[[nodiscard]] auto operator()(std::string_view str) const noexcept -> uint64_t
-	{
-		return ankerl::unordered_dense::hash<std::string_view>{}(str);
-	}
-};
 
 using namespace std::literals;
 
@@ -79,6 +69,51 @@ namespace stl
 		T::func = reinterpret_cast<std::uintptr_t>(alloc);
 	}
 }
+
+template <class K, class D, class H = boost::hash<K>, class KEqual = std::equal_to<K>>
+using FlatMap = boost::unordered_flat_map<K, D, H, KEqual>;
+
+struct string_hash
+{
+	using is_transparent = void;  // enable heterogeneous overloads
+
+	std::size_t operator()(std::string_view str) const
+	{
+		std::size_t seed = 0;
+		for (auto it = str.begin(); it != str.end(); ++it) {
+			boost::hash_combine(seed, std::tolower(*it));
+		}
+		return seed;
+	}
+};
+
+struct string_cmp
+{
+	using is_transparent = void;
+
+	bool iequals(std::string_view a_str1, std::string_view a_str2) const
+	{
+		return std::ranges::equal(a_str1, a_str2, [](unsigned char ch1, unsigned char ch2) {
+			return std::toupper(ch1) == std::toupper(ch2);
+			});
+	}
+
+	bool operator()(const std::string& str1, const std::string& str2) const
+	{
+		return iequals(str1, str2);
+	}
+	bool operator()(const std::string& str1, std::string_view str2) const
+	{
+		return iequals(str1, str2);
+	}
+	bool operator()(std::string_view str1, std::string_view str2) const
+	{
+		return iequals(str1, str2);
+	}
+};
+
+template <class D>
+using StringMap = FlatMap<std::string, D, string_hash, string_cmp>;
 
 //https://github.com/powerof3/CLibUtil/blob/master/include/CLIBUtil/singleton.hpp
 template <class T>

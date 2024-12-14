@@ -1,9 +1,7 @@
 #include "MiscHooks.h"
-#include "InventoryHooks.h"
+#include "Manager.h"
 #include "DescriptionHooks.h"
 #include "DialogueHooks.h"
-#include "QuestHooks.h"
-#include "Processor.h"
 #include "Utils.h"
 
 
@@ -21,16 +19,13 @@ namespace Hook
 
 			auto result = func(marker);
 
-			const auto key = Utils::combineHash(marker->formID, Utils::getModName(marker));
-
-			const auto it = g_REFR_FULL_Map.find(key);
-			if (result && it != g_REFR_FULL_Map.end())
+			std::string newDescription{};
+			if (result && Manager::GetSingleton()->getREFR(marker, newDescription))
 			{
-				result->SetFullName(it->second.c_str());
+				result->SetFullName(newDescription.c_str());
 			}
 
 			return result;
-
 		};
 		static inline REL::Relocation<decltype(thunk)> func;
 
@@ -43,33 +38,94 @@ namespace Hook
 
 	};
 
-	struct NpcNameFileStreamHook //NPC FULL - Why this way? Because templates use one of their templates names and it's horrible to change it based on formID
+	//140376DEE - 1.6.640, 14035DCA8 - 1.5.97
+
+	struct NPCLoadFromFile
 	{
-		static void thunk(RE::TESFullName* a_npcFullname, RE::TESFile* a_file)
+		struct MoveParent : Xbyak::CodeGenerator
 		{
-			func(a_npcFullname, a_file);
-
-			if (!a_npcFullname)
-				return;
-
-			auto* npc = skyrim_cast<const RE::TESForm*>(a_npcFullname);
-
-			const auto key = Utils::combineHash(Utils::getTrimmedFormID(npc), Utils::getModName(npc));
-
-			const auto it = g_NPC_FULL_Map.find(key);
-			if (it != g_NPC_FULL_Map.end())
+			MoveParent() // move RE::TESNPC* as 3rd parameter
 			{
-				a_npcFullname->SetFullName(it->second.c_str());
+				if (REL::Module::IsAE())
+				{
+					mov(r8, r12);
+				}
+				else
+				{
+					mov(r8, r15);
+				}
+			}
+		};
+
+		static bool thunk(RE::TESFile* a_file, void* a_buf, std::uint64_t a_npc)
+		{
+			auto result = func(a_file, a_buf, 4u);
+
+			const RE::TESNPC* npc = reinterpret_cast<RE::TESNPC*>(a_npc);
+			std::uint32_t dnamFormID = *static_cast<std::uint32_t*>(a_buf);
+			const std::uint32_t firstTwoHexDigits = dnamFormID >> 24; // extract first two digits and convert to decimal
+			RE::FormID formID = dnamFormID & 0xFFFFFF; // remove file index -> 0x00XXXXXX
+
+			const RE::TESFile* lookupFile = a_file;
+			if (firstTwoHexDigits < a_file->masterCount)
+			{
+				lookupFile = a_file->masterPtrs[firstTwoHexDigits];
 			}
 
+			if (lookupFile->IsLight())
+			{
+				formID &= 0xFFF;
+			}
+
+			std::string npcformIDString = std::format("{0:08X}", npc->formID);
+			std::string formIDString = std::format("{0:08X}", formID);
+
+			//SKSE::log::info("NPC: {} - FormIDTemplate: {} - PluginTemplate: {}", npcformIDString, formIDString, Utils::getModName(npc));
+
+
+			//const std::string string = std::to_string(Utils::getTrimmedFormID(npc)) + Utils::getModName(npc);
+
+
+			return result;
 		}
+
 		static inline REL::Relocation<decltype(thunk)> func;
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(24159, 24663), REL::Relocate(0x7CE, 0x924) };
-			stl::write_thunk_call<NpcNameFileStreamHook>(target1.address());
+			constexpr auto targetAddress = RELOCATION_ID(24159, 24663);
+
+			REL::Relocation<std::uintptr_t> swapTarget{ targetAddress, REL::Relocate(0x140D, 0x18D3) };
+			REL::safe_fill(swapTarget.address(), REL::NOP, 0x4);
+
+			auto newCode = MoveParent();
+			assert(newCode.getSize() <= 0x4);
+			REL::safe_write(swapTarget.address(), newCode.getCode(), newCode.getSize());
+
+			REL::Relocation<std::uintptr_t> target{ targetAddress, REL::Relocate(0x1418, 0x18DE) };
+			stl::write_thunk_call<NPCLoadFromFile>(target.address());
 		}
+	};
+
+	struct QuestCNAMTextHook //QUST CNAM
+	{
+		static void thunk(RE::BSString& a_out, char* a_buffer, std::uint64_t a3)
+		{
+			func(a_out, a_buffer, a3);
+
+			Manager::GetSingleton()->getQUST(a_out.c_str(), a_out);
+
+		}
+		static inline REL::Relocation<decltype(thunk)> func;
+
+
+		static void Install()
+		{
+			//JournalMenu quest description text Hook
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(24778, 25259), REL::Relocate(0x21C, 0x221) };//First: 5B ->Don't know; Second: C4 ->Don't know; Third: 221 ->Quest description text
+			stl::write_thunk_call<QuestCNAMTextHook>(target1.address());
+		}
+
 	};
 
 	static bool IsACTI = false;
@@ -80,14 +136,8 @@ namespace Hook
 		{
 			IsACTI = false;
 
-			const auto key = Utils::combineHash(Utils::getTrimmedFormID(a_this), Utils::getModName(a_this));
-			const auto it = g_ACTI_Map.find(key);
-
-			if (it != g_ACTI_Map.end())
-			{
+			if (Manager::GetSingleton()->getACTI(Utils::getTrimmedFormID(a_this), Utils::getModName(a_this), SetActivationText))
 				IsACTI = true;
-				SetActivationText = it->second;
-			}
 
 			func(a_this, a_file);
 		}
@@ -143,9 +193,30 @@ namespace Hook
 		}
 	};
 
+	struct MainUpdate
+	{
+
+		static void thunk()
+		{
+			func();
+
+			Manager::GetSingleton()->checkConst();
+
+		};
+		static inline REL::Relocation<decltype(thunk)> func;
+
+
+		static void Install()
+		{
+			const bool marketplace = REL::Module::get().version() >= SKSE::RUNTIME_SSE_1_6_1130;
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(35565, 36564), REL::Relocate(0x748, (marketplace ? 0xC2b : 0xC26), 0x7EE) };
+			stl::write_thunk_call<MainUpdate>(target1.address());
+		}
+	};
+
 	void InstallPostLoadHooks()
 	{
-		NpcNameFileStreamHook::Install();
+		NPCLoadFromFile::Install();
 		GetActivateText::Install();
 		SetActivateText::Install();
 		InstallDialogueHooksPostLoad();
@@ -155,11 +226,11 @@ namespace Hook
 
 	void InstallHooks()
 	{
-		InstallInventoryHooks();
 		InstallDescriptionHooks();
 		InstallDialogueHooks();
-		InstallQuestHooks();
 
+		MainUpdate::Install();
+		QuestCNAMTextHook::Install();
 		MapMarkerDataHook::Install();
 
 		SKSE::log::info("Installed DataLoadedHooks!");

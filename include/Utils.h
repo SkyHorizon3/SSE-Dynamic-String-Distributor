@@ -3,15 +3,13 @@
 
 namespace Utils
 {
-	size_t combineHash(const std::uint32_t formID, const std::string& str);
-	size_t combineHashWithIndex(const std::uint32_t formID, int value, const std::string& str);
-	size_t combineHashSubrecord(const std::uint32_t formID, Config::SubrecordType subrecord);
 	std::string tolower(std::string_view a_str);
 	std::string getModName(const RE::TESForm* form);
 	RE::FormID getTrimmedFormID(const RE::TESForm* form);
 	std::wstring getPluginTXTFilePath();
 	RE::BSFixedString validateString(const RE::BSFixedString& toplace);
-
+	RE::FormID convertToFormID(std::string input);
+	std::string getAfterSpace(const std::string& types);
 
 	// https://github.com/powerof3/CLibUtil/blob/master/include/CLIBUtil/hash.hpp
 	template <class T>
@@ -35,6 +33,37 @@ namespace Utils
 		return fnv1a_64(a_str);
 	}
 
+	template <class T>
+	inline T to_num(const std::string& a_str, bool a_hex = false)
+	{
+		const int base = a_hex ? 16 : 10;
+
+		if constexpr (std::is_same_v<T, double>) {
+			return static_cast<T>(std::stod(a_str, nullptr));
+		}
+		else if constexpr (std::is_same_v<T, float>) {
+			return static_cast<T>(std::stof(a_str, nullptr));
+		}
+		else if constexpr (std::is_same_v<T, std::int64_t>) {
+			return static_cast<T>(std::stol(a_str, nullptr, base));
+		}
+		else if constexpr (std::is_same_v<T, std::uint64_t>) {
+			return static_cast<T>(std::stoull(a_str, nullptr, base));
+		}
+		else if constexpr (std::is_signed_v<T>) {
+			return static_cast<T>(std::stoi(a_str, nullptr, base));
+		}
+		else {
+			return static_cast<T>(std::stoul(a_str, nullptr, base));
+		}
+	}
+
+	inline bool iequals(std::string_view a_str1, std::string_view a_str2)
+	{
+		return std::ranges::equal(a_str1, a_str2, [](unsigned char ch1, unsigned char ch2) {
+			return std::toupper(ch1) == std::toupper(ch2);
+			});
+	}
 }
 
 inline namespace literals

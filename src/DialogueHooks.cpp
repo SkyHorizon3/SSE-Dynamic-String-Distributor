@@ -1,9 +1,8 @@
 #include "MiscHooks.h"
 #include "DialogueHooks.h"
-#include "Utils.h"
 #include "Config.h"
-#include "Processor.h"
-
+#include "Utils.h"
+#include "Manager.h"
 
 namespace Hook
 {
@@ -28,21 +27,7 @@ namespace Hook
 				SKSE::log::debug("{}", ss.str());
 			}
 
-			const auto it = g_INFO_NAM1_Map.find(std::to_string(trimmedFormID) + fileName);
-			if (it != g_INFO_NAM1_Map.end())
-			{
-				const std::uint8_t reponseNumber = a_response->responseNumber;
-				const auto& value = it->second;
-
-				auto contains = std::find_if(value.begin(), value.end(),
-					[&reponseNumber](const Hook::Value& v) { return v.first == reponseNumber; });
-
-				if (contains != value.end())
-				{
-					a_item->text = contains->second;
-					return result;
-				}
-			}
+			Manager::GetSingleton()->getINFO_NAM1(trimmedFormID, fileName, a_response->responseNumber, a_item->text);
 
 			return result;
 		}
@@ -104,11 +89,12 @@ namespace Hook
 				formID &= 0xFFF;
 			}
 
-			const auto it = g_INFO_NAM1_Map.find(std::to_string(formID) + lookupFile->GetFilename().data());
-			if (it != g_INFO_NAM1_Map.end())
+			auto& map = Manager::GetSingleton()->getINFO_NAM1_Map();
+			const auto it = map.find(Manager::constructKey(formID, lookupFile->GetFilename().data()));
+			if (it != map.end())
 			{
-				const std::string newKey = std::to_string(Utils::getTrimmedFormID(parentInfo)) + Utils::getModName(parentInfo);
-				g_INFO_NAM1_Map.insert({ newKey, it->second });
+				const std::string newKey = Manager::constructKey(Utils::getTrimmedFormID(parentInfo), Utils::getModName(parentInfo));
+				map.insert({ newKey, it->second });
 			}
 
 			return result;
@@ -138,21 +124,9 @@ namespace Hook
 		{
 			func(a_out, a2, a3);
 
-			const auto key1 = Utils::combineHash(Utils::getTrimmedFormID(a_out.parentTopic), Utils::getModName(a_out.parentTopic));
-			const auto it1 = g_DIAL_FULL_Map.find(key1);
-
-			if (it1 != g_DIAL_FULL_Map.end())
-			{
-				a_out.topicText = it1->second;
-			}
-
-			const auto key2 = Utils::combineHash(Utils::getTrimmedFormID(a_out.parentTopicInfo), Utils::getModName(a_out.parentTopicInfo));
-			const auto it2 = g_INFO_RNAM_Map.find(key2); //INFO RNAM always overwrites DIAL FULL of parenttopic
-
-			if (it2 != g_INFO_RNAM_Map.end())
-			{
-				a_out.topicText = it2->second;
-			}
+			const auto manager = Manager::GetSingleton();
+			manager->getDIAL(Utils::getTrimmedFormID(a_out.parentTopic), Utils::getModName(a_out.parentTopic), a_out.topicText);
+			manager->getDIAL(Utils::getTrimmedFormID(a_out.parentTopicInfo), Utils::getModName(a_out.parentTopicInfo), a_out.topicText); //INFO RNAM always overwrites DIAL FULL of parenttopic
 
 		};
 		static inline REL::Relocation<decltype(thunk)> func;

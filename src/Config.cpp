@@ -1,8 +1,7 @@
 #include "Config.h"
 #include "MiscHooks.h"
 #include "DialogueHooks.h"
-#include "QuestHooks.h"
-#include "Processor.h"
+#include "Manager.h"
 #include "Utils.h"
 #include "MergeMapperPluginAPI.h"
 
@@ -291,16 +290,6 @@ std::vector<std::string> Config::enumerateFilesInFolders(const std::string& fold
 	return files;
 }
 
-std::string Config::getSubrecordType(const std::string& types) const
-{
-	size_t spacePos = types.find(' ');
-	if (spacePos != std::string::npos && spacePos + 1 < types.length())
-	{
-		return types.substr(spacePos + 1);
-	}
-	return "";
-}
-
 std::tuple<RE::FormID, std::string> Config::extractFormIDAndPlugin(const std::string& formIDWithPlugin)
 {
 	const size_t separatorPos = formIDWithPlugin.find('|');
@@ -310,7 +299,7 @@ std::tuple<RE::FormID, std::string> Config::extractFormIDAndPlugin(const std::st
 		return std::make_tuple(0, "");
 	}
 
-	RE::FormID formID = convertToFormID(formIDWithPlugin.substr(0, separatorPos));
+	RE::FormID formID = Utils::convertToFormID(formIDWithPlugin.substr(0, separatorPos));
 	std::string plugin = formIDWithPlugin.substr(separatorPos + 1);
 
 	if (g_mergeMapperInterface)
@@ -330,57 +319,9 @@ std::tuple<RE::FormID, std::string> Config::extractFormIDAndPlugin(const std::st
 	return std::make_tuple(formID, plugin);
 }
 
-RE::FormID Config::convertToFormID(std::string input)
-{
-	if (input.find('x') == std::string::npos) // If it does not contain 'x', process it.
-	{
-		if (input.length() == 8)
-		{
-			if (input.compare(0, 2, "FE") == 0)
-			{
-				input = "0x" + input.substr(5);
-			}
-			else
-			{
-				input = "0x" + input.substr(2);
-			}
-		}
-		else
-		{
-			input.insert(0, "0x");
-		}
-	}
-
-	//SKSE::log::info("FormID: {}", input);
-
-	return std::stoul(input, nullptr, 16);
-}
-
-Config::SubrecordType Config::getSubrecordType_map(std::string_view type)
-{
-	static const ankerl::unordered_dense::map<std::string_view, SubrecordType> typeMap = {
-		{"FULL"sv, SubrecordType::kFULL},
-		{"SHRT"sv, SubrecordType::kSHRT},
-		{"DATA"sv, SubrecordType::kDATA},
-		{"TNAM"sv, SubrecordType::kTNAM},
-		{"RDMP"sv, SubrecordType::kRDMP},
-
-		{"DESC"sv, SubrecordType::kDESC},
-		{"CNAM"sv, SubrecordType::kCNAM},
-		{"DNAM"sv, SubrecordType::kDNAM},
-		{"NNAM"sv, SubrecordType::kNNAM},
-		{"ITXT"sv, SubrecordType::kITXT},
-		{"EPFD"sv, SubrecordType::kEPFD},
-		{"EPF2"sv, SubrecordType::kITXT},
-	};
-
-	const auto it = typeMap.find(type);
-	return (it != typeMap.end()) ? it->second : SubrecordType::kUnknown;
-}
-
 void Config::onDataLoad()
 {
-	for (const auto& entry : m_onDataLoad)
+	for (auto& entry : m_onDataLoad)
 	{
 		auto [formID, plugin] = extractFormIDAndPlugin(entry.form_id);
 		if (formID == 0 && plugin.empty())
@@ -395,28 +336,28 @@ void Config::onDataLoad()
 			return;
 		}
 
+		const auto manager = Manager::GetSingleton();
+
 		switch (Utils::const_hash(entry.original))
 		{
 		case "const"_h:
 		{
-			Processor::AddToConstTranslationStruct(form, entry.string, getSubrecordType_map(getSubrecordType(entry.type)), 0, "");
-		}
-		break;
-		case "index"_h:
-		{
-			Processor::AddToConstTranslationStruct(form, entry.string, getSubrecordType_map(getSubrecordType(entry.type)), entry.index.value(), "");
+			manager->addToConst(form, std::move(entry));
 		}
 		break;
 		case "refr"_h:
 		{
-			const size_t key = Utils::combineHash(form->formID, plugin);
-			Hook::g_REFR_FULL_Map.insert_or_assign(key, entry.string);
+			manager->addREFR(form, std::move(entry));
 		}
 		break;
 		case "desc"_h:
 		{
-			const size_t key = Utils::combineHashSubrecord(form->formID, getSubrecordType_map(getSubrecordType(entry.type)));
-			Hook::g_DESC_CNAM_Map.insert_or_assign(key, entry.string);
+			manager->addDESC(form, std::move(entry));
+		}
+		break;
+		case "cnam"_h:
+		{
+			manager->addCNAM(form, std::move(entry));
 		}
 		break;
 
@@ -425,17 +366,13 @@ void Config::onDataLoad()
 	}
 }
 
-void Config::processEntry(Data& entry, const std::string& file)
+void Config::processEntry(ParseData& entry, const std::string& file)
 {
 	auto [formID, plugin] = extractFormIDAndPlugin(entry.form_id);
 	if (formID == 0 && plugin.empty())
 		return;
 
-	const size_t key = Utils::combineHash(formID, plugin);
-
-	auto insertIntoMap = [&](auto& map) {
-		map.insert_or_assign(key, entry.string);
-		};
+	const auto manager = Manager::GetSingleton();
 
 	switch (Utils::const_hash(entry.type))
 	{
@@ -480,6 +417,10 @@ void Config::processEntry(Data& entry, const std::string& file)
 	case "WOOP FULL"_h:
 	case "WOOP TNAM"_h:
 	case "WRLD FULL"_h:
+	case "MESG ITXT"_h:
+	case "PERK EPF2"_h:
+	case "QUST NNAM"_h:
+	case "PERK EPFD"_h:
 	{
 		entry.original = "const";
 		m_onDataLoad.emplace_back(entry);
@@ -488,36 +429,23 @@ void Config::processEntry(Data& entry, const std::string& file)
 	case "ACTI RNAM"_h:
 	case "FLOR RNAM"_h:
 	{
-		insertIntoMap(Hook::g_ACTI_Map);
+		manager->addACTI(formID, plugin, std::move(entry));
 	}
 	break;
 	case "DIAL FULL"_h:
+	case "INFO RNAM"_h:
 	{
-		insertIntoMap(Hook::g_DIAL_FULL_Map);
+		manager->addDIAL(formID, plugin, std::move(entry));
 	}
 	break;
 	case "GMST DATA"_h:
 	{
-		Processor::AddToConstTranslationStruct(nullptr, entry.string, getSubrecordType_map(getSubrecordType(entry.type)), 0, entry.editor_id.value());
-	}
-	break;
-	case "INFO RNAM"_h:
-	{
-		insertIntoMap(Hook::g_INFO_RNAM_Map);
-	}
-	break;
-	case "MESG ITXT"_h:
-	case "PERK EPF2"_h:
-	case "QUST NNAM"_h:
-	case "PERK EPFD"_h:
-	{
-		entry.original = "index";
-		m_onDataLoad.emplace_back(entry);
+		//Processor::AddToConstTranslationStruct(nullptr, entry.string, getSubrecordType_map(getSubrecordType(entry.type)), 0, entry.editor_id.value());
 	}
 	break;
 	case "NPC_ FULL"_h:
 	{
-		insertIntoMap(Hook::g_NPC_FULL_Map);
+		//insertIntoMap(Hook::g_NPC_FULL_Map);
 	}
 	break;
 	case "REFR FULL"_h:
@@ -528,27 +456,23 @@ void Config::processEntry(Data& entry, const std::string& file)
 	break;
 	case "QUST CNAM"_h:
 	{
-		Hook::g_QUST_CNAM_Map.insert_or_assign(entry.original, entry.string);
+		manager->addQUST(entry.original, std::move(entry));
 	}
 	break;
 	case "INFO NAM1"_h:
 	{
-		auto& valueList = Hook::g_INFO_NAM1_Map[std::to_string(formID) + plugin];
-		Hook::Value value = { entry.index.value(), entry.string };
-
-		auto it = std::find_if(valueList.begin(), valueList.end(),
-			[&value](const Hook::Value& v) { return v.first == value.first; });
-
-		if (it != valueList.end())
-			it->second = value.second;
-		else
-			valueList.emplace_back(value);
+		manager->addINFO_NAM1(formID, plugin, entry.index.value(), std::move(entry));
+	}
+	break;
+	case "BOOK CNAM"_h:
+	{
+		entry.original = "cnam";
+		m_onDataLoad.emplace_back(entry);
 	}
 	break;
 	case "AMMO DESC"_h:
 	case "ARMO DESC"_h:
 	case "AVIF DESC"_h:
-	case "BOOK CNAM"_h:
 	case "BOOK DESC"_h:
 	case "MESG DESC"_h:
 	case "PERK DESC"_h:
@@ -578,9 +502,9 @@ void Config::parseTranslationFiles()
 	for (const auto& file : m_filesInPluginFolder)
 	{
 		std::string buffer{};
-		std::vector<Data> jsonData{};
+		std::vector<ParseData> jsonData{};
 
-		auto err = glz::read_file_json < glz::opts{ .partial_read_nested = true } > (jsonData, file, buffer);
+		auto err = glz::read_file_json < glz::opts{ .error_on_unknown_keys = false } > (jsonData, file, buffer);
 		if (err)
 		{
 			const std::string descriptive_error = glz::format_error(err, buffer);
