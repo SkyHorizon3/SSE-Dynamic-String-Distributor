@@ -7,7 +7,7 @@
 
 std::vector<std::string> Config::getLoadOrder()
 {
-	const std::wstring loadOrderPath = Utils::getPluginTXTFilePath();
+	const auto loadOrderPath = Utils::getPluginTXTFilePath();
 	if (!std::filesystem::exists(loadOrderPath) || loadOrderPath.empty())
 		return std::vector<std::string>();
 

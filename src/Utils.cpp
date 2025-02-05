@@ -1,5 +1,4 @@
 #include "Utils.h"
-#include "Config.h"
 #include "MergeMapperPluginAPI.h"
 
 namespace Utils
@@ -52,7 +51,7 @@ namespace Utils
 		return formID;
 	}
 
-	std::wstring getPluginTXTFilePath()
+	std::filesystem::path getPluginTXTFilePath()
 	{
 		wchar_t userDir[MAX_PATH];
 		if (FAILED(SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, userDir)))
@@ -61,25 +60,15 @@ namespace Utils
 			return L"";
 		}
 
-		std::wstring loadOrderPath = userDir;
-		if (REL::Module::IsVR())
-		{
-			loadOrderPath += L"\\AppData\\Local\\Skyrim VR\\plugins.txt";
-			SKSE::log::debug("Directory: Skyrim VR");
-		}
-		else
-		{
-			std::wstring name = std::filesystem::exists("steam_api64.dll") ? L"Skyrim Special Edition" : L"Skyrim Special Edition GOG";
-			loadOrderPath += L"\\AppData\\Local\\" + name + L"\\plugins.txt";
+		std::filesystem::path path = std::filesystem::path(userDir);
+		path /= "AppData"sv;
+		path /= "Local"sv;
+		path /= *REL::Relocation<const char**>(RELOCATION_ID(508778, AE_CHECK(SKSE::RUNTIME_SSE_1_6_1130, 380738, 502114))).get();
+		path /= "plugins.txt"sv;
 
-			if (Config::enableDebugLog)
-			{
-				std::string_view skyrim = std::filesystem::exists("steam_api64.dll") ? "Skyrim Special Edition" : "Skyrim Special Edition GOG";
-				SKSE::log::debug("Directory: {} - Version: {}", skyrim, REL::Module::get().version());
-			}
-		}
+		SKSE::log::debug("Directory with plugins.txt: {}", path.string());
 
-		return loadOrderPath;
+		return path;
 	}
 
 	RE::BSFixedString validateString(const RE::BSFixedString& toplace)
@@ -121,5 +110,18 @@ namespace Utils
 			return types.substr(spacePos + 1);
 		}
 		return "";
+	}
+
+	const RE::TESFile* getFileByFormIDRaw(RE::FormID a_rawFormID)
+	{
+		const auto handler = RE::TESDataHandler::GetSingleton();
+
+		const auto* expectedFile = (a_rawFormID & 0xFF000000) == 0xFE000000 ?
+			handler->LookupLoadedLightModByIndex(
+				static_cast<uint16_t>((0x00FFF000 & a_rawFormID) >> 12)) :
+			handler->LookupLoadedModByIndex(
+				static_cast<uint8_t>((0xFF000000 & a_rawFormID) >> 24));
+
+		return expectedFile;
 	}
 }

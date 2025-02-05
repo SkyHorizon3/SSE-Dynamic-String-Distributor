@@ -93,14 +93,9 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
 	SKSE::Init(skse, true);
 
-	if (REL::Module::IsAE())
-	{
-		SKSE::AllocTrampoline(250);
-	}
-	else
-	{
-		SKSE::AllocTrampoline(140);
-	}
+	SKSE::log::info("Game version: {}", skse->RuntimeVersion());
+
+	SKSE::AllocTrampoline(250);
 
 	LoadINI();
 

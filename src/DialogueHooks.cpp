@@ -65,25 +65,18 @@ namespace Hook
 
 			const RE::TESTopicInfo* parentInfo = reinterpret_cast<RE::TESTopicInfo*>(a_topicInfo);
 			std::uint32_t dnamFormID = *static_cast<std::uint32_t*>(a_buf);
-			const std::uint32_t firstTwoHexDigits = dnamFormID >> 24; // extract first two digits and convert to decimal
-			RE::FormID formID = dnamFormID & 0xFFFFFF; // remove file index -> 0x00XXXXXX
 
-			const RE::TESFile* lookupFile = a_file;
-			if (firstTwoHexDigits < a_file->masterCount)
-			{
-				lookupFile = a_file->masterPtrs[firstTwoHexDigits];
-			}
-
+			const auto lookupFile = Utils::getFileByFormIDRaw(dnamFormID);
 			if (lookupFile == nullptr)
 			{
 				SKSE::log::error("INFO DNAM error, please report it in our Discord!");
 				SKSE::log::error("FormID - Parent: {0:08X}", parentInfo->formID);
 				SKSE::log::error("FormID - DNAM: {0:08X}", dnamFormID);
-				SKSE::log::error("FormID - ID: {}", firstTwoHexDigits);
 				SKSE::log::error("File - Parent: {}", a_file->GetFilename());
 				return result;
 			}
 
+			RE::FormID formID = dnamFormID & 0xFFFFFF;
 			if (lookupFile->IsLight())
 			{
 				formID &= 0xFFF;

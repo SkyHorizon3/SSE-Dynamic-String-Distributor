@@ -6,10 +6,11 @@ namespace Utils
 	std::string tolower(std::string_view a_str);
 	std::string getModName(const RE::TESForm* form);
 	RE::FormID getTrimmedFormID(const RE::TESForm* form);
-	std::wstring getPluginTXTFilePath();
+	std::filesystem::path getPluginTXTFilePath();
 	RE::BSFixedString validateString(const RE::BSFixedString& toplace);
 	RE::FormID convertToFormID(std::string input);
 	std::string getAfterSpace(const std::string& types);
+	const RE::TESFile* getFileByFormIDRaw(RE::FormID a_rawFormID);
 
 	// https://github.com/powerof3/CLibUtil/blob/master/include/CLIBUtil/hash.hpp
 	template <class T>
