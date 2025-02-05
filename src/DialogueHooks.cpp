@@ -66,7 +66,7 @@ namespace Hook
 			const RE::TESTopicInfo* parentInfo = reinterpret_cast<RE::TESTopicInfo*>(a_topicInfo);
 			std::uint32_t dnamFormID = *static_cast<std::uint32_t*>(a_buf);
 
-			const auto lookupFile = Utils::getFileByFormIDRaw(dnamFormID);
+			const auto lookupFile = Utils::getFileByFormIDRaw(dnamFormID, a_file);
 			if (lookupFile == nullptr)
 			{
 				SKSE::log::error("INFO DNAM error, please report it in our Discord!");

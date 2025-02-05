@@ -1,5 +1,4 @@
 #pragma once
-#include "Config.h"
 
 namespace Utils
 {
@@ -10,7 +9,7 @@ namespace Utils
 	RE::BSFixedString validateString(const RE::BSFixedString& toplace);
 	RE::FormID convertToFormID(std::string input);
 	std::string getAfterSpace(const std::string& types);
-	const RE::TESFile* getFileByFormIDRaw(RE::FormID a_rawFormID);
+	const RE::TESFile* getFileByFormIDRaw(RE::FormID a_rawFormID, RE::TESFile* a_file);
 
 	// https://github.com/powerof3/CLibUtil/blob/master/include/CLIBUtil/hash.hpp
 	template <class T>

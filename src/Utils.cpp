@@ -112,16 +112,40 @@ namespace Utils
 		return "";
 	}
 
-	const RE::TESFile* getFileByFormIDRaw(RE::FormID a_rawFormID)
+	const RE::TESFile* getFileByFormIDRaw(RE::FormID a_rawFormID, RE::TESFile* a_file)
 	{
-		const auto handler = RE::TESDataHandler::GetSingleton();
+		if (!a_file || a_file->compileIndex == 0xFF) {
+			return nullptr;
+		}
 
-		const auto* expectedFile = (a_rawFormID & 0xFF000000) == 0xFE000000 ?
-			handler->LookupLoadedLightModByIndex(
-				static_cast<uint16_t>((0x00FFF000 & a_rawFormID) >> 12)) :
-			handler->LookupLoadedModByIndex(
-				static_cast<uint8_t>((0xFF000000 & a_rawFormID) >> 24));
+		auto rawIndex = (a_rawFormID & 0xFF000000) >> 24;
+		if (REL::Module::IsVR() && !RE::TESDataHandler::GetSingleton()->VRcompiledFileCollection) {
+			if (rawIndex >= a_file->masterCount) {
+				return a_file;
+			}
+			return a_file->masterPtrs[rawIndex];
+		}
+		else {
+			bool isLight = rawIndex == 0xFE;
+			if (isLight) {
+				rawIndex = (a_rawFormID & 0x00FFF000) >> 12;
+			}
 
-		return expectedFile;
+			if (rawIndex >= a_file->masterCount) {
+				return a_file;
+			}
+
+			std::uint32_t index = 0;
+			for (std::uint32_t i = 0; i < a_file->masterCount; ++i) {
+				auto* master = a_file->masterPtrs[i];
+				if ((master->compileIndex == 0xFE) != isLight) {
+					continue;
+				}
+				if (index++ == rawIndex) {
+					return master;
+				}
+			}
+			return nullptr;
+		}
 	}
 }
