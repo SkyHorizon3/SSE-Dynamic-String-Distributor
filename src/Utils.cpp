@@ -131,21 +131,19 @@ namespace Utils
 				rawIndex = (a_rawFormID & 0x00FFF000) >> 12;
 			}
 
-			if (rawIndex >= a_file->masterCount) {
-				return a_file;
-			}
-
 			std::uint32_t index = 0;
 			for (std::uint32_t i = 0; i < a_file->masterCount; ++i) {
 				auto* master = a_file->masterPtrs[i];
-				if ((master->compileIndex == 0xFE) != isLight) {
+				if ((master->compileIndex == 0xFE) != isLight)
+				{ // is isLight = true execute it if master is smth different than light
+					// is isLight = false execute it if master is smth different than full
 					continue;
 				}
 				if (index++ == rawIndex) {
 					return master;
 				}
 			}
-			return nullptr;
+			return a_file;
 		}
 	}
 }

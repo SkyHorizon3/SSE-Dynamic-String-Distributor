@@ -20,7 +20,7 @@ namespace Hook
 			auto result = func(marker);
 
 			std::string newDescription{};
-			if (result && Manager::GetSingleton()->getREFR(marker, newDescription))
+			if (result && Manager::GetSingleton()->getREFR(marker->formID, newDescription))
 			{
 				result->SetFullName(newDescription.c_str());
 			}
@@ -38,6 +38,7 @@ namespace Hook
 
 	};
 
+	/*
 	//140376DEE - 1.6.640, 14035DCA8 - 1.5.97
 
 	struct NPCLoadFromFile
@@ -106,6 +107,7 @@ namespace Hook
 			stl::write_thunk_call<NPCLoadFromFile>(target.address());
 		}
 	};
+	*/
 
 	struct QuestCNAMTextHook //QUST CNAM
 	{
@@ -193,6 +195,7 @@ namespace Hook
 		}
 	};
 
+	/*
 	struct MainUpdate
 	{
 
@@ -200,8 +203,15 @@ namespace Hook
 		{
 			func();
 
-			Manager::GetSingleton()->checkConst();
+			static auto lastCallTime = std::chrono::steady_clock::now();
+			auto now = std::chrono::steady_clock::now();
 
+			if (std::chrono::duration_cast<std::chrono::seconds>(now - lastCallTime).count() >= 1)
+			{
+				lastCallTime = now;
+
+				Manager::GetSingleton()->checkConst();
+			}
 		};
 		static inline REL::Relocation<decltype(thunk)> func;
 
@@ -213,10 +223,36 @@ namespace Hook
 			stl::write_thunk_call<MainUpdate>(target1.address());
 		}
 	};
+	*/
+
+	struct NpcNameFileStreamHook //NPC FULL - Why this way? Because templates use one of their templates names and it's horrible to change it based on formID
+	{
+		static void thunk(RE::TESFullName* a_npcFullname, RE::TESFile* a_file)
+		{
+			func(a_npcFullname, a_file);
+
+			auto* npc = skyrim_cast<const RE::TESForm*>(a_npcFullname);
+
+			std::string newDescription{};
+			if (Manager::GetSingleton()->getACTI(Utils::getTrimmedFormID(npc), Utils::getModName(npc), newDescription))
+			{
+				a_npcFullname->SetFullName(newDescription.c_str());
+			}
+
+		}
+		static inline REL::Relocation<decltype(thunk)> func;
+
+		static void Install()
+		{
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(24159, 24663), REL::Relocate(0x7CE, 0x924) };
+			stl::write_thunk_call<NpcNameFileStreamHook>(target1.address());
+		}
+	};
 
 	void InstallPostLoadHooks()
 	{
-		NPCLoadFromFile::Install();
+		//NPCLoadFromFile::Install();
+		NpcNameFileStreamHook::Install();
 		GetActivateText::Install();
 		SetActivateText::Install();
 		InstallDialogueHooksPostLoad();
@@ -229,7 +265,7 @@ namespace Hook
 		InstallDescriptionHooks();
 		InstallDialogueHooks();
 
-		MainUpdate::Install();
+		//MainUpdate::Install();
 		QuestCNAMTextHook::Install();
 		MapMarkerDataHook::Install();
 

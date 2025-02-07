@@ -767,7 +767,7 @@ void ConditionParser::BuildCondition(std::shared_ptr<RE::TESCondition>& a_condit
 		condData.object = RE::CONDITIONITEMOBJECT::kSelf;
 	}
 	else {
-		RE::TESForm* refForm{};
+		RE::TESForm* refForm{}; // hier refs abgreifen
 		if (subject.str() == "PlayerRef") {
 			refForm = RE::PlayerCharacter::GetSingleton();
 		}

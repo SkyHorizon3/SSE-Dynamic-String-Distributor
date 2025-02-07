@@ -49,9 +49,12 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 		auto startTime = std::chrono::high_resolution_clock::now();
 
 		Config::GetSingleton()->onDataLoad();
-		Manager::GetSingleton()->buildConditions();
+		//Manager::GetSingleton()->buildConditions();
 
 		Hook::InstallHooks();
+
+		Manager::GetSingleton()->checkConst();
+
 
 		auto endTime = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
@@ -95,7 +98,14 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 
 	SKSE::log::info("Game version: {}", skse->RuntimeVersion());
 
-	SKSE::AllocTrampoline(250);
+	if (REL::Module::IsAE())
+	{
+		SKSE::AllocTrampoline(200);
+	}
+	else
+	{
+		SKSE::AllocTrampoline(140);
+	}
 
 	LoadINI();
 

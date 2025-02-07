@@ -1,6 +1,6 @@
 #pragma once
 
-enum class SubrecordType
+enum class SubrecordType : std::uint32_t
 {
 	kFULL,
 	kSHRT,
@@ -46,11 +46,12 @@ struct ParseData
 struct StringData
 {
 	StringData(const std::string& original, const std::string& conditions)
-		: replacerText(original), conditionString(conditions) {}
+		: replacerText(original), conditionString(conditions), pos(0), subRecordType(SubrecordType::kUnknown) {
+	}
 
 	std::string form_id{};
-	SubrecordType subRecordType;
 	std::string replacerText{};
+	SubrecordType subRecordType;
 	std::optional<std::string> originalString;
 	std::string conditionString{};
 	int pos;
@@ -64,7 +65,7 @@ class Manager : public ISingleton<Manager>
 {
 
 public:
-	void buildConditions();
+	//void buildConditions();
 
 	SubrecordType getSubrecordType_map(std::string_view type);
 
@@ -90,7 +91,7 @@ public:
 	bool getCNAM(const RE::FormID& formID, std::string& description);
 
 	void addREFR(RE::TESForm* form, const ParseData& data);
-	bool getREFR(RE::TESObjectREFR* ref, std::string& description);
+	bool getREFR(const RE::FormID& formID, std::string& description);
 
 	void addQUST(const std::string& original, const ParseData& data);
 	bool getQUST(const std::string& original, RE::BSString& description);
@@ -134,5 +135,6 @@ private:
 	StringMap<StringData> m_QUST_CNAM_Map;
 	StringMap<StringData> m_ACTI_Map;
 
-	FlatMap<RE::FormID, StringData> m_constTranslation;
+	//FlatMap<RE::FormID, StringData> m_constTranslation;
+	std::vector<StringData> m_constTranslationGMST;
 };

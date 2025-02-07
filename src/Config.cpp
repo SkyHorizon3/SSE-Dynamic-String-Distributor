@@ -440,12 +440,12 @@ void Config::processEntry(ParseData& entry, const std::string& file)
 	break;
 	case "GMST DATA"_h:
 	{
-		//Processor::AddToConstTranslationStruct(nullptr, entry.string, getSubrecordType_map(getSubrecordType(entry.type)), 0, entry.editor_id.value());
+		manager->addToConst(nullptr, std::move(entry));
 	}
 	break;
 	case "NPC_ FULL"_h:
 	{
-		//insertIntoMap(Hook::g_NPC_FULL_Map);
+		manager->addACTI(formID, plugin, std::move(entry));
 	}
 	break;
 	case "REFR FULL"_h:

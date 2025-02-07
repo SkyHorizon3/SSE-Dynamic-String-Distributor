@@ -2,6 +2,7 @@
 #include "Utils.h"
 #include "Conditions.h"
 
+/*
 void Manager::buildConditions()
 {
 	auto processEntry = [](auto& pair) {
@@ -17,6 +18,7 @@ void Manager::buildConditions()
 
 
 }
+*/
 
 SubrecordType Manager::getSubrecordType_map(std::string_view type)
 {
@@ -61,38 +63,34 @@ void Manager::addToConst(RE::TESForm* form, const ParseData& data)
 
 	stringData.subRecordType = getSubrecordType_map(Utils::getAfterSpace(data.type));
 
-	m_constTranslation.insert_or_assign(
-		form->formID,
-		stringData
-	);
+	if (form != nullptr)
+	{
+		//SKSE::log::info("FormID: {} - index: {}", std::format("{0:08X}", form->formID), stringData.pos);
+
+		runConstTranslation(form, stringData);
+
+		//m_constTranslation.insert_or_assign(
+		//	form->formID, // not unique, can be more than one replacement per form
+		//	stringData
+		//);
+	}
+	else
+	{
+		if (data.editor_id.has_value())
+			stringData.form_id = data.editor_id.value();
+
+		m_constTranslationGMST.emplace_back(stringData);
+	}
 }
+
 
 void Manager::checkConst()
 {
-	for (const auto& [key, entry] : m_constTranslation)
+	for (const auto& entry : m_constTranslationGMST)
 	{
-		const auto form = RE::TESForm::LookupByID(key);
-		if (!form)
-			continue;
-
-		auto player = RE::PlayerCharacter::GetSingleton();
-		if (!player)
-			break;
-
-		const auto it = m_constTranslation.find(form->formID);
-		if (it != m_constTranslation.end())
-		{
-			if (it->second.conditions == nullptr)
-			{
-				runConstTranslation(form, entry);
-			}
-			else if (it->second.conditions && it->second.conditions->IsTrue(player, player))
-			{
-				runConstTranslation(form, entry);
-			}
-		}
-
+		SetGameSettingString(entry.form_id, entry.replacerText);
 	}
+
 }
 
 void Manager::addDIAL(const RE::FormID& formID, const std::string& plugin, const ParseData& data)
@@ -150,7 +148,7 @@ bool Manager::getINFO_NAM1(const RE::FormID& formID, const std::string& plugin, 
 std::string Manager::constructKey(const RE::FormID& formID, const std::string& plugin)
 {
 	if (formID == 0 || plugin.empty())
-		return "";
+		return {};
 
 	return std::to_string(formID) + plugin;
 }
@@ -189,24 +187,9 @@ void Manager::addREFR(RE::TESForm* form, const ParseData& data)
 	);
 }
 
-bool Manager::getREFR(RE::TESObjectREFR* ref, std::string& description)
+bool Manager::getREFR(const RE::FormID& formID, std::string& description)
 {
-	const auto it = m_REFR.find(ref->formID);
-	if (it != m_REFR.end())
-	{
-		if (it->second.conditions == nullptr)
-		{
-			description = it->second.replacerText;
-			return true;
-		}
-		else if (it->second.conditions && it->second.conditions->IsTrue(ref, ref))
-		{
-			description = it->second.replacerText;
-			return true;
-		}
-	}
-
-	return false;
+	return getReplacerText(m_REFR, formID, description);
 }
 
 void Manager::addQUST(const std::string& original, const ParseData& data)
@@ -250,7 +233,7 @@ void Manager::SetConstStrings(RE::TESForm* form, const RE::BSFixedString& newStr
 
 void Manager::SetFullnameStrings(RE::TESForm* form, const std::string& newString)
 {
-	RE::TESFullName* OrigString = skyrim_cast<RE::TESFullName*>(form);
+	const auto OrigString = form->As<RE::TESFullName>();
 
 	if (!OrigString)
 	{
@@ -411,6 +394,7 @@ void Manager::Report(const RE::TESForm* form)
 	if (!form) // Should not happen, because it's only added if valid
 		return;
 
+
 	std::stringstream ss;
 	ss << "Issue during ConstTranslation with FormID: " << std::format("{0:08X}", form->formID)
 		<< " - Formtype: " << RE::FormTypeToString(form->GetFormType())
@@ -427,7 +411,6 @@ void Manager::runConstTranslation(RE::TESForm* form, const StringData& data)
 	{
 	case SubrecordType::kFULL: //DIAL FULL, REFR FULL aren't working like this.
 	{
-		SKSE::log::info("ReplacerTEXT: {}", data.replacerText);
 		SetFullnameStrings(form, data.replacerText);
 	}
 	break;
@@ -485,5 +468,4 @@ void Manager::runConstTranslation(RE::TESForm* form, const StringData& data)
 
 	default: break;
 	}
-
 }
