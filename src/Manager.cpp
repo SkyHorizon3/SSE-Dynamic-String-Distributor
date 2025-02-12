@@ -90,7 +90,7 @@ void Manager::checkConst()
 	{
 		SetGameSettingString(entry.form_id, entry.replacerText);
 	}
-
+	m_constTranslationGMST.clear();
 }
 
 void Manager::addDIAL(const RE::FormID& formID, const std::string& plugin, const ParseData& data)

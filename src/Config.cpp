@@ -321,7 +321,7 @@ std::tuple<RE::FormID, std::string> Config::extractFormIDAndPlugin(const std::st
 
 void Config::onDataLoad()
 {
-	for (auto& entry : m_onDataLoad)
+	for (const auto& entry : m_onDataLoad)
 	{
 		auto [formID, plugin] = extractFormIDAndPlugin(entry.form_id);
 		if (formID == 0 && plugin.empty())
@@ -330,10 +330,10 @@ void Config::onDataLoad()
 		//SKSE::log::info("FormID: {} - switch: {} - type: {} - string: {}", entry.form_id, entry.original, entry.type, entry.string);
 
 		const auto form = RE::TESDataHandler::GetSingleton()->LookupForm(formID, plugin);
-		if (form == nullptr)
+		if (!form)
 		{
 			SKSE::log::error("Couldn't find FormID {} with record type {}", entry.form_id, entry.type);
-			return;
+			continue;
 		}
 
 		const auto manager = Manager::GetSingleton();
@@ -342,28 +342,29 @@ void Config::onDataLoad()
 		{
 		case "const"_h:
 		{
-			manager->addToConst(form, std::move(entry));
+			manager->addToConst(form, entry);
 		}
 		break;
 		case "refr"_h:
 		{
-			manager->addREFR(form, std::move(entry));
+			manager->addREFR(form, entry);
 		}
 		break;
 		case "desc"_h:
 		{
-			manager->addDESC(form, std::move(entry));
+			manager->addDESC(form, entry);
 		}
 		break;
 		case "cnam"_h:
 		{
-			manager->addCNAM(form, std::move(entry));
+			manager->addCNAM(form, entry);
 		}
 		break;
 
 
 		}
 	}
+	m_onDataLoad.clear();
 }
 
 void Config::processEntry(ParseData& entry, const std::string& file)
@@ -429,23 +430,23 @@ void Config::processEntry(ParseData& entry, const std::string& file)
 	case "ACTI RNAM"_h:
 	case "FLOR RNAM"_h:
 	{
-		manager->addACTI(formID, plugin, std::move(entry));
+		manager->addACTI(formID, plugin, entry);
 	}
 	break;
 	case "DIAL FULL"_h:
 	case "INFO RNAM"_h:
 	{
-		manager->addDIAL(formID, plugin, std::move(entry));
+		manager->addDIAL(formID, plugin, entry);
 	}
 	break;
 	case "GMST DATA"_h:
 	{
-		manager->addToConst(nullptr, std::move(entry));
+		manager->addToConst(nullptr, entry);
 	}
 	break;
 	case "NPC_ FULL"_h:
 	{
-		manager->addACTI(formID, plugin, std::move(entry));
+		manager->addACTI(formID, plugin, entry);
 	}
 	break;
 	case "REFR FULL"_h:
@@ -456,12 +457,12 @@ void Config::processEntry(ParseData& entry, const std::string& file)
 	break;
 	case "QUST CNAM"_h:
 	{
-		manager->addQUST(entry.original, std::move(entry));
+		manager->addQUST(entry.original, entry);
 	}
 	break;
 	case "INFO NAM1"_h:
 	{
-		manager->addINFO_NAM1(formID, plugin, entry.index.value(), std::move(entry));
+		manager->addINFO_NAM1(formID, plugin, entry.index.value(), entry);
 	}
 	break;
 	case "BOOK CNAM"_h:

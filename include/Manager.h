@@ -57,7 +57,7 @@ struct StringData
 	int pos;
 
 
-	std::shared_ptr<RE::TESCondition> conditions;
+	//std::shared_ptr<RE::TESCondition> conditions;
 };
 
 
