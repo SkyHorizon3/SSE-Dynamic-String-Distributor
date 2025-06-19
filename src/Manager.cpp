@@ -93,7 +93,7 @@ void Manager::checkConst()
 	m_constTranslationGMST.clear();
 }
 
-void Manager::addDIAL(const RE::FormID& formID, const std::string& plugin, const ParseData& data)
+void Manager::addDIAL(const RE::FormID formID, const std::string& plugin, const ParseData& data)
 {
 	m_DIAL_RNAM_Map.insert_or_assign(
 		constructKey(formID, plugin),
@@ -101,12 +101,12 @@ void Manager::addDIAL(const RE::FormID& formID, const std::string& plugin, const
 	);
 }
 
-bool Manager::getDIAL(const RE::FormID& formID, const std::string& plugin, RE::BSString& description)
+bool Manager::getDIAL(const RE::FormID formID, const std::string& plugin, RE::BSString& description)
 {
 	return getReplacerText(m_DIAL_RNAM_Map, constructKey(formID, plugin), description);
 }
 
-void Manager::addINFO_NAM1(const RE::FormID& formID, const std::string& plugin, const int& responseNumber, const ParseData& data)
+void Manager::addINFO_NAM1(const RE::FormID formID, const std::string& plugin, const std::uint32_t responseNumber, const ParseData& data)
 {
 	auto& valueList = m_INFO_NAM1_Map[constructKey(formID, plugin)];
 
@@ -126,7 +126,7 @@ void Manager::addINFO_NAM1(const RE::FormID& formID, const std::string& plugin, 
 	}
 }
 
-bool Manager::getINFO_NAM1(const RE::FormID& formID, const std::string& plugin, const std::uint8_t& responseNumber, RE::BSString& string)
+bool Manager::getINFO_NAM1(const RE::FormID formID, const std::string& plugin, const std::uint8_t responseNumber, RE::BSString& string)
 {
 	const auto it = m_INFO_NAM1_Map.find(constructKey(formID, plugin));
 	if (it != m_INFO_NAM1_Map.end())
@@ -145,7 +145,7 @@ bool Manager::getINFO_NAM1(const RE::FormID& formID, const std::string& plugin, 
 	return false;
 }
 
-std::string Manager::constructKey(const RE::FormID& formID, const std::string& plugin)
+std::string Manager::constructKey(const RE::FormID formID, const std::string& plugin)
 {
 	if (formID == 0 || plugin.empty())
 		return {};
@@ -161,7 +161,7 @@ void Manager::addDESC(RE::TESForm* form, const ParseData& data) // no duplicates
 	);
 }
 
-bool Manager::getDESC(const RE::FormID& formID, std::string& description)
+bool Manager::getDESC(const RE::FormID formID, std::string& description)
 {
 	return getReplacerText(m_DESC, formID, description);
 }
@@ -174,7 +174,7 @@ void Manager::addCNAM(RE::TESForm* form, const ParseData& data)
 	);
 }
 
-bool Manager::getCNAM(const RE::FormID& formID, std::string& description)
+bool Manager::getCNAM(const RE::FormID formID, std::string& description)
 {
 	return getReplacerText(m_CNAM, formID, description);
 }
@@ -187,7 +187,7 @@ void Manager::addREFR(RE::TESForm* form, const ParseData& data)
 	);
 }
 
-bool Manager::getREFR(const RE::FormID& formID, std::string& description)
+bool Manager::getREFR(const RE::FormID formID, std::string& description)
 {
 	return getReplacerText(m_REFR, formID, description);
 }
@@ -205,7 +205,7 @@ bool Manager::getQUST(const std::string& original, RE::BSString& description)
 	return getReplacerText(m_QUST_CNAM_Map, original, description);
 }
 
-void Manager::addACTI(const RE::FormID& formID, const std::string& plugin, const ParseData& data)
+void Manager::addACTI(const RE::FormID formID, const std::string& plugin, const ParseData& data)
 {
 	m_ACTI_Map.insert_or_assign(
 		constructKey(formID, plugin),
@@ -213,7 +213,7 @@ void Manager::addACTI(const RE::FormID& formID, const std::string& plugin, const
 	);
 }
 
-bool Manager::getACTI(const RE::FormID& formID, const std::string& plugin, std::string& description)
+bool Manager::getACTI(const RE::FormID formID, const std::string& plugin, std::string& description)
 {
 	return getReplacerText(m_ACTI_Map, constructKey(formID, plugin), description);
 }
@@ -248,7 +248,7 @@ void Manager::SetGameSettingString(const std::string& a_name, const std::string&
 {
 	auto setting = RE::GameSettingCollection::GetSingleton()->GetSetting(a_name.c_str());
 
-	if (setting == nullptr)
+	if (!setting)
 	{
 		SKSE::log::debug("Failed to set GameSetting string for {}. NOTE: It is normal for this to happen with some settings, they are simply not loaded.", a_name.c_str());
 		return;
@@ -261,12 +261,12 @@ void Manager::SetGameSettingString(const std::string& a_name, const std::string&
 }
 
 
-void Manager::SetMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedString& newString, const int& index)
+void Manager::SetMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index)
 {
 	RE::BGSMessage* message = form->As<RE::BGSMessage>(); //MESG ITXT
 	if (message)
 	{
-		int pos = 0;
+		std::uint32_t pos = 0;
 		for (const auto& button : message->menuButtons)
 		{
 			//SKSE::log::info("Pos: {} - String: {}", pos, text->text.c_str());
@@ -292,22 +292,24 @@ void Manager::SetMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedStr
 
 		for (const auto& entry : perk->perkEntries)
 		{
-			if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
+			if (!entry || entry->GetType() != RE::PERK_ENTRY_TYPE::kEntryPoint)
+				continue;
+
+			const auto* entryPoint = static_cast<RE::BGSEntryPointPerkEntry*>(entry);
+			if (!entryPoint)
+				continue;
+
+			if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kAddActivateChoice)
 			{
-				RE::BGSEntryPointPerkEntry* entryPoint = static_cast<RE::BGSEntryPointPerkEntry*>(entry);
+				RE::BGSEntryPointFunctionDataActivateChoice* func = static_cast<RE::BGSEntryPointFunctionDataActivateChoice*>(entryPoint->functionData);
 
-				if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kAddActivateChoice)
+				//SKSE::log::info("ID: {} - String: {}", func->id, func->label);
+
+				if (func && func->GetID() == index)
 				{
-					RE::BGSEntryPointFunctionDataActivateChoice* func = static_cast<RE::BGSEntryPointFunctionDataActivateChoice*>(entryPoint->functionData);
-
-					//SKSE::log::info("ID: {} - String: {}", func->id, func->label);
-
-					if (func->id == index)
-					{
-						func->label = Utils::validateString(newString);
-					}
-
+					func->label = Utils::validateString(newString);
 				}
+
 			}
 
 		}
@@ -328,16 +330,19 @@ void Manager::SetRegionDataStrings(RE::TESForm* form, const RE::BSFixedString& n
 
 	for (const auto& region : regionData->dataList->regionDataList)
 	{
-		if (region->GetType() == RE::TESRegionData::Type::kMap)
-		{
-			RE::TESRegionDataMap* mapData = static_cast<RE::TESRegionDataMap*>(region);
-			mapData->mapName = Utils::validateString(newString);
-		}
+		if (!region || region->GetType() != RE::TESRegionData::Type::kMap)
+			continue;
+
+		auto* mapData = static_cast<RE::TESRegionDataMap*>(region);
+		if (!mapData)
+			continue;
+
+		mapData->mapName = Utils::validateString(newString);
 	}
 
 }
 
-void Manager::SetEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& newString, const int& index) //PERK EPFD
+void Manager::SetEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index) //PERK EPFD
 {
 	RE::BGSPerk* perk = form->As<RE::BGSPerk>();
 	if (!perk)
@@ -346,31 +351,30 @@ void Manager::SetEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& n
 		return;
 	}
 
-	int entryCount = perk->perkEntries.size();
-	for (int i = entryCount - 1; i >= 0; --i)
+	const std::uint32_t entryCount = perk->perkEntries.size();
+	for (std::uint32_t i = entryCount; i-- > 0;)
 	{
 		const auto& entry = perk->perkEntries[i];
+		if (!entry || entry->GetType() != RE::PERK_ENTRY_TYPE::kEntryPoint)
+			continue;
 
-		if (entry->GetType() == RE::PERK_ENTRY_TYPE::kEntryPoint)
+		const auto* entryPoint = static_cast<RE::BGSEntryPointPerkEntry*>(entry);
+		if (!entryPoint)
+			continue;
+
+		if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kSetText)
 		{
-			RE::BGSEntryPointPerkEntry* entryPoint = static_cast<RE::BGSEntryPointPerkEntry*>(entry);
+			auto* func = static_cast<RE::BGSEntryPointFunctionDataText*>(entryPoint->functionData);
 
-			if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kSetText)
+			if (func && entryCount - 1 - i == index)
 			{
-				RE::BGSEntryPointFunctionDataText* func = static_cast<RE::BGSEntryPointFunctionDataText*>(entryPoint->functionData);
-
-				if (entryCount - 1 - i == index)
-				{
-					func->text = Utils::validateString(newString);
-				}
+				func->text = Utils::validateString(newString);
 			}
 		}
-
 	}
 }
 
-
-void Manager::SetQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedString& newString, const int& index) //QUST NNAM
+void Manager::SetQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index) //QUST NNAM
 {
 	RE::TESQuest* quest = form->As<RE::TESQuest>();
 
@@ -403,7 +407,6 @@ void Manager::Report(const RE::TESForm* form)
 	SKSE::log::error("{}", ss.str());
 
 }
-
 
 void Manager::runConstTranslation(RE::TESForm* form, const StringData& data)
 {

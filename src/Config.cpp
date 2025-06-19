@@ -265,8 +265,8 @@ std::vector<std::string> Config::enumerateFilesInFolders(const std::string& fold
 	{
 		if (entry.is_regular_file())
 		{
-			const auto ext = entry.path().extension();
-			if (ext == L".json")
+			const auto ext = Utils::tolower(entry.path().extension().string());
+			if (ext == ".json")
 			{
 				files.emplace_back(entry.path().string());
 			}
@@ -275,8 +275,8 @@ std::vector<std::string> Config::enumerateFilesInFolders(const std::string& fold
 
 	std::sort(files.begin(), files.end(),
 		[](const std::string& a, const std::string& b) {
-			auto aExt = std::filesystem::path(a).extension().string();
-			auto bExt = std::filesystem::path(b).extension().string();
+			auto aExt = Utils::tolower(std::filesystem::path(a).extension().string());
+			auto bExt = Utils::tolower(std::filesystem::path(b).extension().string());
 
 			// JSON files to the front, other files to the end
 			if (aExt == ".json" && bExt != ".json")
@@ -509,7 +509,7 @@ void Config::parseTranslationFiles()
 		if (err)
 		{
 			const std::string descriptive_error = glz::format_error(err, buffer);
-			SKSE::log::error("Error parsing JSON: {}", descriptive_error);
+			SKSE::log::error("Error parsing file: {} - Error: {}", file, descriptive_error);
 			continue;
 		}
 

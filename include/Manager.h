@@ -39,7 +39,7 @@ struct ParseData
 	std::string string{};
 	std::string original{};
 	std::string conditions{};
-	custom_nullable_t<int> index{};
+	custom_nullable_t<std::uint32_t> index{};
 	custom_nullable_t<std::string> editor_id{};
 };
 
@@ -54,7 +54,7 @@ struct StringData
 	SubrecordType subRecordType;
 	std::optional<std::string> originalString;
 	std::string conditionString{};
-	int pos;
+	std::uint32_t pos;
 
 
 	//std::shared_ptr<RE::TESCondition> conditions;
@@ -75,29 +75,29 @@ public:
 	void addToConst(RE::TESForm* form, const ParseData& data);
 	void checkConst();
 
-	void addDIAL(const RE::FormID& formID, const std::string& plugin, const ParseData& data);
-	bool getDIAL(const RE::FormID& formID, const std::string& plugin, RE::BSString& description);
+	void addDIAL(const RE::FormID formID, const std::string& plugin, const ParseData& data);
+	bool getDIAL(const RE::FormID formID, const std::string& plugin, RE::BSString& description);
 
-	void addINFO_NAM1(const RE::FormID& formID, const std::string& plugin, const int& responseNumber, const ParseData& data);
-	bool getINFO_NAM1(const RE::FormID& formID, const std::string& plugin, const std::uint8_t& responseNumber, RE::BSString& string);
+	void addINFO_NAM1(const RE::FormID formID, const std::string& plugin, const std::uint32_t responseNumber, const ParseData& data);
+	bool getINFO_NAM1(const RE::FormID formID, const std::string& plugin, const std::uint8_t responseNumber, RE::BSString& string);
 	StringMap<std::vector<StringData>>& getINFO_NAM1_Map() { return m_INFO_NAM1_Map; }
 
-	static std::string constructKey(const RE::FormID& formID, const std::string& plugin);
+	static std::string constructKey(const RE::FormID formID, const std::string& plugin);
 
 	void addDESC(RE::TESForm* form, const ParseData& data);
-	bool getDESC(const RE::FormID& formID, std::string& description);
+	bool getDESC(const RE::FormID formID, std::string& description);
 
 	void addCNAM(RE::TESForm* form, const ParseData& data);
-	bool getCNAM(const RE::FormID& formID, std::string& description);
+	bool getCNAM(const RE::FormID formID, std::string& description);
 
 	void addREFR(RE::TESForm* form, const ParseData& data);
-	bool getREFR(const RE::FormID& formID, std::string& description);
+	bool getREFR(const RE::FormID formID, std::string& description);
 
 	void addQUST(const std::string& original, const ParseData& data);
 	bool getQUST(const std::string& original, RE::BSString& description);
 
-	void addACTI(const RE::FormID& formID, const std::string& plugin, const ParseData& data);
-	bool getACTI(const RE::FormID& formID, const std::string& plugin, std::string& description);
+	void addACTI(const RE::FormID formID, const std::string& plugin, const ParseData& data);
+	bool getACTI(const RE::FormID formID, const std::string& plugin, std::string& description);
 
 	void runConstTranslation(RE::TESForm* form, const StringData& data);
 private:
@@ -109,13 +109,13 @@ private:
 
 	void SetGameSettingString(const std::string& name, const std::string& newString);
 
-	void SetMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedString& newString, const int& index);
+	void SetMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
 
 	void SetRegionDataStrings(RE::TESForm* form, const RE::BSFixedString& newString);
 
-	void SetEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& newString, const int& index);
+	void SetEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
 
-	void SetQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedString& newString, const int& index);
+	void SetQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
 
 	void Report(const RE::TESForm* form);
 
