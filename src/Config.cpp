@@ -386,6 +386,7 @@ void Config::processEntry(ParseData& entry, const std::string& file)
 	case "BOOK FULL"_h:
 	case "CELL FULL"_h:
 	case "CONT FULL"_h:
+	case "CLAS FULL"_h:
 	case "DOOR FULL"_h:
 	case "ENCH FULL"_h:
 	case "EXPL FULL"_h:

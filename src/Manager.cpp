@@ -20,9 +20,9 @@ void Manager::buildConditions()
 }
 */
 
-SubrecordType Manager::getSubrecordType_map(std::string_view type)
+SubrecordType Manager::subrecordToEnum(std::string_view type)
 {
-	static constexpr frozen::unordered_map<std::string_view, SubrecordType, 12> typeMap = {
+	static std::map<std::string_view, SubrecordType> typeMap = {
 		{"FULL"sv, SubrecordType::kFULL},
 		{"SHRT"sv, SubrecordType::kSHRT},
 		{"DATA"sv, SubrecordType::kDATA},
@@ -61,7 +61,7 @@ void Manager::addToConst(RE::TESForm* form, const ParseData& data)
 	if (data.index.has_value())
 		stringData.pos = data.index.value();
 
-	stringData.subRecordType = getSubrecordType_map(Utils::getAfterSpace(data.type));
+	stringData.subRecordType = subrecordToEnum(Utils::getAfterSpace(data.type));
 
 	if (form != nullptr)
 	{

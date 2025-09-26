@@ -67,7 +67,7 @@ class Manager : public ISingleton<Manager>
 public:
 	//void buildConditions();
 
-	SubrecordType getSubrecordType_map(std::string_view type);
+	SubrecordType subrecordToEnum(std::string_view type);
 
 	template <typename Map, typename Key, typename replace>
 	bool getReplacerText(const Map& map, const Key& key, replace& string);

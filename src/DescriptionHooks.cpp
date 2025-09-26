@@ -64,8 +64,7 @@ namespace Hook
 			auto trampolineJmp = TrampolineCall(target.address() + 0x7, stl::unrestricted_cast<std::uintptr_t>(thunk));
 
 			auto& trampoline = SKSE::GetTrampoline();
-			auto result = trampoline.allocate(trampolineJmp);
-			trampoline.write_branch<6>(target.address(), (std::uintptr_t)result);
+			trampoline.write_branch<6>(target.address(), trampoline.allocate(trampolineJmp));
 		}
 	};
 
@@ -105,9 +104,10 @@ namespace Hook
 
 	struct GetDescriptionHookSE
 	{
-		static void thunk(RE::TESDescription* a_description, RE::BSString& a_out, RE::TESForm* a_parent, std::uint32_t unk)
+		static void thunk(RE::TESDescription* a_description, RE::BSString& a_out, const RE::TESForm* a_parent, std::uint32_t chunkID)
 		{
-			func(a_description, a_out, a_parent, unk);  // invoke original to get original description string output
+			func(a_description, a_out, a_parent, chunkID);  // invoke original to get original description string output
+
 
 			if (a_parent && !a_out.empty())
 			{
@@ -139,7 +139,7 @@ namespace Hook
 	//https://github.com/Nightfallstorm/DescriptionFramework released under GPL-3.0
 	struct ItemCardPopulateHook //BOOK CNAM
 	{
-		static void thunk(RE::ItemCard* itemCard, RE::TESBoundObject** a_item, char a3)
+		static void thunk(RE::ItemCard* itemCard, RE::TESBoundObject** a_item, bool a3) // it's not a TESBoundObject, at least not directly. Smth called ItemChange*
 		{
 			if (!itemCard || !a_item || !*a_item)
 			{
