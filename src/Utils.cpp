@@ -1,15 +1,7 @@
 #include "Utils.h"
-#include "MergeMapperPluginAPI.h"
 
 namespace Utils
 {
-	std::string tolower(std::string_view a_str)
-	{
-		std::string result(a_str);
-		std::ranges::transform(result, result.begin(), [](unsigned char ch) { return static_cast<unsigned char>(std::tolower(ch)); });
-		return result;
-	}
-
 	std::string getModName(const RE::TESForm* form)
 	{
 		if (!form)
@@ -26,7 +18,7 @@ namespace Utils
 		const auto file = array->front();
 		std::string_view filename = file ? file->GetFilename() : "";
 
-		return tolower(filename.data());
+		return string::tolower(filename.data());
 	}
 
 	RE::FormID getTrimmedFormID(const RE::TESForm* form)
@@ -36,14 +28,12 @@ namespace Utils
 			return 0;
 		}
 
-		const auto array = form->sourceFiles.array;
-		if (!array || array->empty())
-		{
+		const auto file = form->GetFile(0);
+		if (!file)
 			return 0;
-		}
 
 		RE::FormID formID = form->GetFormID() & 0xFFFFFF; // remove file index -> 0x00XXXXXX
-		if (array->front()->IsLight())
+		if (file->IsLight())
 		{
 			formID &= 0xFFF; // remove ESL index -> 0x00000XXX
 		}
@@ -114,36 +104,15 @@ namespace Utils
 
 	const RE::TESFile* getFileByFormIDRaw(RE::FormID a_rawFormID, RE::TESFile* a_file)
 	{
-		if (!a_file || a_file->compileIndex == 0xFF) {
-			return nullptr;
-		}
-
-		auto rawIndex = (a_rawFormID & 0xFF000000) >> 24;
-		if (REL::Module::IsVR() && !RE::TESDataHandler::GetSingleton()->VRcompiledFileCollection) {
-			if (rawIndex >= a_file->masterCount) {
-				return a_file;
-			}
-			return a_file->masterPtrs[rawIndex];
-		}
-		else {
-			bool isLight = rawIndex == 0xFE;
-			if (isLight) {
-				rawIndex = (a_rawFormID & 0x00FFF000) >> 12;
-			}
-
-			std::uint32_t index = 0;
-			for (std::uint32_t i = 0; i < a_file->masterCount; ++i) {
-				auto* master = a_file->masterPtrs[i];
-				if ((master->compileIndex == 0xFE) != isLight)
-				{ // is isLight = true execute it if master is smth different than light
-					// is isLight = false execute it if master is smth different than full
-					continue;
-				}
-				if (index++ == rawIndex) {
-					return master;
-				}
-			}
+		if (a_rawFormID - 1 <= 0x7FE)
 			return a_file;
-		}
+
+		const RE::TESFile* owner = a_file;
+		const auto masterIndex = a_rawFormID >> 24;
+
+		if (masterIndex < owner->masterCount && owner->masterPtrs)
+			return owner->masterPtrs[masterIndex];
+
+		return owner;
 	}
 }

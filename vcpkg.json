@@ -1,18 +1,16 @@
 {
   "name": "dynamicstringdistributor",
-  "version-semver": "1.2.5",
-  "description": "",
+  "version-string": "1.3.0",
+  "description": "DSD",
   "license": "GPL-3.0",
   "dependencies": [
-    "xbyak",
-    "spdlog",
-    "directxtk",
-    "catch2",
-    "rapidcsv",
+    "commonlibsse-ng",
     "simpleini",
+    "glaze",
+    "boost-unordered",
     "frozen",
-    "srell",
-    "boost-unordered"
+    "mergemapper",
+    "clib-util"
   ],
-  "builtin-baseline": "20a72ce99b12dd0ebfea5d39f32681bd68b19d03"
+  "builtin-baseline": "8ce02b3d9a447071083436ad36f318dd19dd19ad"
 }

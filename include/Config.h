@@ -1,8 +1,7 @@
 #pragma once
-#include <glaze/glaze.hpp>
 #include "Manager.h"
 
-class Config : public ISingleton<Config>
+class Config : public REX::Singleton<Config>
 {
 public:
 	void enumerateFolder();

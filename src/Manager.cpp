@@ -1,6 +1,5 @@
 #include "Manager.h"
 #include "Utils.h"
-#include "Conditions.h"
 
 /*
 void Manager::buildConditions()

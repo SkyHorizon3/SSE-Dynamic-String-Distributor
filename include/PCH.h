@@ -1,19 +1,21 @@
 #pragma once
 #include "RE/Skyrim.h"
+#include "REX/REX/Singleton.h"
 #include "SKSE/SKSE.h"
 
-#include <unordered_map>
 #include <ShlObj.h>
-#include <tuple>
 
+#include <MergeMapperPluginAPI.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <boost/unordered/unordered_flat_map.hpp>
-#include <frozen/unordered_map.h>
-#include <frozen/bits/elsa_std.h>
 #include <xbyak/xbyak.h>
 #include <SimpleIni.h>
+#include <glaze/glaze.hpp>
+#include <ClibUtil/string.hpp>
 
 using namespace std::literals;
+using namespace clib_util::string::literals;
+namespace string = clib_util::string;
 
 namespace stl
 {
@@ -25,7 +27,6 @@ namespace stl
 		auto& trampoline = SKSE::GetTrampoline();
 		T::func = trampoline.write_call<size>(a_src, T::thunk);
 	}
-
 
 	template <class F, size_t offset, class T>
 	void write_vfunc()
@@ -52,7 +53,7 @@ namespace stl
 					db(*reinterpret_cast<std::uint8_t*>(a_originalFuncAddr + i));
 				}
 
-				jmp(qword[rip]);
+				jmp(ptr[rip]);
 				dq(a_originalFuncAddr + a_originalByteLength);
 			}
 		};
@@ -89,51 +90,19 @@ struct string_hash
 
 struct string_cmp
 {
-	using is_transparent = void;
-
-	bool iequals(std::string_view a_str1, std::string_view a_str2) const
-	{
-		return std::ranges::equal(a_str1, a_str2, [](unsigned char ch1, unsigned char ch2) {
-			return std::toupper(ch1) == std::toupper(ch2);
-			});
-	}
+	using is_transparent = void;  // enable heterogeneous overloads
 
 	bool operator()(const std::string& str1, const std::string& str2) const
 	{
-		return iequals(str1, str2);
-	}
-	bool operator()(const std::string& str1, std::string_view str2) const
-	{
-		return iequals(str1, str2);
+		return string::iequals(str1, str2);
 	}
 	bool operator()(std::string_view str1, std::string_view str2) const
 	{
-		return iequals(str1, str2);
+		return string::iequals(str1, str2);
 	}
 };
 
 template <class D>
 using StringMap = FlatMap<std::string, D, string_hash, string_cmp>;
-
-//https://github.com/powerof3/CLibUtil/blob/master/include/CLIBUtil/singleton.hpp
-template <class T>
-class ISingleton
-{
-public:
-	static T* GetSingleton()
-	{
-		static T singleton;
-		return std::addressof(singleton);
-	}
-
-protected:
-	ISingleton() = default;
-	~ISingleton() = default;
-
-	ISingleton(const ISingleton&) = delete;
-	ISingleton(ISingleton&&) = delete;
-	ISingleton& operator=(const ISingleton&) = delete;
-	ISingleton& operator=(ISingleton&&) = delete;
-};
 
 #include "Plugin.h"

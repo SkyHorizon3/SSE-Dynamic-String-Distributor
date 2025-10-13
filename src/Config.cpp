@@ -20,7 +20,7 @@ std::vector<std::string> Config::getLoadOrder()
 		{
 			if (line[0] == '*') //Check if line starts with *
 			{
-				loadOrder.emplace_back(Utils::tolower(line.substr(1))); //Add lines without the *
+				loadOrder.emplace_back(string::tolower(line.substr(1))); //Add lines without the *
 			}
 		}
 		file.close();
@@ -133,7 +133,7 @@ std::vector<std::string> Config::getLoadOrder()
 		const auto ext = entry.path().extension();
 		if (entry.is_regular_file() && (ext == L".esp" || ext == L".esm" || ext == L".esl"))
 		{
-			activePlugins.emplace_back(Utils::tolower(entry.path().filename().string()));
+			activePlugins.emplace_back(string::tolower(entry.path().filename().string()));
 		}
 	}
 
@@ -166,7 +166,7 @@ void Config::enumerateFolder() //Get all folders in DynamicStringDistributor dir
 	{
 		if (entry.is_directory())
 		{
-			const auto& folder = Utils::tolower(entry.path().filename().string());
+			const auto& folder = string::tolower(entry.path().filename().string());
 
 			// Check if it's the Overwrite folder
 			if (folder == "overwrite")
@@ -265,7 +265,7 @@ std::vector<std::string> Config::enumerateFilesInFolders(const std::string& fold
 	{
 		if (entry.is_regular_file())
 		{
-			const auto ext = Utils::tolower(entry.path().extension().string());
+			const auto ext = string::tolower(entry.path().extension().string());
 			if (ext == ".json")
 			{
 				files.emplace_back(entry.path().string());
@@ -275,8 +275,8 @@ std::vector<std::string> Config::enumerateFilesInFolders(const std::string& fold
 
 	std::sort(files.begin(), files.end(),
 		[](const std::string& a, const std::string& b) {
-			auto aExt = Utils::tolower(std::filesystem::path(a).extension().string());
-			auto bExt = Utils::tolower(std::filesystem::path(b).extension().string());
+			auto aExt = string::tolower(std::filesystem::path(a).extension().string());
+			auto bExt = string::tolower(std::filesystem::path(b).extension().string());
 
 			// JSON files to the front, other files to the end
 			if (aExt == ".json" && bExt != ".json")
@@ -309,7 +309,7 @@ std::tuple<RE::FormID, std::string> Config::extractFormIDAndPlugin(const std::st
 		formID = mergeForm.second;
 	}
 
-	plugin = Utils::tolower(plugin);
+	plugin = string::tolower(plugin);
 
 	if (std::find(m_loadOrder.begin(), m_loadOrder.end(), plugin) == m_loadOrder.end())
 	{
@@ -338,7 +338,7 @@ void Config::onDataLoad()
 
 		const auto manager = Manager::GetSingleton();
 
-		switch (Utils::const_hash(entry.original))
+		switch (string::const_hash(entry.original))
 		{
 		case "const"_h:
 		{
@@ -375,7 +375,7 @@ void Config::processEntry(ParseData& entry, const std::string& file)
 
 	const auto manager = Manager::GetSingleton();
 
-	switch (Utils::const_hash(entry.type))
+	switch (string::const_hash(entry.type))
 	{
 	case "ACTI FULL"_h:
 	case "ALCH FULL"_h:

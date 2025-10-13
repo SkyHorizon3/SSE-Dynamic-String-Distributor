@@ -1,4 +1,7 @@
-add_library("${PROJECT_NAME}" SHARED)
+add_library("${PROJECT_NAME}" 
+SHARED
+${MERGEMAPPER_INCLUDE_DIRS}/MergeMapperPluginAPI.cpp
+)
 
 # Set C++ standard and enable folder organization
 target_compile_features("${PROJECT_NAME}" PRIVATE cxx_std_23)
@@ -41,7 +44,7 @@ if (CMAKE_GENERATOR MATCHES "Visual Studio")
     set(SC_RELEASE_OPTS "/Zi;/fp:fast;/GL;/Gy-;/Gm-;/Gw;/sdl-;/GS-;/guard:cf-;/O2;/Ob2;/Oi;/Ot;/Oy;/fp:except-")
     
     target_compile_options("${PROJECT_NAME}" PRIVATE
-        /MP /await /W4 /WX /permissive- /Zc:alignedNew /Zc:auto /Zc:__cplusplus /Zc:externC /Zc:externConstexpr
+        /MP /W4 /WX /permissive- /Zc:alignedNew /Zc:auto /Zc:__cplusplus /Zc:externC /Zc:externConstexpr
         /Zc:forScope /Zc:hiddenFriend /Zc:implicitNoexcept /Zc:lambda /Zc:noexceptTypes /Zc:preprocessor /Zc:referenceBinding
         /Zc:rvalueCast /Zc:sizedDealloc /Zc:strictStrings /Zc:ternary /Zc:threadSafeInit /Zc:trigraphs /Zc:wchar_t
         /wd4200 # nonstandard extension used: zero-sized array in struct/union
@@ -60,15 +63,27 @@ if (CMAKE_GENERATOR MATCHES "Visual Studio")
     )
 endif()
 
-# Find required packages (adjust as needed)
-add_subdirectory(${CMAKE_SOURCE_DIR}/extern/CommonLibSSE-NG CommonLibSSE)
-add_subdirectory(${CMAKE_SOURCE_DIR}/extern/glazejson glaze)
-find_package(spdlog CONFIG REQUIRED)
+# Find required packages
+find_package(CommonLibSSE CONFIG REQUIRED)
+find_package(DirectXTK CONFIG REQUIRED)
+find_package(glaze CONFIG REQUIRED)
+find_package(frozen CONFIG REQUIRED)
+find_package(boost_unordered CONFIG REQUIRED)
+find_path(MERGEMAPPER_INCLUDE_DIRS "MergeMapperPluginAPI.h")
 
 # Include directories and libraries
-target_include_directories("${PROJECT_NAME}" PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories("${PROJECT_NAME}" PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories("${PROJECT_NAME}" PUBLIC 
+${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+target_include_directories("${PROJECT_NAME}" PRIVATE 
+${CMAKE_CURRENT_BINARY_DIR}/cmake 
+${CMAKE_CURRENT_SOURCE_DIR}/src 
+${MERGEMAPPER_INCLUDE_DIRS})
 
 # Link libraries
-target_link_libraries("${PROJECT_NAME}" PUBLIC CommonLibSSE::CommonLibSSE)
-target_link_libraries("${PROJECT_NAME}" PRIVATE glaze::glaze)
+target_link_libraries("${PROJECT_NAME}" PUBLIC 
+CommonLibSSE::CommonLibSSE
+glaze::glaze
+frozen::frozen
+Boost::unordered
+)

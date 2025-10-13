@@ -1,6 +1,5 @@
 ﻿#include "Config.h"
 #include "MiscHooks.h"
-#include "MergeMapperPluginAPI.h"
 
 void LoadINI()
 {
@@ -55,11 +54,9 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 
 		Manager::GetSingleton()->checkConst();
 
-
 		auto endTime = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
 		SKSE::log::info("The form lookup, the execution of ConstTranslation and the installation of hooks took {} milliseconds.", duration.count());
-
 	}
 	break;
 
@@ -95,21 +92,11 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface*, 
 SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
 	SKSE::Init(skse, true);
+	spdlog::set_pattern("[%H:%M:%S:%e] [%l] %v"s);
 
 	SKSE::log::info("Game version: {}", skse->RuntimeVersion());
 
-	if (REL::Module::IsAE())
-	{
-		SKSE::AllocTrampoline(200);
-	}
-	else
-	{
-		SKSE::AllocTrampoline(140);
-	}
-
 	LoadINI();
-
-	spdlog::set_pattern("[%H:%M:%S:%e] [%l] %v"s);
 
 	if (Config::enableDebugLog)
 	{
@@ -120,6 +107,15 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 	{
 		spdlog::set_level(spdlog::level::info);
 		spdlog::flush_on(spdlog::level::info);
+	}
+
+	if (REL::Module::IsAE())
+	{
+		SKSE::AllocTrampoline(200);
+	}
+	else
+	{
+		SKSE::AllocTrampoline(140);
 	}
 
 	SKSE::GetMessagingInterface()->RegisterListener(MessageListener);

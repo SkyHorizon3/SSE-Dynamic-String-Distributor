@@ -1,6 +1,5 @@
 #include "MiscHooks.h"
 #include "Manager.h"
-#include "DescriptionHooks.h"
 #include "DialogueHooks.h"
 #include "Utils.h"
 
@@ -249,6 +248,49 @@ namespace Hook
 		}
 	};
 
+	struct GetDescription
+	{
+		static void thunk(RE::TESDescription* a_description, RE::BSString& a_out, const RE::TESForm* a_parent, std::uint32_t a_chunkID)
+		{
+			func(a_description, a_out, a_parent, a_chunkID);  // invoke original to get original description string output
+
+			if (!a_parent || a_out.empty())
+				return;
+
+			const auto manager = Manager::GetSingleton();
+			const auto formID = a_parent->formID;
+			std::string newDescription{};
+
+			// 0x4D414E43 = MANC (->CNAM)
+			bool result = (a_chunkID == 0x4D414E43) ? manager->getCNAM(formID, newDescription) : manager->getDESC(formID, newDescription);
+
+			if (result)
+			{
+				a_out = newDescription;
+
+				SKSE::log::debug("Replaced XXXX DESC {0:08X} with:", a_parent->formID);
+				SKSE::log::debug("{}", newDescription);
+			}
+
+		}
+		static inline REL::Relocation<decltype(thunk)> func;
+
+
+		static void Install()
+		{
+			REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(14399, 14552) };
+
+			if (REL::Module::IsAE())
+			{
+				stl::hook_function_prologue<GetDescription, 6>(target.address());
+			}
+			else
+			{
+				stl::hook_function_prologue<GetDescription, 5>(target.address());
+			}
+		}
+	};
+
 	void InstallPostLoadHooks()
 	{
 		//NPCLoadFromFile::Install();
@@ -262,7 +304,7 @@ namespace Hook
 
 	void InstallHooks()
 	{
-		InstallDescriptionHooks();
+		GetDescription::Install();
 		InstallDialogueHooks();
 
 		//MainUpdate::Install();
