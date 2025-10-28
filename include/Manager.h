@@ -126,6 +126,12 @@ private:
 		return func(setting, str);
 	}
 
+	static RE::BSTHashMap<RE::FormID, RE::BSFixedString>* GetActivateTextOverrideMap()
+	{
+		static REL::Relocation<RE::BSTHashMap<RE::FormID, RE::BSFixedString>**> map{ RELOCATION_ID(501446, 360166) };
+		return *map;
+	}
+
 	FlatMap<RE::FormID, StringData> m_DESC;
 	FlatMap<RE::FormID, StringData> m_CNAM;
 	FlatMap<RE::FormID, StringData> m_REFR;
