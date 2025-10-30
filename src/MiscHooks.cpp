@@ -189,7 +189,7 @@ namespace Hook
 		{
 			func(a_description, a_out, a_parent, a_chunkID);  // invoke original to get original description string output
 
-			if (!a_parent || a_out.empty())
+			if (!a_parent)
 				return;
 
 			const auto manager = Manager::GetSingleton();

@@ -59,15 +59,14 @@ namespace Hook
 			}
 		};
 
-		static bool thunk(RE::TESFile* a_file, void* a_buf, std::uint64_t a_topicInfo)
+		static bool thunk(RE::TESFile* a_file, void* a_buf, const RE::TESTopicInfo* parentInfo)
 		{
 			auto result = func(a_file, a_buf, 4u); // invoke with 4u from original code
 
-			const RE::TESTopicInfo* parentInfo = reinterpret_cast<RE::TESTopicInfo*>(a_topicInfo);
 			std::uint32_t dnamFormID = *static_cast<std::uint32_t*>(a_buf);
 
 			const auto lookupFile = Utils::getFileByFormIDRaw(dnamFormID, a_file);
-			if (lookupFile == nullptr)
+			if (!lookupFile)
 			{
 				SKSE::log::error("INFO DNAM error, please report it in our Discord!");
 				SKSE::log::error("FormID - Parent: {0:08X}", parentInfo->formID);
@@ -93,7 +92,7 @@ namespace Hook
 			return result;
 		}
 
-		static inline REL::Relocation<decltype(thunk)> func;
+		static inline REL::Relocation<bool(RE::TESFile*, void*, std::uint32_t)> func;
 
 		static void Install()
 		{

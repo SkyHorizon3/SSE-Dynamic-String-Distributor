@@ -61,7 +61,6 @@ struct StringData
 
 class Manager : public REX::Singleton<Manager>
 {
-
 public:
 	SubrecordType subrecordToEnum(std::string_view type);
 
