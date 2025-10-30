@@ -68,7 +68,8 @@ namespace Utils
 
 	RE::FormID convertToFormID(std::string input)
 	{
-		if (input.find('x') == std::string::npos) // If it does not contain 'x', process it.
+		const bool has_x = (input.find('x') != std::string::npos) || (input.find('X') != std::string::npos);
+		if (!has_x) // If it does not contain 'x', process it.
 		{
 			if (input.length() == 8)
 			{

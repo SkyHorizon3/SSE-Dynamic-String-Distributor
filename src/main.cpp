@@ -109,14 +109,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 		spdlog::flush_on(spdlog::level::info);
 	}
 
-	if (REL::Module::IsAE())
-	{
-		SKSE::AllocTrampoline(200);
-	}
-	else
-	{
-		SKSE::AllocTrampoline(140);
-	}
+	SKSE::AllocTrampoline(200);
 
 	SKSE::GetMessagingInterface()->RegisterListener(MessageListener);
 

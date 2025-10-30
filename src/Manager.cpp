@@ -1,5 +1,6 @@
 #include "Manager.h"
 #include "Utils.h"
+#include "RE.h"
 
 /*
 void Manager::buildConditions()
@@ -255,7 +256,7 @@ void Manager::SetGameSettingString(const std::string& a_name, const std::string&
 
 	if (setting->GetType() == RE::Setting::Type::kString)
 	{
-		changeSettingString(setting, a_newString.c_str());
+		RE::setStringValue(setting, a_newString.c_str());
 	}
 }
 

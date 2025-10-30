@@ -119,19 +119,6 @@ private:
 
 	void Report(const RE::TESForm* form);
 
-	static RE::Setting* changeSettingString(RE::Setting* setting, const char* str)
-	{
-		using func_t = decltype(&changeSettingString);
-		static REL::Relocation<func_t> func{ RELOCATION_ID(73882, 75619) };
-		return func(setting, str);
-	}
-
-	static RE::BSTHashMap<RE::FormID, RE::BSFixedString>* GetActivateTextOverrideMap()
-	{
-		static REL::Relocation<RE::BSTHashMap<RE::FormID, RE::BSFixedString>**> map{ RELOCATION_ID(501446, 360166) };
-		return *map;
-	}
-
 	FlatMap<RE::FormID, StringData> m_DESC;
 	FlatMap<RE::FormID, StringData> m_CNAM;
 	FlatMap<RE::FormID, StringData> m_REFR;
@@ -141,6 +128,5 @@ private:
 	StringMap<StringData> m_QUST_CNAM_Map;
 	StringMap<StringData> m_ACTI_Map;
 
-	//FlatMap<RE::FormID, StringData> m_constTranslation;
 	std::vector<StringData> m_constTranslationGMST;
 };
