@@ -2,44 +2,38 @@
 #include "Utils.h"
 #include "RE.h"
 
-/*
-void Manager::buildConditions()
-{
-	auto processEntry = [](auto& pair) {
-		auto& entry = pair.second;
-		if (!entry.conditionString.empty()) {
-			ConditionParser::BuildCondition(entry.conditions, entry.conditionString);
-			entry.conditionString.clear();
-		}
-		};
-
-	std::for_each(std::execution::par, m_REFR.begin(), m_REFR.end(), processEntry);
-	std::for_each(std::execution::par, m_constTranslation.begin(), m_constTranslation.end(), processEntry);
-
-
-}
-*/
-
 SubrecordType Manager::subrecordToEnum(std::string_view type)
 {
-	static std::map<std::string_view, SubrecordType> typeMap = {
-		{"FULL"sv, SubrecordType::kFULL},
-		{"SHRT"sv, SubrecordType::kSHRT},
-		{"DATA"sv, SubrecordType::kDATA},
-		{"TNAM"sv, SubrecordType::kTNAM},
-		{"RDMP"sv, SubrecordType::kRDMP},
+	switch (string::const_hash(type))
+	{
+	case "FULL"_h:
+		return SubrecordType::kFULL;
+	case "SHRT"_h:
+		return SubrecordType::kSHRT;
+	case "DATA"_h:
+		return SubrecordType::kDATA;
+	case "TNAM"_h:
+		return SubrecordType::kTNAM;
+	case "RDMP"_h:
+		return SubrecordType::kRDMP;
+	case "DESC"_h:
+		return SubrecordType::kDESC;
+	case "CNAM"_h:
+		return SubrecordType::kCNAM;
+	case "DNAM"_h:
+		return SubrecordType::kDNAM;
+	case "NNAM"_h:
+		return SubrecordType::kNNAM;
+	case "ITXT"_h:
+		return SubrecordType::kITXT;
+	case "EPFD"_h:
+		return SubrecordType::kEPFD;
+	case "EPF2"_h:
+		return SubrecordType::kITXT;
 
-		{"DESC"sv, SubrecordType::kDESC},
-		{"CNAM"sv, SubrecordType::kCNAM},
-		{"DNAM"sv, SubrecordType::kDNAM},
-		{"NNAM"sv, SubrecordType::kNNAM},
-		{"ITXT"sv, SubrecordType::kITXT},
-		{"EPFD"sv, SubrecordType::kEPFD},
-		{"EPF2"sv, SubrecordType::kITXT},
-	};
-
-	const auto it = typeMap.find(type);
-	return (it != typeMap.end()) ? it->second : SubrecordType::kUnknown;
+	default:
+		return SubrecordType::kUnknown;
+	}
 }
 
 template <typename Map, typename Key, typename replace>
@@ -68,11 +62,6 @@ void Manager::addToConst(RE::TESForm* form, const ParseData& data)
 		//SKSE::log::info("FormID: {} - index: {}", std::format("{0:08X}", form->formID), stringData.pos);
 
 		runConstTranslation(form, stringData);
-
-		//m_constTranslation.insert_or_assign(
-		//	form->formID, // not unique, can be more than one replacement per form
-		//	stringData
-		//);
 	}
 	else
 	{
@@ -260,7 +249,6 @@ void Manager::SetGameSettingString(const std::string& a_name, const std::string&
 	}
 }
 
-
 void Manager::SetMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index)
 {
 	RE::BGSMessage* message = form->As<RE::BGSMessage>(); //MESG ITXT
@@ -395,17 +383,12 @@ void Manager::SetQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedStrin
 
 void Manager::Report(const RE::TESForm* form)
 {
-	if (!form) // Should not happen, because it's only added if valid
-		return;
-
-
 	std::stringstream ss;
-	ss << "Issue during ConstTranslation with FormID: " << std::format("{0:08X}", form->formID)
-		<< " - Formtype: " << RE::FormTypeToString(form->GetFormType())
+	ss << "Tried to cast " << std::format("{0:08X}", form->formID)
+		<< " to an invalid form type - Actual Formtype: " << RE::FormTypeToString(form->GetFormType())
 		<< " - Plugin: " << Utils::getModName(form);
 
 	SKSE::log::error("{}", ss.str());
-
 }
 
 void Manager::runConstTranslation(RE::TESForm* form, const StringData& data)
