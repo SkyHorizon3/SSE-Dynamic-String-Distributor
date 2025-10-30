@@ -48,11 +48,9 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 		auto startTime = std::chrono::high_resolution_clock::now();
 
 		Config::GetSingleton()->onDataLoad();
-		//Manager::GetSingleton()->buildConditions();
+		Manager::GetSingleton()->runGameSettingTranslation();
 
-		Hook::InstallHooks();
-
-		Manager::GetSingleton()->checkConst();
+		Hook::InstallDataLoadedHooks();
 
 		auto endTime = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);

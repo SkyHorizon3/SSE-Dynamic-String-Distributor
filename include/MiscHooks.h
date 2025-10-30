@@ -4,5 +4,5 @@
 namespace Hook
 {
 	void InstallPostLoadHooks();
-	void InstallHooks();
+	void InstallDataLoadedHooks();
 }

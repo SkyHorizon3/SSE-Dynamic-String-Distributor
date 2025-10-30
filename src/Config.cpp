@@ -423,19 +423,16 @@ void Config::processEntry(ParseData& entry, const std::string& file)
 	case "PERK EPF2"_h:
 	case "QUST NNAM"_h:
 	case "PERK EPFD"_h:
+	case "ACTI RNAM"_h:
+	case "FLOR RNAM"_h:
 	{
 		entry.original = "const";
 		m_onDataLoad.emplace_back(entry);
 	}
 	break;
-	case "ACTI RNAM"_h:
-	case "FLOR RNAM"_h:
-	{
-		manager->addACTI(formID, plugin, entry);
-	}
-	break;
 	case "DIAL FULL"_h:
 	case "INFO RNAM"_h:
+	case "NPC_ FULL"_h:
 	{
 		manager->addDIAL(formID, plugin, entry);
 	}
@@ -443,11 +440,6 @@ void Config::processEntry(ParseData& entry, const std::string& file)
 	case "GMST DATA"_h:
 	{
 		manager->addToConst(nullptr, entry);
-	}
-	break;
-	case "NPC_ FULL"_h:
-	{
-		manager->addACTI(formID, plugin, entry);
 	}
 	break;
 	case "REFR FULL"_h:
@@ -519,4 +511,8 @@ void Config::parseTranslationFiles()
 			processEntry(entry, file);
 		}
 	}
+
+	m_folders.clear();
+	m_loadOrder.clear();
+	m_filesInPluginFolder.clear();
 }

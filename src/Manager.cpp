@@ -30,6 +30,8 @@ SubrecordType Manager::subrecordToEnum(std::string_view type)
 		return SubrecordType::kEPFD;
 	case "EPF2"_h:
 		return SubrecordType::kITXT;
+	case "RNAM"_h:
+		return SubrecordType::kRNAM;
 
 	default:
 		return SubrecordType::kUnknown;
@@ -73,11 +75,11 @@ void Manager::addToConst(RE::TESForm* form, const ParseData& data)
 }
 
 
-void Manager::checkConst()
+void Manager::runGameSettingTranslation()
 {
 	for (const auto& entry : m_constTranslationGMST)
 	{
-		SetGameSettingString(entry.form_id, entry.replacerText);
+		setGameSettingString(entry.form_id, entry.replacerText);
 	}
 	m_constTranslationGMST.clear();
 }
@@ -194,21 +196,8 @@ bool Manager::getQUST(const std::string& original, RE::BSString& description)
 	return getReplacerText(m_QUST_CNAM_Map, original, description);
 }
 
-void Manager::addACTI(const RE::FormID formID, const std::string& plugin, const ParseData& data)
-{
-	m_ACTI_Map.insert_or_assign(
-		constructKey(formID, plugin),
-		StringData{ data.string, data.conditions }
-	);
-}
-
-bool Manager::getACTI(const RE::FormID formID, const std::string& plugin, std::string& description)
-{
-	return getReplacerText(m_ACTI_Map, constructKey(formID, plugin), description);
-}
-
 template <typename T>
-void Manager::SetConstStrings(RE::TESForm* form, const RE::BSFixedString& newString, RE::BSFixedString T::* memberPtr)
+void Manager::setConstStrings(RE::TESForm* form, const RE::BSFixedString& newString, RE::BSFixedString T::* memberPtr)
 {
 	if (auto* OrigString = static_cast<T*>(form); OrigString)
 	{
@@ -216,24 +205,24 @@ void Manager::SetConstStrings(RE::TESForm* form, const RE::BSFixedString& newStr
 	}
 	else
 	{
-		Report(form);
+		report(form);
 	}
 }
 
-void Manager::SetFullnameStrings(RE::TESForm* form, const std::string& newString)
+void Manager::setFullnameStrings(RE::TESForm* form, const std::string& newString)
 {
 	const auto OrigString = form->As<RE::TESFullName>();
 
 	if (!OrigString)
 	{
-		Report(form);
+		report(form);
 		return;
 	}
 
 	OrigString->SetFullName(newString.c_str());
 }
 
-void Manager::SetGameSettingString(const std::string& a_name, const std::string& a_newString)
+void Manager::setGameSettingString(const std::string& a_name, const std::string& a_newString)
 {
 	auto setting = RE::GameSettingCollection::GetSingleton()->GetSetting(a_name.c_str());
 
@@ -249,7 +238,7 @@ void Manager::SetGameSettingString(const std::string& a_name, const std::string&
 	}
 }
 
-void Manager::SetMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index)
+void Manager::setMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index)
 {
 	RE::BGSMessage* message = form->As<RE::BGSMessage>(); //MESG ITXT
 	if (message)
@@ -274,7 +263,7 @@ void Manager::SetMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedStr
 
 		if (!perk)
 		{
-			Report(form);
+			report(form);
 			return;
 		}
 
@@ -306,13 +295,13 @@ void Manager::SetMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedStr
 
 }
 
-void Manager::SetRegionDataStrings(RE::TESForm* form, const RE::BSFixedString& newString) //REGN RDMP
+void Manager::setRegionDataStrings(RE::TESForm* form, const RE::BSFixedString& newString) //REGN RDMP
 {
 	RE::TESRegion* regionData = form->As<RE::TESRegion>();
 
 	if (!regionData || !regionData->dataList)
 	{
-		Report(form);
+		report(form);
 		return;
 	}
 
@@ -330,12 +319,12 @@ void Manager::SetRegionDataStrings(RE::TESForm* form, const RE::BSFixedString& n
 
 }
 
-void Manager::SetEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index) //PERK EPFD
+void Manager::setEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index) //PERK EPFD
 {
 	RE::BGSPerk* perk = form->As<RE::BGSPerk>();
 	if (!perk)
 	{
-		Report(form);
+		report(form);
 		return;
 	}
 
@@ -362,13 +351,13 @@ void Manager::SetEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& n
 	}
 }
 
-void Manager::SetQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index) //QUST NNAM
+void Manager::setQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index) //QUST NNAM
 {
 	RE::TESQuest* quest = form->As<RE::TESQuest>();
 
 	if (!quest)
 	{
-		Report(form);
+		report(form);
 		return;
 	}
 
@@ -381,7 +370,22 @@ void Manager::SetQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedStrin
 	}
 }
 
-void Manager::Report(const RE::TESForm* form)
+void Manager::setActivateOverrideStrings(RE::TESForm* form, const RE::BSFixedString& newString)
+{
+	auto& overrideMap = RE::getActivateTextOverrideMap();
+
+	const auto it = overrideMap.find(form->formID);
+	if (it != overrideMap.end())
+	{
+		it->second = newString;
+	}
+	else
+	{
+		overrideMap.emplace(form->formID, newString);
+	}
+}
+
+void Manager::report(const RE::TESForm* form)
 {
 	std::stringstream ss;
 	ss << "Tried to cast " << std::format("{0:08X}", form->formID)
@@ -397,58 +401,63 @@ void Manager::runConstTranslation(RE::TESForm* form, const StringData& data)
 	{
 	case SubrecordType::kFULL: //DIAL FULL, REFR FULL aren't working like this.
 	{
-		SetFullnameStrings(form, data.replacerText);
+		setFullnameStrings(form, data.replacerText);
 	}
 	break;
 	case SubrecordType::kDESC: //Only LSCR DESC
 	{
-		SetConstStrings<RE::TESLoadScreen>(form, data.replacerText, &RE::TESLoadScreen::loadingText);
+		setConstStrings<RE::TESLoadScreen>(form, data.replacerText, &RE::TESLoadScreen::loadingText);
 	}
 	break;
 	case SubrecordType::kDNAM:
 	{
-		SetConstStrings<RE::EffectSetting>(form, data.replacerText, &RE::EffectSetting::magicItemDescription);
+		setConstStrings<RE::EffectSetting>(form, data.replacerText, &RE::EffectSetting::magicItemDescription);
 	}
 	break;
 	case SubrecordType::kSHRT:
 	{
-		SetConstStrings<RE::TESNPC>(form, data.replacerText, &RE::TESNPC::shortName);
+		setConstStrings<RE::TESNPC>(form, data.replacerText, &RE::TESNPC::shortName);
 	}
 	break;
 	case SubrecordType::kTNAM:
 	{
-		SetConstStrings<RE::TESWordOfPower>(form, data.replacerText, &RE::TESWordOfPower::translation);
+		setConstStrings<RE::TESWordOfPower>(form, data.replacerText, &RE::TESWordOfPower::translation);
 	}
 	break;
 	case SubrecordType::kDATA:
 	{
-		SetGameSettingString(data.form_id, data.replacerText);
+		setGameSettingString(data.form_id, data.replacerText);
 	}
 	break;
 	case SubrecordType::kITXT:
 	{
-		SetMessageBoxButtonStrings(form, data.replacerText, data.pos);
+		setMessageBoxButtonStrings(form, data.replacerText, data.pos);
 	}
 	break;
 	case SubrecordType::kRDMP:
 	{
-		SetRegionDataStrings(form, data.replacerText);
+		setRegionDataStrings(form, data.replacerText);
 	}
 	break;
 	case SubrecordType::kEPFD:
 	{
-		SetEntryPointStrings(form, data.replacerText, data.pos);
+		setEntryPointStrings(form, data.replacerText, data.pos);
 	}
 	break;
 	case SubrecordType::kNNAM:
 	{
-		SetQuestObjectiveStrings(form, data.replacerText, data.pos);
+		setQuestObjectiveStrings(form, data.replacerText, data.pos);
+	}
+	break;
+	case SubrecordType::kRNAM:
+	{
+		setActivateOverrideStrings(form, data.replacerText);
 	}
 	break;
 	case SubrecordType::kUnknown:
 	{
-		SKSE::log::info("Unknown record {0:08X} in ConstTranslation", form->formID);
-		SKSE::log::error("out of plugin {}.", Utils::getModName(form));
+		const auto formID = std::format("{0:08X}", form->formID);
+		SKSE::log::error("Unknown record {} in ConstTranslation out of plugin {}", formID, Utils::getModName(form));
 	}
 	break;
 

@@ -167,8 +167,8 @@ namespace Hook
 
 			auto* npc = skyrim_cast<const RE::TESForm*>(a_npcFullname);
 
-			std::string newDescription{};
-			if (Manager::GetSingleton()->getACTI(Utils::getTrimmedFormID(npc), Utils::getModName(npc), newDescription))
+			RE::BSString newDescription{};
+			if (Manager::GetSingleton()->getDIAL(Utils::getTrimmedFormID(npc), Utils::getModName(npc), newDescription))
 			{
 				a_npcFullname->SetFullName(newDescription.c_str());
 			}
@@ -235,7 +235,7 @@ namespace Hook
 		SKSE::log::info("Installed PostLoadHooks!");
 	}
 
-	void InstallHooks()
+	void InstallDataLoadedHooks()
 	{
 		GetDescription::Install();
 		InstallDialogueHooks();

@@ -1,6 +1,6 @@
 #pragma once
 
-enum class SubrecordType : std::uint32_t
+enum class SubrecordType : std::uint8_t
 {
 	kFULL,
 	kSHRT,
@@ -13,6 +13,7 @@ enum class SubrecordType : std::uint32_t
 	kNNAM,
 	kITXT,
 	kEPFD,
+	kRNAM,
 
 	kUnknown
 };
@@ -55,9 +56,6 @@ struct StringData
 	std::optional<std::string> originalString;
 	std::string conditionString{};
 	std::uint32_t pos;
-
-
-	//std::shared_ptr<RE::TESCondition> conditions;
 };
 
 
@@ -65,15 +63,13 @@ class Manager : public REX::Singleton<Manager>
 {
 
 public:
-	//void buildConditions();
-
 	SubrecordType subrecordToEnum(std::string_view type);
 
 	template <typename Map, typename Key, typename replace>
 	bool getReplacerText(const Map& map, const Key& key, replace& string);
 
 	void addToConst(RE::TESForm* form, const ParseData& data);
-	void checkConst();
+	void runGameSettingTranslation();
 
 	void addDIAL(const RE::FormID formID, const std::string& plugin, const ParseData& data);
 	bool getDIAL(const RE::FormID formID, const std::string& plugin, RE::BSString& description);
@@ -96,28 +92,27 @@ public:
 	void addQUST(const std::string& original, const ParseData& data);
 	bool getQUST(const std::string& original, RE::BSString& description);
 
-	void addACTI(const RE::FormID formID, const std::string& plugin, const ParseData& data);
-	bool getACTI(const RE::FormID formID, const std::string& plugin, std::string& description);
-
 	void runConstTranslation(RE::TESForm* form, const StringData& data);
 private:
 
 	template <typename T>
-	void SetConstStrings(RE::TESForm* form, const RE::BSFixedString& newString, RE::BSFixedString T::* memberPtr);
+	void setConstStrings(RE::TESForm* form, const RE::BSFixedString& newString, RE::BSFixedString T::* memberPtr);
 
-	void SetFullnameStrings(RE::TESForm* form, const std::string& newString);
+	void setFullnameStrings(RE::TESForm* form, const std::string& newString);
 
-	void SetGameSettingString(const std::string& name, const std::string& newString);
+	void setGameSettingString(const std::string& name, const std::string& newString);
 
-	void SetMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
+	void setMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
 
-	void SetRegionDataStrings(RE::TESForm* form, const RE::BSFixedString& newString);
+	void setRegionDataStrings(RE::TESForm* form, const RE::BSFixedString& newString);
 
-	void SetEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
+	void setEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
 
-	void SetQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
+	void setQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
 
-	void Report(const RE::TESForm* form);
+	void setActivateOverrideStrings(RE::TESForm* form, const RE::BSFixedString& newString);
+
+	void report(const RE::TESForm* form);
 
 	FlatMap<RE::FormID, StringData> m_DESC;
 	FlatMap<RE::FormID, StringData> m_CNAM;
@@ -126,7 +121,6 @@ private:
 	StringMap<std::vector<StringData>> m_INFO_NAM1_Map;
 	StringMap<StringData> m_DIAL_RNAM_Map;
 	StringMap<StringData> m_QUST_CNAM_Map;
-	StringMap<StringData> m_ACTI_Map;
 
 	std::vector<StringData> m_constTranslationGMST;
 };
