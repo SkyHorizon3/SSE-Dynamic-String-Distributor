@@ -365,6 +365,9 @@ void Config::onDataLoad()
 		}
 	}
 	m_onDataLoad.clear();
+	m_folders.clear();
+	m_loadOrder.clear();
+	m_filesInPluginFolder.clear();
 }
 
 void Config::processEntry(ParseData& entry, const std::string& file)
@@ -511,8 +514,4 @@ void Config::parseTranslationFiles()
 			processEntry(entry, file);
 		}
 	}
-
-	m_folders.clear();
-	m_loadOrder.clear();
-	m_filesInPluginFolder.clear();
 }

@@ -110,11 +110,11 @@ namespace Hook
 
 	struct QuestCNAMTextHook //QUST CNAM
 	{
-		static void thunk(RE::BSString& a_out, char* a_buffer, std::uint64_t a3)
+		static void thunk(RE::BSString& out, char* buffer, std::uint64_t a3)
 		{
-			func(a_out, a_buffer, a3);
+			func(out, buffer, a3);
 
-			Manager::GetSingleton()->getQUST(a_out.c_str(), a_out);
+			Manager::GetSingleton()->getQUST(out.c_str(), out);
 
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
@@ -161,16 +161,16 @@ namespace Hook
 
 	struct NpcNameFileStreamHook //NPC FULL - Why this way? Because templates use one of their templates names and it's horrible to change it based on formID
 	{
-		static void thunk(RE::TESFullName* a_npcFullname, RE::TESFile* a_file)
+		static void thunk(RE::TESFullName* npcFullname, RE::TESFile* file)
 		{
-			func(a_npcFullname, a_file);
+			func(npcFullname, file);
 
-			auto* npc = skyrim_cast<const RE::TESForm*>(a_npcFullname);
+			auto* npc = skyrim_cast<const RE::TESForm*>(npcFullname);
 
 			RE::BSString newDescription{};
 			if (Manager::GetSingleton()->getDIAL(Utils::getTrimmedFormID(npc), Utils::getModName(npc), newDescription))
 			{
-				a_npcFullname->SetFullName(newDescription.c_str());
+				npcFullname->SetFullName(newDescription.c_str());
 			}
 
 		}
@@ -185,44 +185,38 @@ namespace Hook
 
 	struct GetDescription
 	{
-		static void thunk(RE::TESDescription* a_description, RE::BSString& a_out, const RE::TESForm* a_parent, std::uint32_t a_chunkID)
+		static void thunk(RE::TESDescription* description, RE::BSString& out, const RE::TESForm* parent, std::uint32_t chunkID)
 		{
-			func(a_description, a_out, a_parent, a_chunkID);  // invoke original to get original description string output
+			func(description, out, parent, chunkID);
 
-			if (!a_parent)
+			if (!parent)
 				return;
 
 			const auto manager = Manager::GetSingleton();
-			const auto formID = a_parent->formID;
+			const auto formID = parent->formID;
+
 			std::string newDescription{};
 
-			// 0x4D414E43 = MANC (->CNAM)
-			bool result = (a_chunkID == 0x4D414E43) ? manager->getCNAM(formID, newDescription) : manager->getDESC(formID, newDescription);
+			// 0x4D414E43 == 'MANC' (CNAM)
+			const bool isCNAM = (chunkID == 0x4D414E43);
+			const bool result = isCNAM ? manager->getCNAM(formID, newDescription) : manager->getDESC(formID, newDescription);
 
 			if (result)
 			{
-				a_out = newDescription;
+				out = std::move(newDescription);
 
-				SKSE::log::debug("Replaced XXXX DESC {0:08X} with:", a_parent->formID);
-				SKSE::log::debug("{}", newDescription);
+				const char* type = isCNAM ? "CNAM" : "DESC";
+				SKSE::log::debug("Replaced {} for {:08X} with:", type, formID);
+				SKSE::log::debug("{}", out.c_str());
 			}
 
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
-
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(14399, 14552) };
-
-			if (REL::Module::IsAE())
-			{
-				stl::hook_function_prologue<GetDescription, 6>(target.address());
-			}
-			else
-			{
-				stl::hook_function_prologue<GetDescription, 5>(target.address());
-			}
+			REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(14401, 14552) };
+			stl::hook_function_prologue<GetDescription, 6>(target.address());
 		}
 	};
 

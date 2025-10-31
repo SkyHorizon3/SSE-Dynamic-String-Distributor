@@ -74,7 +74,6 @@ void Manager::addToConst(RE::TESForm* form, const ParseData& data)
 	}
 }
 
-
 void Manager::runGameSettingTranslation()
 {
 	for (const auto& entry : m_constTranslationGMST)
@@ -280,10 +279,9 @@ void Manager::setMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedStr
 			{
 				RE::BGSEntryPointFunctionDataActivateChoice* func = static_cast<RE::BGSEntryPointFunctionDataActivateChoice*>(entryPoint->functionData);
 
-				//SKSE::log::info("ID: {} - String: {}", func->id, func->label);
-
 				if (func && func->GetID() == index)
 				{
+					//SKSE::log::debug("original: {} - replacement: {}", func->label.c_str(), newString.c_str());
 					func->label = Utils::validateString(newString);
 				}
 
@@ -329,25 +327,34 @@ void Manager::setEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& n
 	}
 
 	const std::uint32_t entryCount = perk->perkEntries.size();
-	for (std::uint32_t i = entryCount; i-- > 0;)
+	std::uint32_t textFuncFound = 0;
+
+	for (std::int32_t i = entryCount - 1; i >= 0; --i)
 	{
 		const auto& entry = perk->perkEntries[i];
-		if (!entry || entry->GetType() != RE::PERK_ENTRY_TYPE::kEntryPoint)
+		if (!entry)
+			continue;
+
+		if (entry->GetType() != RE::PERK_ENTRY_TYPE::kEntryPoint)
 			continue;
 
 		const auto* entryPoint = static_cast<RE::BGSEntryPointPerkEntry*>(entry);
 		if (!entryPoint)
 			continue;
 
-		if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kSetText)
+		if (entryPoint->entryData.function != RE::BGSEntryPointPerkEntry::EntryData::Function::kSetText)
+			continue;
+
+		if (textFuncFound == index)
 		{
 			auto* func = static_cast<RE::BGSEntryPointFunctionDataText*>(entryPoint->functionData);
-
-			if (func && entryCount - 1 - i == index)
+			if (func)
 			{
 				func->text = Utils::validateString(newString);
 			}
 		}
+
+		++textFuncFound;
 	}
 }
 

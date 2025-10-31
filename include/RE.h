@@ -9,9 +9,9 @@ namespace RE
 		return func(setting, str);
 	}
 
-	[[nodiscard]] inline static RE::BSTHashMap<RE::FormID, RE::BSFixedString>& getActivateTextOverrideMap()
+	[[nodiscard]] inline static RE::BSTHashMap<RE::FormID, RE::BSFixedString>& getActivateTextOverrideMap() // ACTI RNAM
 	{
-		REL::Relocation<RE::BSTHashMap<RE::FormID, RE::BSFixedString>*> map{ RELOCATION_ID(501445, 360165).address() - 0x18 };
+		REL::Relocation<RE::BSTHashMap<RE::FormID, RE::BSFixedString>*> map{ RELOCATION_ID(501445, 360165).address() - 0x18 }; // ptr to sentinal - offset to start of hashmap
 		return *map;
 	}
 }
