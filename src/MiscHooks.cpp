@@ -198,7 +198,7 @@ namespace Hook
 			std::string newDescription{};
 
 			// 0x4D414E43 == 'MANC' (CNAM)
-			const bool isCNAM = (chunkID == 0x4D414E43);
+			const bool isCNAM = (chunkID == 'MANC');
 			const bool result = isCNAM ? manager->getCNAM(formID, newDescription) : manager->getDESC(formID, newDescription);
 
 			if (result)

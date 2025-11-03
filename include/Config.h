@@ -9,6 +9,7 @@ public:
 	void onDataLoad();
 
 	static inline bool enableDebugLog = false;
+	static inline bool enableDebugInfo = false;
 
 private:
 

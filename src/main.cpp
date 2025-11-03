@@ -9,7 +9,9 @@ void LoadINI()
 	ini.SetUnicode();
 	ini.LoadFile(path.c_str());
 
-	Config::enableDebugLog = ini.GetBoolValue("Debug", "EnableDebugLog");
+	constexpr const char* section = "Debug";
+	Config::enableDebugLog = ini.GetBoolValue(section, "EnableDebugLog");
+	Config::enableDebugInfo = ini.GetBoolValue(section, "EnableDebugInfo");
 }
 
 void MessageListener(SKSE::MessagingInterface::Message* message)
