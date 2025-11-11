@@ -38,7 +38,7 @@ namespace Hook
 			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(34413, 35220), 0xE4 };
 			stl::write_thunk_call<DialogueResponseHook>(target1.address());
 
-			REL::Relocation<std::uintptr_t> target2{ REL::VariantID(34436, 35256, 0x574360), 0xCD };
+			REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(34436, 35256), 0xCD };
 			stl::write_thunk_call<DialogueResponseHook>(target2.address());
 
 			if (REL::Module::IsAE())
@@ -96,7 +96,7 @@ namespace Hook
 
 		static void Install()
 		{
-			constexpr auto targetAddress = REL::VariantID(25058, 25597, 0x3A1310);
+			constexpr auto targetAddress = RELOCATION_ID(25058, 25597);
 
 			REL::Relocation<std::uintptr_t> swapTarget{ targetAddress, REL::Relocate(0x332, 0x39F) };
 			REL::safe_fill(swapTarget.address(), REL::NOP, 0x6);

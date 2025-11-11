@@ -378,7 +378,7 @@ void Config::processEntry(ParseData& entry, const std::string& file)
 
 	if (enableDebugInfo)
 	{
-		entry.string.insert(0, std::format("Debug Info: {:08X}|{} | ", formID, plugin));
+		entry.string.insert(0, std::format("Debug Info: {:08X}|{}| ", formID, plugin));
 	}
 
 	const auto manager = Manager::GetSingleton();
