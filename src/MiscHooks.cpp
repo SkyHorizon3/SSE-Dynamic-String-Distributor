@@ -215,7 +215,7 @@ namespace Hook
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(14401, 14552) };
+			REL::Relocation<std::uintptr_t> target{ REL::VariantID(14401, 14552, 0x1A0300) };
 			stl::hook_function_prologue<GetDescription, 6>(target.address());
 		}
 	};
