@@ -109,7 +109,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 		spdlog::flush_on(spdlog::level::info);
 	}
 
-	SKSE::AllocTrampoline(200);
+	SKSE::AllocTrampoline(120);
 
 	SKSE::GetMessagingInterface()->RegisterListener(MessageListener);
 

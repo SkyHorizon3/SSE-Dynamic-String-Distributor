@@ -187,18 +187,20 @@ namespace Hook
 	{
 		static void thunk(RE::TESDescription* description, RE::BSString& out, const RE::TESForm* parent, std::uint32_t chunkID)
 		{
-			func(description, out, parent, chunkID);
+			// In SE we hook LoadDescriptionFromFile func where the game already castet the description to TESForm
+			// AE inlined, we hook the GetDescription where the game didn't cast it yet
+			const auto safeForm = parent ? parent : skyrim_cast<const RE::TESForm*>(description);
 
-			if (!parent)
+			func(description, out, safeForm, chunkID); // call original func with our cast, so we don't cast twice at least
+			if (!safeForm)
 				return;
 
-			const auto manager = Manager::GetSingleton();
-			const auto formID = parent->formID;
-
+			const auto formID = safeForm->formID;
 			std::string newDescription{};
 
 			// 0x4D414E43 == 'MANC' (CNAM)
 			const bool isCNAM = (chunkID == 'MANC');
+			const auto manager = Manager::GetSingleton();
 			const bool result = isCNAM ? manager->getCNAM(formID, newDescription) : manager->getDESC(formID, newDescription);
 
 			if (result)
