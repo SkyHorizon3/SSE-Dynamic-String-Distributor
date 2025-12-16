@@ -1,8 +1,16 @@
+Ôªø# Automation
+- [SSE Auto TranslatorÔªøÔªø](https://www.nexusmods.com/skyrimspecialedition/mods/111491):
+    - Complete automation for every step
 
-I strongly recommend using [xTranslator](https://www.nexusmods.com/starfield/mods/313) and [SSEEdit](https://www.nexusmods.com/skyrimspecialedition/mods/164) to get all the information below.\
-If you're not trying to do an english to english replacement I also recommend using [SSE Auto Translator](https://www.nexusmods.com/skyrimspecialedition/mods/111491) to automate the entire process.
+- Export plugins xEdit script from DSD modpage:
+    - Can export plugins or records from xEdit automatically into the correct JSON format
+    - QUST CNAM original strings have to be adjusted manually
 
-The replacement string needs to follow the json format. The best way to do this is to write the text as it should look and convert it with [freeformatter](https://www.freeformatter.com/json-escape.html#before-output).
+# JSON format details
+
+I strongly recommend using [xTranslator](https://www.nexusmods.com/starfield/mods/313) and [SSEEdit](https://www.nexusmods.com/skyrimspecialedition/mods/164) to get all the information below.
+
+Note: The replacement string needs to follow the json format. The best way to do this is to write the text as it should look and convert it with [freeformatter](https://www.freeformatter.com/json-escape.html#before-output).
 
 ## Replace XXXX FULL, XXXX DESC, NPC_ SHRT, WOOP TNAM, INFO RNAM, BOOK CNAM, MGEF DNAM, REGN RDMP, ACTI RNAM, FLOR RNAM
 
@@ -44,7 +52,7 @@ Example:
     {
         "form_id": "0001AD07|Skyrim.esm",
         "type": "BOOK DESC",
-        "string": "<font face='$HandwrittenFont'>\r\nDelvin,\r\nhier ist die Rezeptur f¸r die Verbesserte Knochenr¸stung, die ich in meinem letzten Brief erw‰hnt habe. Behaltet das Gold, das Ihr durch den Verkauf einnehmt, und stellt sicher, dass es unserer kleinen Schwester an nichts mangelt.\r\n\r\nZutaten:\r\n- 4 Tassen Knochenstaub\r\n- 1 Tasse Salz\r\n- 1 Flasche Netchgelee\r\n- 1 Tasse gemahlenen Mammutstoﬂzahn\r\n- 1 Eimer frisches Wasser\r\n\r\nGebt den Knochenstaub und das Salz ins Wasser und lasst sie dort mindestens einen Tag lang einweichen. Dann gebt das Netchgelee und den Mammutstoﬂzahn hinzu. R¸hrt alles ¸ber einer heiﬂen Flamme um, bis die Mischung sich langsam erh‰rtet. Gieﬂt sie anschlieﬂend in die gew¸nschte Form und platziert die Form in der Mitte Eurer Schmiede. Erhitzt die Mischung mindestens einen halben Tag lang, dann lasst sie ausk¸hlen und entfernt sie aus der Form.\r\n\r\n- Glover Mallory"
+        "string": "<font face='$HandwrittenFont'>\r\nDelvin,\r\nhier ist die Rezeptur f√ºr die Verbesserte Knochenr√ºstung, die ich in meinem letzten Brief erw√§hnt habe. Behaltet das Gold, das Ihr durch den Verkauf einnehmt, und stellt sicher, dass es unserer kleinen Schwester an nichts mangelt.\r\n\r\nZutaten:\r\n- 4 Tassen Knochenstaub\r\n- 1 Tasse Salz\r\n- 1 Flasche Netchgelee\r\n- 1 Tasse gemahlenen Mammutsto√üzahn\r\n- 1 Eimer frisches Wasser\r\n\r\nGebt den Knochenstaub und das Salz ins Wasser und lasst sie dort mindestens einen Tag lang einweichen. Dann gebt das Netchgelee und den Mammutsto√üzahn hinzu. R√ºhrt alles √ºber einer hei√üen Flamme um, bis die Mischung sich langsam erh√§rtet. Gie√üt sie anschlie√üend in die gew√ºnschte Form und platziert die Form in der Mitte Eurer Schmiede. Erhitzt die Mischung mindestens einen halben Tag lang, dann lasst sie ausk√ºhlen und entfernt sie aus der Form.\r\n\r\n- Glover Mallory"
     },
     {
         "form_id": "000E40D3|Skyrim.esm",
@@ -96,9 +104,9 @@ Use this scheme for QUST NNAM, INFO NAM1, MESG ITXT, PERK EPF2, PERK EPFD replac
 
 For INFO NAM1 the index is the reponse number of the response.\
 For QUST NNAM the index is the objective index (QOBJ) of the objective.\
-For MESG ITXT the index is the position in the order in which you can see them in SSEEdit. Starting with 0.\
+For MESG ITXT the index is the order in which you can see them in SSEEdit. Starting with 0.\
 For PERK EPF2 the index is the Fragment Index in EPF3.\
-For PERK EPFD the index is the position in the order in which you can see them in SSEEdit. Starting with 0 and only PERK EPFD strings count to this order.
+For PERK EPFD the index is the order in which you can see them in SSEEdit. Starting with 0 and only PERK EPFD strings count to this order.
 
 Example:
 ```json
