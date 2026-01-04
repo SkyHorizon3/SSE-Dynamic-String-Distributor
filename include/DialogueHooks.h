@@ -2,6 +2,5 @@
 
 namespace Hook
 {
-	void InstallDialogueHooksPostLoad();
 	void InstallDialogueHooks();
 }

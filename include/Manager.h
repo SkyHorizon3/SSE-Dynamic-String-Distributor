@@ -74,8 +74,7 @@ public:
 	bool getDIAL(const RE::FormID formID, const std::string& plugin, RE::BSString& description);
 
 	void addINFO_NAM1(const RE::FormID formID, const std::string& plugin, const std::uint32_t responseNumber, const ParseData& data);
-	bool getINFO_NAM1(const RE::FormID formID, const std::string& plugin, const std::uint8_t responseNumber, RE::BSString& string);
-	StringMap<std::vector<StringData>>& getINFO_NAM1_Map() { return m_INFO_NAM1_Map; }
+	bool getINFO_NAM1(const RE::FormID formID, const std::string& plugin, const std::uint8_t responseNumber, RE::BSFixedString& string);
 
 	static std::string constructKey(const RE::FormID formID, const std::string& plugin);
 
@@ -111,7 +110,7 @@ private:
 
 	void setActivateOverrideStrings(RE::TESForm* form, const RE::BSFixedString& newString);
 
-	void report(const RE::TESForm* form);
+	void report(const RE::TESForm* const form);
 
 	FlatMap<RE::FormID, StringData> m_DESC;
 	FlatMap<RE::FormID, StringData> m_CNAM;

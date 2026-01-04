@@ -1,6 +1,5 @@
 #include "Manager.h"
 #include "Utils.h"
-#include "RE.h"
 
 SubrecordType Manager::subrecordToEnum(std::string_view type)
 {
@@ -116,7 +115,7 @@ void Manager::addINFO_NAM1(const RE::FormID formID, const std::string& plugin, c
 	}
 }
 
-bool Manager::getINFO_NAM1(const RE::FormID formID, const std::string& plugin, const std::uint8_t responseNumber, RE::BSString& string)
+bool Manager::getINFO_NAM1(const RE::FormID formID, const std::string& plugin, const std::uint8_t responseNumber, RE::BSFixedString& string)
 {
 	const auto it = m_INFO_NAM1_Map.find(constructKey(formID, plugin));
 	if (it != m_INFO_NAM1_Map.end())
@@ -223,7 +222,7 @@ void Manager::setFullnameStrings(RE::TESForm* form, const std::string& newString
 
 void Manager::setGameSettingString(const std::string& a_name, const std::string& a_newString)
 {
-	auto setting = RE::GameSettingCollection::GetSingleton()->GetSetting(a_name.c_str());
+	const auto setting = RE::GameSettingCollection::GetSingleton()->GetSetting(a_name.c_str());
 
 	if (!setting)
 	{
@@ -239,14 +238,12 @@ void Manager::setGameSettingString(const std::string& a_name, const std::string&
 
 void Manager::setMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index)
 {
-	RE::BGSMessage* message = form->As<RE::BGSMessage>(); //MESG ITXT
+	const auto message = form->As<RE::BGSMessage>(); //MESG ITXT
 	if (message)
 	{
 		std::uint32_t pos = 0;
 		for (const auto& button : message->menuButtons)
 		{
-			//SKSE::log::info("Pos: {} - String: {}", pos, text->text.c_str());
-
 			if (pos == index)
 			{
 				button->text = Utils::validateString(newString);
@@ -254,11 +251,10 @@ void Manager::setMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedStr
 
 			pos++;
 		}
-
 	}
 	else
 	{
-		RE::BGSPerk* perk = form->As<RE::BGSPerk>(); //PERK EPF2
+		const auto perk = form->As<RE::BGSPerk>(); //PERK EPF2
 
 		if (!perk)
 		{
@@ -275,18 +271,15 @@ void Manager::setMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedStr
 			if (!entryPoint)
 				continue;
 
-			if (entryPoint->entryData.function == RE::BGSEntryPointPerkEntry::EntryData::Function::kAddActivateChoice)
+			const auto data = entryPoint->functionData;
+			if (!data || data->GetType() != RE::BGSEntryPointFunctionData::ENTRY_POINT_FUNCTION_DATA::kActivateChoice)
+				continue;
+
+			const auto func = static_cast<RE::BGSEntryPointFunctionDataActivateChoice*>(data);
+			if (func && func->GetID() == index)
 			{
-				RE::BGSEntryPointFunctionDataActivateChoice* func = static_cast<RE::BGSEntryPointFunctionDataActivateChoice*>(entryPoint->functionData);
-
-				if (func && func->GetID() == index)
-				{
-					//SKSE::log::debug("original: {} - replacement: {}", func->label.c_str(), newString.c_str());
-					func->label = Utils::validateString(newString);
-				}
-
+				func->label = Utils::validateString(newString);
 			}
-
 		}
 
 	}
@@ -295,7 +288,7 @@ void Manager::setMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedStr
 
 void Manager::setRegionDataStrings(RE::TESForm* form, const RE::BSFixedString& newString) //REGN RDMP
 {
-	RE::TESRegion* regionData = form->As<RE::TESRegion>();
+	const auto regionData = form->As<RE::TESRegion>();
 
 	if (!regionData || !regionData->dataList)
 	{
@@ -319,7 +312,7 @@ void Manager::setRegionDataStrings(RE::TESForm* form, const RE::BSFixedString& n
 
 void Manager::setEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index) //PERK EPFD
 {
-	RE::BGSPerk* perk = form->As<RE::BGSPerk>();
+	const auto perk = form->As<RE::BGSPerk>();
 	if (!perk)
 	{
 		report(form);
@@ -342,12 +335,13 @@ void Manager::setEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& n
 		if (!entryPoint)
 			continue;
 
-		if (entryPoint->entryData.function != RE::BGSEntryPointPerkEntry::EntryData::Function::kSetText)
+		const auto data = entryPoint->functionData;
+		if (!data || data->GetType() != RE::BGSEntryPointFunctionData::ENTRY_POINT_FUNCTION_DATA::kText)
 			continue;
 
 		if (textFuncFound == index)
 		{
-			auto* func = static_cast<RE::BGSEntryPointFunctionDataText*>(entryPoint->functionData);
+			const auto func = static_cast<RE::BGSEntryPointFunctionDataText*>(data);
 			if (func)
 			{
 				func->text = Utils::validateString(newString);
@@ -360,7 +354,7 @@ void Manager::setEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& n
 
 void Manager::setQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index) //QUST NNAM
 {
-	RE::TESQuest* quest = form->As<RE::TESQuest>();
+	const auto quest = form->As<RE::TESQuest>();
 
 	if (!quest)
 	{
@@ -392,7 +386,7 @@ void Manager::setActivateOverrideStrings(RE::TESForm* form, const RE::BSFixedStr
 	}
 }
 
-void Manager::report(const RE::TESForm* form)
+void Manager::report(const RE::TESForm* const form)
 {
 	std::stringstream ss;
 	ss << "Tried to cast " << std::format("{0:08X}", form->formID)

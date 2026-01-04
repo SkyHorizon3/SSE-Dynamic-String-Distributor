@@ -2,7 +2,7 @@
 
 namespace Utils
 {
-	std::string getModName(const RE::TESForm* form)
+	std::string getModName(const RE::TESForm* const form)
 	{
 		if (!form)
 		{
@@ -21,13 +21,12 @@ namespace Utils
 		return string::tolower(filename.data());
 	}
 
-	RE::FormID getTrimmedFormID(const RE::TESForm* form)
+	RE::FormID getTrimmedFormID(const RE::TESForm* const form)
 	{
 		if (!form)
-		{
 			return 0;
-		}
 
+		// TODO: This returns wrong file for REFR records defined in esm files when another esm file adds the persistent flag
 		const auto file = form->GetFile(0);
 		if (!file)
 			return 0;
@@ -41,29 +40,50 @@ namespace Utils
 		return formID;
 	}
 
-	std::filesystem::path getPluginTXTFilePath()
-	{
-		wchar_t userDir[MAX_PATH];
-		if (FAILED(SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, userDir)))
-		{
-			SKSE::log::error("User directory not found!");
-			return L"";
-		}
-
-		std::filesystem::path path = std::filesystem::path(userDir);
-		path /= "AppData"sv;
-		path /= "Local"sv;
-		path /= *REL::Relocation<const char**>(RELOCATION_ID(508778, AE_CHECK(SKSE::RUNTIME_SSE_1_6_1130, 380738, 502114))).get();
-		path /= "plugins.txt"sv;
-
-		SKSE::log::debug("Directory with plugins.txt: {}", path.string());
-
-		return path;
-	}
-
 	RE::BSFixedString validateString(const RE::BSFixedString& toplace)
 	{
 		return toplace.empty() ? RE::BSFixedString(" ") : toplace;
+	}
+
+	RE::TESActorBase* getFullNameNPC(RE::TESNPC* npc)
+	{
+		if (!npc)
+			return nullptr;
+
+		//const auto& refName = npc->fullName;
+		RE::TESActorBase* current = npc;
+
+		std::uint16_t guard = 0;
+
+		while (current && current->baseTemplateForm && guard++ < 20)
+		{
+			auto base = skyrim_cast<RE::TESActorBase*>(current->baseTemplateForm);
+
+			if (base && !base->IsPlayer())
+				base->SetFullName("HEYYY!");
+
+			if (!base)
+			{
+				SKSE::log::info("Cast failed for {:08X}!", current->baseTemplateForm->formID);
+				break;
+			}
+
+			RE::TESFullName;
+
+			RE::TESLeveledList;
+
+			/*if (base->fullName != refName)
+				break;*/
+
+			current = base;
+		}
+
+		if (guard >= 20)
+		{
+			SKSE::log::critical("NPC {:08X} uses more than 20 base templates. Report to DSD modpage!", npc->formID);
+		}
+
+		return current;
 	}
 
 	RE::FormID convertToFormID(std::string input)
@@ -88,32 +108,16 @@ namespace Utils
 			}
 		}
 
-		//SKSE::log::info("FormID: {}", input);
-
 		return std::stoul(input, nullptr, 16);
 	}
 
 	std::string getAfterSpace(const std::string& types)
 	{
-		size_t spacePos = types.find(' ');
+		const auto spacePos = types.find(' ');
 		if (spacePos != std::string::npos && spacePos + 1 < types.length())
 		{
 			return types.substr(spacePos + 1);
 		}
-		return "";
-	}
-
-	const RE::TESFile* getFileByFormIDRaw(RE::FormID a_rawFormID, RE::TESFile* a_file)
-	{
-		if (a_rawFormID - 1 <= 0x7FE)
-			return a_file;
-
-		const RE::TESFile* owner = a_file;
-		const auto masterIndex = a_rawFormID >> 24;
-
-		if (masterIndex < owner->masterCount && owner->masterPtrs)
-			return owner->masterPtrs[masterIndex];
-
-		return owner;
+		return {};
 	}
 }

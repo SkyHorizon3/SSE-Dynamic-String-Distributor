@@ -12,6 +12,7 @@
 #include <SimpleIni.h>
 #include <glaze/glaze.hpp>
 #include <ClibUtil/string.hpp>
+#include "RE.h"
 
 using namespace std::literals;
 using namespace clib_util::string::literals;
