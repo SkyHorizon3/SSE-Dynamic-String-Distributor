@@ -6,6 +6,7 @@
 
 namespace Hook
 {
+	// TODO: Port this to constTranslation
 	struct MapMarkerDataHook //REFR FULL
 	{
 		static RE::TESFullName* thunk(RE::TESObjectREFR* marker)

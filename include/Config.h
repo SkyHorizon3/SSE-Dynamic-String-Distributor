@@ -1,5 +1,4 @@
 #pragma once
-#include "Manager.h"
 
 class Config : public REX::Singleton<Config>
 {

@@ -56,7 +56,16 @@ void Manager::addToConst(RE::TESForm* form, const ParseData& data)
 	if (data.index.has_value())
 		stringData.pos = data.index.value();
 
-	stringData.subRecordType = subrecordToEnum(Utils::getAfterSpace(data.type));
+	const auto& fullType = data.type;
+	std::string subrecordType{};
+
+	const auto spacePos = fullType.find(' ');
+	if (spacePos != std::string::npos && spacePos + 1 < fullType.length())
+	{
+		subrecordType = fullType.substr(spacePos + 1);
+	}
+
+	stringData.subRecordType = subrecordToEnum(subrecordType);
 
 	if (form != nullptr)
 	{

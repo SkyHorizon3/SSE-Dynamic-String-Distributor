@@ -2,22 +2,36 @@
 
 namespace Utils
 {
+	// Get the file that defines the record through the formID index
+	// The problem is that the internal file array is wrong in an edge case with REFR forms:
+	// It returns wrong file for REFR records defined in esm files when another esm file adds the persistent flag in an override
+	// It's not bug, just bullshit caused by the plugin system since it obviously can't know if 
+	// a record is persistent if the flag is added later in another plugin
+	const RE::TESFile* getFormBasePlugin(const RE::TESForm* const form)
+	{
+		const auto handler = RE::TESDataHandler::GetSingleton();
+
+		if (!form || !handler)
+			return nullptr;
+
+		const auto formID = form->formID;
+		const auto expected = (formID & 0xFF000000) == 0xFE000000 ?
+			handler->LookupLoadedLightModByIndex(static_cast<std::uint16_t>((0x00FFF000 & formID) >> 12)) :
+			handler->LookupLoadedModByIndex(static_cast<std::uint8_t>((0xFF000000 & formID) >> 24));
+
+		return expected;
+	}
+
 	std::string getModName(const RE::TESForm* const form)
 	{
 		if (!form)
-		{
-			return "";
-		}
+			return {};
 
-		const auto array = form->sourceFiles.array;
-		if (!array || array->empty())
-		{
-			return "";
-		}
+		const auto file = getFormBasePlugin(form);
+		if (!file)
+			return {};
 
-		const auto file = array->front();
 		std::string_view filename = file ? file->GetFilename() : "";
-
 		return string::tolower(filename.data());
 	}
 
@@ -26,8 +40,7 @@ namespace Utils
 		if (!form)
 			return 0;
 
-		// TODO: This returns wrong file for REFR records defined in esm files when another esm file adds the persistent flag
-		const auto file = form->GetFile(0);
+		const auto file = getFormBasePlugin(form);
 		if (!file)
 			return 0;
 
@@ -109,15 +122,5 @@ namespace Utils
 		}
 
 		return std::stoul(input, nullptr, 16);
-	}
-
-	std::string getAfterSpace(const std::string& types)
-	{
-		const auto spacePos = types.find(' ');
-		if (spacePos != std::string::npos && spacePos + 1 < types.length())
-		{
-			return types.substr(spacePos + 1);
-		}
-		return {};
 	}
 }

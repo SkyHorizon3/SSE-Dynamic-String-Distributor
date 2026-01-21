@@ -91,25 +91,17 @@ public:
 	bool getQUST(const std::string& original, RE::BSString& description);
 
 	void runConstTranslation(RE::TESForm* form, const StringData& data);
-private:
 
+private:
 	template <typename T>
 	void setConstStrings(RE::TESForm* form, const RE::BSFixedString& newString, RE::BSFixedString T::* memberPtr);
-
 	void setFullnameStrings(RE::TESForm* form, const std::string& newString);
-
 	void setGameSettingString(const std::string& name, const std::string& newString);
-
 	void setMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
-
 	void setRegionDataStrings(RE::TESForm* form, const RE::BSFixedString& newString);
-
 	void setEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
-
 	void setQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
-
 	void setActivateOverrideStrings(RE::TESForm* form, const RE::BSFixedString& newString);
-
 	void report(const RE::TESForm* const form);
 
 	FlatMap<RE::FormID, StringData> m_DESC;
