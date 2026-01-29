@@ -3,24 +3,30 @@
 #include "Utils.h"
 #include "MergeMapperPluginAPI.h"
 
-std::vector<std::string_view> Config::getLoadOrder()
+std::vector<std::string> Config::getLoadOrder()
 {
-	std::vector<std::string_view> order{};
+	std::vector<std::string> order{};
 
 	const auto handler = RE::TESDataHandler::GetSingleton();
 	if (!handler)
 		return order;
 
-	for (const auto& file : handler->files)
+	const auto files = handler->files;
+	order.reserve(files.size());
+
+	for (const auto& file : files)
 	{
 		if (file && file->compileIndex != 0xFF) // only the files that are truely active
-			order.emplace_back(file->GetFilename());
+		{
+			const auto name = file->GetFilename();
+			order.emplace_back(string::tolower(name));
+		}
 	}
 
 	return order;
 }
 
-std::vector<std::string> Config::getFolders() //Get all folders in DynamicStringDistributor directory
+std::vector<std::string> Config::getFilesSorted()
 {
 	if (!std::filesystem::exists(DSD_PATH))
 		return {};

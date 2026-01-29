@@ -3,16 +3,16 @@
 class Config : public REX::Singleton<Config>
 {
 public:
-	std::vector<std::string> getFolders();
+	std::vector<std::string> getFilesSorted();
 	void parseTranslationFiles();
 	void onDataLoad();
 
 	static inline bool enableDebugLog = false;
 	static inline bool enableDebugInfo = false;
 
-	std::vector<std::string_view> getLoadOrder();
+	std::vector<std::string> getLoadOrder();
 private:
-	inline static constexpr std::string_view DSD_PATH = "Data/SKSE/Plugins/DynamicStringDistributor";
+	inline static constexpr const char* DSD_PATH = "Data/SKSE/Plugins/DynamicStringDistributor";
 
 	std::vector<std::string> enumerateFilesInFolders(const std::string& folders);
 	std::tuple<RE::FormID, std::string> extractFormIDAndPlugin(const std::string& formIDWithPlugin);

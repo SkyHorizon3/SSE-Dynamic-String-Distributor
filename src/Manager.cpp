@@ -203,19 +203,6 @@ bool Manager::getQUST(const std::string& original, RE::BSString& description)
 	return getReplacerText(m_QUST_CNAM_Map, original, description);
 }
 
-template <typename T>
-void Manager::setConstStrings(RE::TESForm* form, const RE::BSFixedString& newString, RE::BSFixedString T::* memberPtr)
-{
-	if (auto* OrigString = static_cast<T*>(form); OrigString)
-	{
-		OrigString->*memberPtr = Utils::validateString(newString);
-	}
-	else
-	{
-		report(form);
-	}
-}
-
 void Manager::setFullnameStrings(RE::TESForm* form, const std::string& newString)
 {
 	const auto OrigString = form->As<RE::TESFullName>();
@@ -416,22 +403,50 @@ void Manager::runConstTranslation(RE::TESForm* form, const StringData& data)
 	break;
 	case SubrecordType::kDESC: //Only LSCR DESC
 	{
-		setConstStrings<RE::TESLoadScreen>(form, data.replacerText, &RE::TESLoadScreen::loadingText);
+		auto loadScreen = form->As<RE::TESLoadScreen>();
+		if (!loadScreen)
+		{
+			report(form);
+			return;
+		}
+
+		loadScreen->loadingText = data.replacerText;
 	}
 	break;
 	case SubrecordType::kDNAM:
 	{
-		setConstStrings<RE::EffectSetting>(form, data.replacerText, &RE::EffectSetting::magicItemDescription);
+		auto effect = form->As<RE::EffectSetting>();
+		if (!effect)
+		{
+			report(form);
+			return;
+		}
+
+		effect->magicItemDescription = data.replacerText;
 	}
 	break;
 	case SubrecordType::kSHRT:
 	{
-		setConstStrings<RE::TESNPC>(form, data.replacerText, &RE::TESNPC::shortName);
+		auto npc = form->As<RE::TESNPC>();
+		if (!npc)
+		{
+			report(form);
+			return;
+		}
+
+		npc->shortName = data.replacerText;
 	}
 	break;
 	case SubrecordType::kTNAM:
 	{
-		setConstStrings<RE::TESWordOfPower>(form, data.replacerText, &RE::TESWordOfPower::translation);
+		auto word = form->As<RE::TESWordOfPower>();
+		if (!word)
+		{
+			report(form);
+			return;
+		}
+
+		word->translation = data.replacerText;
 	}
 	break;
 	case SubrecordType::kDATA:
