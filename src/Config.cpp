@@ -11,9 +11,7 @@ std::vector<std::string> Config::getLoadOrder()
 	if (!handler)
 		return order;
 
-	const auto files = handler->files;
-	order.reserve(files.size());
-
+	const auto& files = handler->files;
 	for (const auto& file : files)
 	{
 		if (file && file->compileIndex != 0xFF) // only the files that are truely active

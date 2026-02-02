@@ -8,7 +8,7 @@ namespace Hook
 {
 	struct GetResponseListHook //INFO NAM1
 	{
-		static RE::ResponseList* thunk(RE::TESTopicInfo* topicInfo, RE::ResponseList* list)
+		static RE::TESTopicInfo::TESResponseList* thunk(RE::TESTopicInfo* topicInfo, RE::TESTopicInfo::TESResponseList* list)
 		{
 			auto result = func(topicInfo, list);
 			if (!topicInfo || !result)

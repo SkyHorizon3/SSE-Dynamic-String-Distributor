@@ -15,10 +15,11 @@ namespace RE
 		return *map;
 	}
 
-	class ResponseList
+	// case sensitive BSFixedString change
+	inline void setBSFixedString(RE::BSFixedString& str, const char* data)
 	{
-	public:
-		TESTopicInfo::ResponseData* head;
-	};
-	static_assert(sizeof(ResponseList) == 0x8);
+		using func_t = decltype(&setBSFixedString);
+		static REL::Relocation<func_t> func{ REL::VariantID(15291, 15453, 0x0) };
+		func(str, data);
+	}
 }

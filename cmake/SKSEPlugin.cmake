@@ -83,6 +83,7 @@ ${MERGEMAPPER_INCLUDE_DIRS})
 # Link libraries
 target_link_libraries("${PROJECT_NAME}" PUBLIC 
 CommonLibSSE::CommonLibSSE
+PRIVATE
 glaze::glaze
 frozen::frozen
 Boost::unordered
