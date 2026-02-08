@@ -1,36 +1,25 @@
 #pragma once
 
-enum class SubrecordType : std::uint8_t
+enum class TranslationType : std::uint8_t
 {
-	kFULL,
-	kSHRT,
-	kTNAM,
-	kDATA,
-	kRDMP,
-	kDESC,
-	kCNAM,
-	kDNAM,
-	kNNAM,
-	kITXT,
-	kEPFD,
-	kRNAM,
+	kFullName, // XXXX FULL
+	kShortName, // XXXX SHRT
+	kWordOfPower, // WOOP TNAM
+	kGameSetting, // GMST DATA
+	kRegion, // REGN RDMP
+	kMagicDescription, // MGEF DNAM
+	kLoadScreenDescription, // LSCR DESC 
+	kQuestObjective, // QUST NNAM
+	kButtonText1, // MESG ITXT
+	kButtonText2, // PERK EPF2
+	kActivationText, // ACTI RNAM, FLOR RNAM
+	kReference, // REFR FULL
+	kPerkVerb, // PERK EPFD
+	kRuntime1,
+	kRuntime2,
+	kRuntimeLegacy, // QUST CNAM
 
 	kUnknown
-};
-
-template <class T>
-struct custom_nullable_t
-{
-	std::optional<T> val{};
-	bool has_value() const { return val.has_value(); }
-
-	T& value() { return *val; }
-	const T& value() const { return *val; }
-
-	template <class... Args>
-	void emplace(Args&&... args) {
-		val.emplace(std::forward<Args>(args)...);
-	}
 };
 
 struct ParseData
@@ -39,61 +28,38 @@ struct ParseData
 	std::string type{};
 	std::string string{};
 	std::string original{};
-	std::string conditions{};
-	custom_nullable_t<std::uint32_t> index{};
-	custom_nullable_t<std::string> editor_id{};
+	std::optional<std::uint32_t> index{};
+	std::optional<std::string> editor_id{};
 };
 
-struct StringData
+struct ConstTranslationData
 {
-	StringData(const std::string& original, const std::string& conditions)
-		: replacerText(original), conditionString(conditions), pos(0), subRecordType(SubrecordType::kUnknown) {
-	}
-
-	std::string form_id{};
+	RE::FormID runtimeFormID{ 0 };
 	std::string replacerText{};
-	SubrecordType subRecordType;
-	std::optional<std::string> originalString;
-	std::string conditionString{};
-	std::uint32_t pos;
+	TranslationType translationType{ TranslationType::kUnknown };
+	std::optional<std::uint32_t> index{};
+	std::optional<std::string> editor_id{};
 };
-
 
 class Manager : public REX::Singleton<Manager>
 {
 public:
-	SubrecordType subrecordToEnum(std::string_view type);
+	void LoadINI();
+	bool isDebugLogEnabled() const noexcept { return m_debugLog; }
 
-	template <typename Map, typename Key, typename replace>
-	bool getReplacerText(const Map& map, const Key& key, replace& string);
+	void runConstTranslation();
 
-	void addToConst(RE::TESForm* form, const ParseData& data);
-	void runGameSettingTranslation();
-
-	void addDIAL(const RE::FormID formID, const std::string& plugin, const ParseData& data);
-	bool getDIAL(const RE::FormID formID, const std::string& plugin, RE::BSString& description);
-
-	void addINFO_NAM1(const RE::FormID formID, const std::string& plugin, const std::uint32_t responseNumber, const ParseData& data);
-	bool getINFO_NAM1(const RE::FormID formID, const std::string& plugin, const std::uint8_t responseNumber, RE::BSFixedString& string);
-
-	static std::string constructKey(const RE::FormID formID, const std::string& plugin);
-
-	void addDESC(RE::TESForm* form, const ParseData& data);
-	bool getDESC(const RE::FormID formID, std::string& description);
-
-	void addCNAM(RE::TESForm* form, const ParseData& data);
-	bool getCNAM(const RE::FormID formID, std::string& description);
-
-	void addREFR(RE::TESForm* form, const ParseData& data);
-	bool getREFR(const RE::FormID formID, std::string& description);
-
-	void addQUST(const std::string& original, const ParseData& data);
-	bool getQUST(const std::string& original, RE::BSString& description);
-
-	void runConstTranslation(RE::TESForm* form, const StringData& data);
-
+	void enumerateLoadOrder();
+	void parseTranslationFiles();
 private:
-	void setFullnameStrings(RE::TESForm* form, const std::string& newString);
+	inline static constexpr const char* DSD_PATH = "Data/SKSE/Plugins/DynamicStringDistributor";
+
+	std::vector<std::string> processFolders();
+	std::vector<std::string> processFiles(const std::string_view folder);
+	std::tuple<RE::FormID, std::string> extractFormIDAndPlugin(const std::string& formIDWithPlugin);
+	TranslationType getTranslationType(std::string_view formType);
+	void processEntry(ParseData& entry, const std::string& file);
+
 	void setGameSettingString(const std::string& name, const std::string& newString);
 	void setMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
 	void setRegionDataStrings(RE::TESForm* form, const RE::BSFixedString& newString);
@@ -102,13 +68,13 @@ private:
 	void setActivateOverrideStrings(RE::TESForm* form, const RE::BSFixedString& newString);
 	void report(const RE::TESForm* const form);
 
-	FlatMap<RE::FormID, StringData> m_DESC;
-	FlatMap<RE::FormID, StringData> m_CNAM;
-	FlatMap<RE::FormID, StringData> m_REFR;
+	StringMap<std::pair<RE::TESFile*, std::uint32_t>> m_loadOrder{};
+	std::vector<ConstTranslationData> m_constTranslation{};
+	FlatMap<std::uint64_t, std::string> m_runtimeMap1{};
+	FlatMap<RE::FormID, std::string> m_runtimeMap2{};
+	StringMap<std::string> m_legacyMap{};
 
-	StringMap<std::vector<StringData>> m_INFO_NAM1_Map;
-	StringMap<StringData> m_DIAL_RNAM_Map;
-	StringMap<StringData> m_QUST_CNAM_Map;
-
-	std::vector<StringData> m_constTranslationGMST;
+	// INI
+	bool m_debugLog{ false };
+	bool m_debugInfo{ false };
 };

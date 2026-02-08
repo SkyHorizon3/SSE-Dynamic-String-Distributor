@@ -53,50 +53,20 @@ namespace Utils
 		return formID;
 	}
 
+	RE::FormID getRuntimeFormID(const RE::TESFile* file, const RE::FormID raw)
+	{
+		if (!file)
+			return raw;
+
+		if (file->IsLight())
+			return (raw & 0xFFF) | 0xFE000000 | file->smallFileCompileIndex << 12;
+
+		return (raw & 0xFFFFFF) | file->compileIndex << 24;
+	}
+
 	RE::BSFixedString validateString(const RE::BSFixedString& toplace)
 	{
 		return toplace.empty() ? RE::BSFixedString(" ") : toplace;
-	}
-
-	RE::TESActorBase* getFullNameNPC(RE::TESNPC* npc)
-	{
-		if (!npc)
-			return nullptr;
-
-		//const auto& refName = npc->fullName;
-		RE::TESActorBase* current = npc;
-
-		std::uint16_t guard = 0;
-
-		while (current && current->baseTemplateForm && guard++ < 20)
-		{
-			auto base = skyrim_cast<RE::TESActorBase*>(current->baseTemplateForm);
-
-			if (base && !base->IsPlayer())
-				base->SetFullName("HEYYY!");
-
-			if (!base)
-			{
-				SKSE::log::info("Cast failed for {:08X}!", current->baseTemplateForm->formID);
-				break;
-			}
-
-			RE::TESFullName;
-
-			RE::TESLeveledList;
-
-			/*if (base->fullName != refName)
-				break;*/
-
-			current = base;
-		}
-
-		if (guard >= 20)
-		{
-			SKSE::log::critical("NPC {:08X} uses more than 20 base templates. Report to DSD modpage!", npc->formID);
-		}
-
-		return current;
 	}
 
 	RE::FormID convertToFormID(std::string input)

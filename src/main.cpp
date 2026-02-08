@@ -1,33 +1,11 @@
-﻿#include "Config.h"
-#include "MiscHooks.h"
-
-void LoadINI()
-{
-	const auto path = std::format("Data/SKSE/Plugins/{}.ini", Plugin::NAME);
-
-	CSimpleIniA ini;
-	ini.SetUnicode();
-	ini.LoadFile(path.c_str());
-
-	constexpr const char* section = "Debug";
-	Config::enableDebugLog = ini.GetBoolValue(section, "EnableDebugLog");
-	Config::enableDebugInfo = ini.GetBoolValue(section, "EnableDebugInfo");
-}
+﻿#include "Manager.h"
 
 void MessageListener(SKSE::MessagingInterface::Message* message)
 {
 	switch (message->type)
 	{
-		// https://github.com/ianpatt/skse64/blob/09f520a2433747f33ae7d7c15b1164ca198932c3/skse64/PluginAPI.h#L193-L212
 	case SKSE::MessagingInterface::kPostPostLoad:
 	{
-		/*
-		if (!GetModuleHandle(L"po3_Tweaks"))
-		{
-			SKSE::log::critical("po3_Tweaks not found, mod won't work!");
-		}
-		*/
-
 		MergeMapperPluginAPI::GetMergeMapperInterface001();
 		if (g_mergeMapperInterface)
 		{
@@ -39,27 +17,26 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 			SKSE::log::info("MergeMapper not detected");
 		}
 
-		Hook::InstallPostLoadHooks();
+		/*Hook::InstallPostLoadHooks();
 
 		Config::GetSingleton()->enumerateFolder();
-		Config::GetSingleton()->parseTranslationFiles();
+		Config::GetSingleton()->parseTranslationFiles();*/
 	}
 	break;
 	case SKSE::MessagingInterface::kDataLoaded:
 	{
 		auto startTime = std::chrono::high_resolution_clock::now();
 
-		Config::GetSingleton()->onDataLoad();
+		/*Config::GetSingleton()->onDataLoad();
 		Manager::GetSingleton()->runGameSettingTranslation();
 
-		Hook::InstallDataLoadedHooks();
+		Hook::InstallDataLoadedHooks();*/
 
 		auto endTime = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
 		SKSE::log::info("The form lookup, the execution of ConstTranslation and the installation of hooks took {} milliseconds.", duration.count());
 	}
 	break;
-
 
 	default:
 		break;
@@ -96,9 +73,10 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 
 	SKSE::log::info("Game version: {}", skse->RuntimeVersion());
 
-	LoadINI();
+	const auto manager = Manager::GetSingleton();
+	manager->LoadINI();
 
-	if (Config::enableDebugLog)
+	if (manager->isDebugLogEnabled())
 	{
 		spdlog::set_level(spdlog::level::trace);
 		spdlog::flush_on(spdlog::level::trace);
