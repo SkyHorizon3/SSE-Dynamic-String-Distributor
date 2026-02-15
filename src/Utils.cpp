@@ -64,11 +64,6 @@ namespace Utils
 		return (raw & 0xFFFFFF) | file->compileIndex << 24;
 	}
 
-	RE::BSFixedString validateString(const RE::BSFixedString& toplace)
-	{
-		return toplace.empty() ? RE::BSFixedString(" ") : toplace;
-	}
-
 	RE::FormID convertToFormID(std::string input)
 	{
 		const bool has_x = (input.find('x') != std::string::npos) || (input.find('X') != std::string::npos);

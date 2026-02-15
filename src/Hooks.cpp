@@ -1,8 +1,6 @@
-#include "MiscHooks.h"
+#include "Hooks.h"
 #include "Manager.h"
-#include "DialogueHooks.h"
 #include "Utils.h"
-
 
 namespace Hook
 {
@@ -16,13 +14,18 @@ namespace Hook
 				return func(marker);
 			}
 
+			if (!marker->IsPersistent())
+			{
+				SKSE::log::info("Not persistent: {:08X}");
+			}
+
 			auto result = func(marker);
 
-			std::string newDescription{};
+			/*std::string newDescription{};
 			if (result && Manager::GetSingleton()->getREFR(marker->formID, newDescription))
 			{
 				result->SetFullName(newDescription.c_str());
-			}
+			}*/
 
 			return result;
 		};
@@ -60,13 +63,13 @@ namespace Hook
 		{
 			func(npcFullname, file);
 
-			auto* npc = skyrim_cast<const RE::TESForm*>(npcFullname);
+			/*auto* npc = skyrim_cast<const RE::TESForm*>(npcFullname);
 
 			RE::BSString newDescription{};
 			if (Manager::GetSingleton()->getDIAL(Utils::getTrimmedFormID(npc), Utils::getModName(npc), newDescription))
 			{
 				npcFullname->SetFullName(newDescription.c_str());
-			}
+			}*/
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
@@ -89,12 +92,12 @@ namespace Hook
 			if (!safeForm)
 				return;
 
-			const auto formID = safeForm->formID;
-			std::string newDescription{};
+			//const auto formID = safeForm->formID;
+			//std::string newDescription{};
 
 			// 0x4D414E43 == 'MANC' (CNAM)
-			const bool isCNAM = (chunkID == 'MANC');
-			const auto manager = Manager::GetSingleton();
+			//const bool isCNAM = (chunkID == 'MANC');
+			/*const auto manager = Manager::GetSingleton();
 			const bool result = isCNAM ? manager->getCNAM(formID, newDescription) : manager->getDESC(formID, newDescription);
 
 			if (result)
@@ -104,7 +107,7 @@ namespace Hook
 				const char* type = isCNAM ? "CNAM" : "DESC";
 				SKSE::log::debug("Replaced {} for {:08X} with:", type, formID);
 				SKSE::log::debug("{}", out.c_str());
-			}
+			}*/
 
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
@@ -116,20 +119,84 @@ namespace Hook
 		}
 	};
 
-	void InstallPostLoadHooks()
+	struct GetResponseListHook //INFO NAM1
+	{
+		static RE::TESTopicInfo::TESResponseList* thunk(RE::TESTopicInfo* topicInfo, RE::TESTopicInfo::TESResponseList* list)
+		{
+			auto result = func(topicInfo, list);
+			if (!topicInfo || !result)
+				return result;
+
+			auto responseTopicInfo = topicInfo;
+			auto linkedResponseInfo = topicInfo->dataInfo;
+
+			if (linkedResponseInfo)
+			{
+				for (auto i = linkedResponseInfo; i; i = i->dataInfo)
+				{
+					responseTopicInfo = i;
+				}
+			}
+
+			const std::string fileName = Utils::getModName(responseTopicInfo);
+			const RE::FormID trimmedFormID = Utils::getTrimmedFormID(responseTopicInfo);
+			//const auto manager = Manager::GetSingleton();
+
+			for (auto response = result->head; response; response = response->next)
+			{
+				SKSE::log::debug("Original string: {} - TopicInfoFormID: {:08X} - LinkedResponseFormID: {:08X} - ResponseNumber: {} - Plugin: {}", response->responseText.c_str(), topicInfo->formID, responseTopicInfo->formID, response->responseNumber, fileName);
+
+				//manager->getINFO_NAM1(trimmedFormID, fileName, response->responseNumber, response->responseText);
+			}
+
+			return result;
+		}
+		static inline REL::Relocation<decltype(thunk)> func;
+
+		static void Install()
+		{
+			REL::Relocation<std::uintptr_t> target{ REL::VariantID(25083, 0, 0x0) };
+			stl::hook_function_prologue<GetResponseListHook, 6>(target.address());
+		}
+	};
+
+	struct DialogueMenuTextHook //DIAL FULL, INFO RNAM
+	{
+		static void thunk(RE::MenuTopicManager::Dialogue& a_out, const char* source, std::uint64_t maxLen) //Skyrim is not only passing BSStrings into this function
+		{
+			func(a_out, source, maxLen);
+
+			//const auto manager = Manager::GetSingleton();
+			//manager->getDIAL(Utils::getTrimmedFormID(a_out.parentTopic), Utils::getModName(a_out.parentTopic), a_out.topicText);
+			//manager->getDIAL(Utils::getTrimmedFormID(a_out.parentTopicInfo), Utils::getModName(a_out.parentTopicInfo), a_out.topicText); //INFO RNAM always overwrites DIAL FULL of parenttopic
+
+		};
+		static inline REL::Relocation<decltype(thunk)> func;
+
+		static void Install()
+		{
+			constexpr auto address = RELOCATION_ID(34434, 35254);
+
+			REL::Relocation<std::uintptr_t> target1{ address, REL::Relocate(0xCC, 0x226) };
+			stl::write_thunk_call<DialogueMenuTextHook>(target1.address());
+
+			if (REL::Module::IsAE())
+			{
+				REL::Relocation<std::uintptr_t> target2{ address, 0x115 };
+				stl::write_thunk_call<DialogueMenuTextHook>(target2.address());
+			}
+		}
+	};
+
+	void InstallHooks()
 	{
 		NpcNameFileStreamHook::Install();
-		SKSE::log::info("Installed PostLoadHooks!");
-	}
-
-	void InstallDataLoadedHooks()
-	{
 		GetDescription::Install();
-		InstallDialogueHooks();
-
 		GetLogEntryHook::Install();
 		MapMarkerDataHook::Install();
+		GetResponseListHook::Install();
+		DialogueMenuTextHook::Install();
 
-		SKSE::log::info("Installed DataLoadedHooks!");
+		SKSE::log::info("Installed Hooks!");
 	}
 }

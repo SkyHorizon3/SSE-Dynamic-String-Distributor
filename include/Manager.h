@@ -1,47 +1,8 @@
 #pragma once
+#include "Shared.h"
 
-enum class TranslationType : std::uint8_t
-{
-	kFullName, // XXXX FULL
-	kShortName, // XXXX SHRT
-	kWordOfPower, // WOOP TNAM
-	kGameSetting, // GMST DATA
-	kRegion, // REGN RDMP
-	kMagicDescription, // MGEF DNAM
-	kLoadScreenDescription, // LSCR DESC 
-	kQuestObjective, // QUST NNAM
-	kButtonText1, // MESG ITXT
-	kButtonText2, // PERK EPF2
-	kActivationText, // ACTI RNAM, FLOR RNAM
-	kReference, // REFR FULL
-	kPerkVerb, // PERK EPFD
-	kRuntime1,
-	kRuntime2,
-	kRuntimeLegacy, // QUST CNAM
-
-	kUnknown
-};
-
-struct ParseData
-{
-	std::string form_id{};
-	std::string type{};
-	std::string string{};
-	std::string original{};
-	std::optional<std::uint32_t> index{};
-	std::optional<std::string> editor_id{};
-};
-
-struct ConstTranslationData
-{
-	RE::FormID runtimeFormID{ 0 };
-	std::string replacerText{};
-	TranslationType translationType{ TranslationType::kUnknown };
-	std::optional<std::uint32_t> index{};
-	std::optional<std::string> editor_id{};
-};
-
-class Manager : public REX::Singleton<Manager>
+class Manager :
+	public REX::Singleton<Manager>
 {
 public:
 	void LoadINI();
@@ -53,6 +14,7 @@ public:
 	void parseTranslationFiles();
 private:
 	inline static constexpr const char* DSD_PATH = "Data/SKSE/Plugins/DynamicStringDistributor";
+	inline static constexpr const char* EMPTY = " ";
 
 	std::vector<std::string> processFolders();
 	std::vector<std::string> processFiles(const std::string_view folder);
@@ -60,19 +22,22 @@ private:
 	TranslationType getTranslationType(std::string_view formType);
 	void processEntry(ParseData& entry, const std::string& file);
 
-	void setGameSettingString(const std::string& name, const std::string& newString);
-	void setMessageBoxButtonStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
-	void setRegionDataStrings(RE::TESForm* form, const RE::BSFixedString& newString);
-	void setEntryPointStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
-	void setQuestObjectiveStrings(RE::TESForm* form, const RE::BSFixedString& newString, const std::uint32_t index);
-	void setActivateOverrideStrings(RE::TESForm* form, const RE::BSFixedString& newString);
+	void fixedStringChange(RE::BSFixedString& to, std::string_view from);
+	void setGameSettingString(const std::optional<std::string>& name, const std::string_view newString);
+	void setMessageBoxButtonStrings(RE::TESForm* form, std::string_view newString, const std::optional<std::uint32_t>& index);
+	void setPerkMessageBoxButtonStrings(RE::TESForm* form, std::string_view newString, const std::optional<std::uint32_t>& index);
+	void setRegionDataStrings(RE::TESForm* form, std::string_view newString);
+	void setEntryPointStrings(RE::TESForm* form, std::string_view newString, const std::optional<std::uint32_t>& index);
+	void setQuestObjectiveStrings(RE::TESForm* form, std::string_view newString, const std::optional<std::uint32_t>& index);
+	void setActivateOverrideStrings(RE::TESForm* form, std::string_view newString);
+	void setReferenceStrings(RE::TESForm* form, std::string_view newString);
 	void report(const RE::TESForm* const form);
 
-	StringMap<std::pair<RE::TESFile*, std::uint32_t>> m_loadOrder{};
-	std::vector<ConstTranslationData> m_constTranslation{};
-	FlatMap<std::uint64_t, std::string> m_runtimeMap1{};
-	FlatMap<RE::FormID, std::string> m_runtimeMap2{};
-	StringMap<std::string> m_legacyMap{};
+	StringMap<std::pair<RE::TESFile*, std::uint32_t>> m_loadOrder;
+	std::vector<ConstTranslationData> m_constTranslation;
+	FlatMap<std::uint64_t, std::string> m_runtimeMap1;
+	FlatMap<RE::FormID, std::string> m_runtimeMap2;
+	StringMap<std::string> m_legacyMap;
 
 	// INI
 	bool m_debugLog{ false };
