@@ -1,4 +1,5 @@
 ﻿#include "Manager.h"
+#include "Hooks.h"
 
 void MessageListener(SKSE::MessagingInterface::Message* message)
 {
@@ -17,24 +18,13 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 			SKSE::log::info("MergeMapper not detected");
 		}
 
-		/*Hook::InstallPostLoadHooks();
-
-		Config::GetSingleton()->enumerateFolder();
-		Config::GetSingleton()->parseTranslationFiles();*/
+		Hook::InstallHooks();
 	}
 	break;
 	case SKSE::MessagingInterface::kDataLoaded:
 	{
-		auto startTime = std::chrono::high_resolution_clock::now();
-
-		/*Config::GetSingleton()->onDataLoad();
-		Manager::GetSingleton()->runGameSettingTranslation();
-
-		Hook::InstallDataLoadedHooks();*/
-
-		auto endTime = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-		SKSE::log::info("The form lookup, the execution of ConstTranslation and the installation of hooks took {} milliseconds.", duration.count());
+		Manager::GetSingleton()->runConstTranslation();
+		SKSE::log::info("ConstTranslation successful!");
 	}
 	break;
 

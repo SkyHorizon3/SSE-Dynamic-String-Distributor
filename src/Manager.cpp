@@ -89,7 +89,7 @@ std::vector<std::string> Manager::processFiles(const std::string_view folder)
 	return files;
 }
 
-std::tuple<RE::FormID, std::string> Manager::extractFormIDAndPlugin(const std::string& formIDWithPlugin)
+std::tuple<RE::FormID, RE::TESFile*> Manager::extractFormIDAndPlugin(const std::string& formIDWithPlugin)
 {
 	if (const auto split = string::split(formIDWithPlugin, "|"); split.size() == 2)
 	{
@@ -103,13 +103,14 @@ std::tuple<RE::FormID, std::string> Manager::extractFormIDAndPlugin(const std::s
 			formID = mergeForm.second;
 		}
 
-		if (m_loadOrder.contains(plugin))
+		const auto it = m_loadOrder.find(plugin);
+		if (it != m_loadOrder.end())
 		{
-			return { formID, plugin };
+			return { formID, it->second.first };
 		}
 	}
 
-	return { 0, "" };
+	return { 0, nullptr };
 }
 
 TranslationType Manager::getTranslationType(std::string_view formType)
@@ -198,7 +199,6 @@ TranslationType Manager::getTranslationType(std::string_view formType)
 		return TranslationType::kActivationText;
 	}
 	case "DIAL FULL"_h:
-	case "INFO RNAM"_h:
 	case "AMMO DESC"_h:
 	case "ARMO DESC"_h:
 	case "AVIF DESC"_h:
@@ -228,6 +228,7 @@ TranslationType Manager::getTranslationType(std::string_view formType)
 	case "INFO NAM1"_h:
 	case "NPC_ FULL"_h:
 	case "BOOK CNAM"_h:
+	case "INFO RNAM"_h:
 	{
 		return TranslationType::kRuntime2;
 	}
@@ -241,15 +242,16 @@ TranslationType Manager::getTranslationType(std::string_view formType)
 void Manager::processEntry(ParseData& entry, const std::string& file)
 {
 	auto [formID, plugin] = extractFormIDAndPlugin(entry.form_id);
-	if (formID == 0 || plugin.empty())
+	if (formID == 0 || !plugin)
 	{
-		SKSE::log::error("Failed to extract formID \"{}\" or plugin \"{}\" out of file {}", entry.form_id, plugin, file);
+		SKSE::log::error("Failed to extract formID \"{}\" out of file {}!", entry.form_id, file);
 		return;
 	}
 
+	const auto runtimeFormID = Utils::getRuntimeFormID(plugin, formID);
 	if (m_debugInfo)
 	{
-		entry.string.insert(0, std::format("Debug Info: {:08X}|{}| ", formID, plugin));
+		entry.string.insert(0, std::format("Debug Info: {:08X}|{}| ", runtimeFormID, plugin->GetFilename()));
 	}
 
 	const auto translationType = getTranslationType(entry.type);
@@ -269,27 +271,32 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	case TranslationType::kGameSetting:
 	case TranslationType::kReference: // add to const translation
 	{
-		const auto filePtr = m_loadOrder.find(plugin)->second.first;
-		const auto runtimeFormID = Utils::getRuntimeFormID(filePtr, formID);
 		m_constTranslation.emplace_back(runtimeFormID, entry.string, translationType, entry.index, entry.editor_id);
 	}
 	break;
 	case TranslationType::kRuntime1: // add to first runtime map
 	{
-		const auto filePtr = m_loadOrder.find(plugin)->second.first;
-		const auto runtimeFormID = Utils::getRuntimeFormID(filePtr, formID);
-
-
+		m_runtimeMap1.emplace(runtimeFormID, entry.string);
 	}
 	break;
-	case TranslationType::kRuntime2: // add to second runtime map
+	case TranslationType::kRuntime2: // add to second runtime map, strings associated with an index
 	{
-
+		const auto index = entry.index.has_value() ? entry.index.value() : 0;
+		auto combined = hash::szudzik_pair(index, runtimeFormID);
+		m_runtimeMap2.emplace(combined, entry.string);
 	}
 	break;
 	case TranslationType::kRuntimeLegacy: // add to legacy string key map
 	{
+		if (entry.original.has_value())
+		{
+			m_legacyMap.emplace(entry.original.value(), entry.string);
+			return;
+		}
 
+		const auto index = entry.index.has_value() ? entry.index.value() : 0;
+		auto combined = hash::szudzik_pair(index, runtimeFormID);
+		m_runtimeMap2.emplace(combined, entry.string);
 	}
 	break;
 	case TranslationType::kUnknown:
@@ -301,6 +308,44 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	default:
 		std::unreachable();
 	}
+}
+
+const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t index, const TranslationType type, std::string_view original)
+{
+	switch (type)
+	{
+	case TranslationType::kRuntime1:
+	{
+		const auto it = m_runtimeMap1.find(formID);
+		if (it != m_runtimeMap1.end())
+			return it->second.c_str();
+	}
+	break;
+	case TranslationType::kRuntime2:
+	{
+		auto combined = hash::szudzik_pair(index, formID);
+		const auto it = m_runtimeMap2.find(combined);
+		if (it != m_runtimeMap2.end())
+			return it->second.c_str();
+	}
+	break;
+	case TranslationType::kRuntimeLegacy:
+	{
+		const auto itL = m_legacyMap.find(original);
+		if (itL != m_legacyMap.end())
+			return itL->second.c_str();
+
+		auto combined = hash::szudzik_pair(index, formID);
+		const auto itR = m_runtimeMap2.find(combined);
+		if (itR != m_runtimeMap2.end())
+			return itR->second.c_str();
+	}
+	break;
+	default:
+		break;
+	}
+
+	return nullptr;
 }
 
 void Manager::parseTranslationFiles()
@@ -327,6 +372,8 @@ void Manager::parseTranslationFiles()
 			}
 		}
 	}
+
+	m_loadOrder.clear();
 }
 
 void Manager::fixedStringChange(RE::BSFixedString& to, std::string_view from)
@@ -338,7 +385,7 @@ void Manager::setGameSettingString(const std::optional<std::string>& name, const
 {
 	if (!name.has_value())
 	{
-		SKSE::log::error("Couldn't inject string {}! The editorID is missing!", newString);
+		SKSE::log::error("Couldn't inject string \"{}\"! The editorID is missing!", newString);
 		return;
 	}
 
@@ -360,7 +407,7 @@ void Manager::setMessageBoxButtonStrings(RE::TESForm* form, std::string_view new
 {
 	if (!index.has_value())
 	{
-		SKSE::log::error("Couldn't inject string {}! The index is missing!", newString, index);
+		SKSE::log::error("Couldn't inject string \"{}\"! The index is missing!", newString);
 		return;
 	}
 
@@ -374,7 +421,7 @@ void Manager::setMessageBoxButtonStrings(RE::TESForm* form, std::string_view new
 	std::uint32_t pos = 0;
 	for (const auto& button : message->menuButtons)
 	{
-		if (pos == (*index))
+		if (button && pos == (*index))
 		{
 			fixedStringChange(button->text, newString);
 		}
@@ -387,7 +434,7 @@ void Manager::setPerkMessageBoxButtonStrings(RE::TESForm* form, std::string_view
 {
 	if (!index.has_value())
 	{
-		SKSE::log::error("Couldn't inject string {}! The index is missing!", newString, index);
+		SKSE::log::error("Couldn't inject string \"{}\"! The index is missing!", newString);
 		return;
 	}
 
@@ -446,7 +493,7 @@ void Manager::setEntryPointStrings(RE::TESForm* form, std::string_view newString
 {
 	if (!index.has_value())
 	{
-		SKSE::log::error("Couldn't inject string {}! The index is missing!", newString, index);
+		SKSE::log::error("Couldn't inject string \"{}\"! The index is missing!", newString);
 		return;
 	}
 
@@ -494,7 +541,7 @@ void Manager::setQuestObjectiveStrings(RE::TESForm* form, std::string_view newSt
 {
 	if (!index.has_value())
 	{
-		SKSE::log::error("Couldn't inject string {}! The index is missing!", newString, index);
+		SKSE::log::error("Couldn't inject string: \"{}\"! The index is missing!", newString);
 		return;
 	}
 
@@ -548,7 +595,7 @@ void Manager::setReferenceStrings(RE::TESForm* form, std::string_view newString)
 	}
 }
 
-void Manager::report(const RE::TESForm* const form)
+void Manager::report(const RE::TESForm* const form) const
 {
 	SKSE::log::error("Tried to cast {:08X} to an invalid form type - Actual Formtype: {} - Plugin: {}", form->formID, RE::FormTypeToString(form->GetFormType()), Utils::getModName(form));
 }
@@ -557,11 +604,16 @@ void Manager::runConstTranslation()
 {
 	for (const auto& entry : m_constTranslation)
 	{
-		const auto form = RE::TESForm::LookupByID(entry.runtimeFormID);
-		if (!form)
+		RE::TESForm* form = nullptr;
+
+		if (entry.translationType != TranslationType::kGameSetting)
 		{
-			SKSE::log::error("Couldn't find formID {:08X}!", entry.runtimeFormID);
-			continue;
+			form = RE::TESForm::LookupByID(entry.runtimeFormID);
+			if (!form)
+			{
+				SKSE::log::error("Couldn't find formID {:08X}!", entry.runtimeFormID);
+				continue;
+			}
 		}
 
 		switch (entry.translationType)
@@ -656,17 +708,16 @@ void Manager::runConstTranslation()
 			setActivateOverrideStrings(form, entry.replacerText);
 		}
 		break;
-		case TranslationType::kGameSetting:
-		{
-			setGameSettingString(entry.editor_id, entry.replacerText);
-		}
-		break;
 		case TranslationType::kReference:
 		{
 			setReferenceStrings(form, entry.replacerText);
 		}
 		break;
-
+		case TranslationType::kGameSetting:
+		{
+			setGameSettingString(entry.editor_id, entry.replacerText);
+		}
+		break;
 		default:
 			std::unreachable();
 		}

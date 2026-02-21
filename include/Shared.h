@@ -28,7 +28,7 @@ struct ParseData
 	std::string form_id;
 	std::string type;
 	std::string string;
-	std::string original;
+	std::optional<std::string> original;
 	std::optional<std::uint32_t> index;
 	std::optional<std::string> editor_id;
 };

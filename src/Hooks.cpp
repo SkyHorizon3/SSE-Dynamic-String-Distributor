@@ -1,6 +1,5 @@
 #include "Hooks.h"
 #include "Manager.h"
-#include "Utils.h"
 
 namespace Hook
 {
@@ -9,17 +8,12 @@ namespace Hook
 	{
 		static RE::TESFullName* thunk(RE::TESObjectREFR* marker)
 		{
-			if (!marker || marker->IsDisabled())
-			{
-				return func(marker);
-			}
-
-			if (!marker->IsPersistent())
-			{
-				SKSE::log::info("Not persistent: {:08X}");
-			}
-
 			auto result = func(marker);
+
+			if (marker && !marker->IsPersistent())
+			{
+				SKSE::log::info("Not persistent: {:08X}", marker->formID);
+			}
 
 			/*std::string newDescription{};
 			if (result && Manager::GetSingleton()->getREFR(marker->formID, newDescription))
@@ -37,7 +31,6 @@ namespace Hook
 			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(18755, 19216), REL::Relocate(0xA6, 0xE4) };
 			stl::write_thunk_call<MapMarkerDataHook>(target1.address());
 		}
-
 	};
 
 	struct GetLogEntryHook //QUST CNAM
@@ -46,7 +39,13 @@ namespace Hook
 		{
 			auto result = func(item, ownerQuest);
 
-			return result;
+			const char* translation = nullptr;
+			if (ownerQuest && item)
+			{
+				translation = Manager::GetSingleton()->getTranslation(ownerQuest->formID, item->index, TranslationType::kRuntimeLegacy, result);
+			}
+
+			return translation == nullptr ? result : translation;
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
@@ -63,13 +62,26 @@ namespace Hook
 		{
 			func(npcFullname, file);
 
-			/*auto* npc = skyrim_cast<const RE::TESForm*>(npcFullname);
+			static std::once_flag flag;
+			std::call_once(flag, [&]() {
+				// Run our parser here, DataHandler already build the file list. 
+				// The reason is, that there is no reliable way in which I could tell which template the NPC copied from at DataLoaded
+				const auto manager = Manager::GetSingleton();
+				manager->enumerateLoadOrder();
+				manager->parseTranslationFiles();
+				});
 
-			RE::BSString newDescription{};
-			if (Manager::GetSingleton()->getDIAL(Utils::getTrimmedFormID(npc), Utils::getModName(npc), newDescription))
+			const auto npc = skyrim_cast<const RE::TESForm*>(npcFullname);
+			const char* translation = nullptr;
+			if (npc)
 			{
-				npcFullname->SetFullName(newDescription.c_str());
-			}*/
+				translation = Manager::GetSingleton()->getTranslation(npc->formID, 0, TranslationType::kRuntime2);
+			}
+
+			if (translation)
+			{
+				npcFullname->SetFullName(translation);
+			}
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
@@ -92,23 +104,21 @@ namespace Hook
 			if (!safeForm)
 				return;
 
-			//const auto formID = safeForm->formID;
-			//std::string newDescription{};
+			const char* translation = nullptr;
 
 			// 0x4D414E43 == 'MANC' (CNAM)
-			//const bool isCNAM = (chunkID == 'MANC');
-			/*const auto manager = Manager::GetSingleton();
-			const bool result = isCNAM ? manager->getCNAM(formID, newDescription) : manager->getDESC(formID, newDescription);
-
-			if (result)
+			const bool isCNAM = chunkID == 'MANC';
+			const bool isDESC = chunkID == 'CSED';
+			if (isDESC || isCNAM) // skip garbage data, not caused by Skyrim but other modders
 			{
-				out = std::move(newDescription);
+				const auto type = isDESC ? TranslationType::kRuntime1 : TranslationType::kRuntime2;
+				translation = Manager::GetSingleton()->getTranslation(safeForm->formID, 0, type);
+			}
 
-				const char* type = isCNAM ? "CNAM" : "DESC";
-				SKSE::log::debug("Replaced {} for {:08X} with:", type, formID);
-				SKSE::log::debug("{}", out.c_str());
-			}*/
-
+			if (translation)
+			{
+				out = translation;
+			}
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
@@ -138,15 +148,20 @@ namespace Hook
 				}
 			}
 
-			const std::string fileName = Utils::getModName(responseTopicInfo);
-			const RE::FormID trimmedFormID = Utils::getTrimmedFormID(responseTopicInfo);
-			//const auto manager = Manager::GetSingleton();
+			const auto manager = Manager::GetSingleton();
 
 			for (auto response = result->head; response; response = response->next)
 			{
-				SKSE::log::debug("Original string: {} - TopicInfoFormID: {:08X} - LinkedResponseFormID: {:08X} - ResponseNumber: {} - Plugin: {}", response->responseText.c_str(), topicInfo->formID, responseTopicInfo->formID, response->responseNumber, fileName);
+				if (!response)
+					continue;
 
-				//manager->getINFO_NAM1(trimmedFormID, fileName, response->responseNumber, response->responseText);
+				SKSE::log::debug("Original string: {} - TopicInfoFormID: {:08X} - LinkedResponseFormID: {:08X} - ResponseNumber: {}", response->responseText.c_str(), topicInfo->formID, responseTopicInfo->formID, response->responseNumber);
+
+				const auto translation = manager->getTranslation(responseTopicInfo->formID, response->responseNumber, TranslationType::kRuntime2);
+				if (translation)
+				{
+					RE::setBSFixedString(response->responseText, translation);
+				}
 			}
 
 			return result;
@@ -164,12 +179,22 @@ namespace Hook
 	{
 		static void thunk(RE::MenuTopicManager::Dialogue& a_out, const char* source, std::uint64_t maxLen) //Skyrim is not only passing BSStrings into this function
 		{
-			func(a_out, source, maxLen);
+			const auto manager = Manager::GetSingleton();
+			const char* translation = nullptr;
 
-			//const auto manager = Manager::GetSingleton();
-			//manager->getDIAL(Utils::getTrimmedFormID(a_out.parentTopic), Utils::getModName(a_out.parentTopic), a_out.topicText);
-			//manager->getDIAL(Utils::getTrimmedFormID(a_out.parentTopicInfo), Utils::getModName(a_out.parentTopicInfo), a_out.topicText); //INFO RNAM always overwrites DIAL FULL of parenttopic
+			const auto parent = a_out.parentTopic;
+			if (parent)
+			{
+				translation = manager->getTranslation(parent->formID, 0, TranslationType::kRuntime1);
+			}
 
+			const auto parentInfo = a_out.parentTopicInfo;
+			if (parentInfo)
+			{
+				translation = manager->getTranslation(parentInfo->formID, 0, TranslationType::kRuntime2);
+			}
+
+			func(a_out, translation == nullptr ? source : translation, maxLen);
 		};
 		static inline REL::Relocation<decltype(thunk)> func;
 
@@ -193,7 +218,7 @@ namespace Hook
 		NpcNameFileStreamHook::Install();
 		GetDescription::Install();
 		GetLogEntryHook::Install();
-		MapMarkerDataHook::Install();
+		//MapMarkerDataHook::Install();
 		GetResponseListHook::Install();
 		DialogueMenuTextHook::Install();
 
