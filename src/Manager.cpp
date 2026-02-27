@@ -276,27 +276,27 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	break;
 	case TranslationType::kRuntime1: // add to first runtime map
 	{
-		m_runtimeMap1.emplace(runtimeFormID, entry.string);
+		m_runtimeMap1.insert_or_assign(runtimeFormID, entry.string);
 	}
 	break;
 	case TranslationType::kRuntime2: // add to second runtime map, strings associated with an index
 	{
 		const auto index = entry.index.has_value() ? entry.index.value() : 0;
 		auto combined = hash::szudzik_pair(index, runtimeFormID);
-		m_runtimeMap2.emplace(combined, entry.string);
+		m_runtimeMap2.insert_or_assign(combined, entry.string);
 	}
 	break;
 	case TranslationType::kRuntimeLegacy: // add to legacy string key map
 	{
 		if (entry.original.has_value())
 		{
-			m_legacyMap.emplace(entry.original.value(), entry.string);
+			m_legacyMap.insert_or_assign(entry.original.value(), entry.string);
 			return;
 		}
 
 		const auto index = entry.index.has_value() ? entry.index.value() : 0;
 		auto combined = hash::szudzik_pair(index, runtimeFormID);
-		m_runtimeMap2.emplace(combined, entry.string);
+		m_runtimeMap2.insert_or_assign(combined, entry.string);
 	}
 	break;
 	case TranslationType::kUnknown:
