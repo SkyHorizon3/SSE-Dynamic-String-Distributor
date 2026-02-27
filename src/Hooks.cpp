@@ -181,24 +181,28 @@ namespace Hook
 
 	struct DialogueMenuTextHook //DIAL FULL, INFO RNAM
 	{
-		static void thunk(RE::MenuTopicManager::Dialogue& a_out, const char* source, std::uint64_t maxLen) //Skyrim is not only passing BSStrings into this function
-		{
+		static void thunk(RE::MenuTopicManager::Dialogue& out, const char* source, std::uint64_t maxLen) //Skyrim is not only passing BSStrings into this function
+		{	
 			const auto manager = Manager::GetSingleton();
 			const char* translation = nullptr;
 
-			const auto parent = a_out.parentTopic;
+			const auto parent = out.parentTopic;
 			if (parent)
 			{
 				translation = manager->getTranslation(parent->formID, 0, TranslationType::kRuntime1);
 			}
 
-			const auto parentInfo = a_out.parentTopicInfo;
+			const auto parentInfo = out.parentTopicInfo;
 			if (parentInfo)
 			{
-				translation = manager->getTranslation(parentInfo->formID, 0, TranslationType::kRuntime2);
+				const auto rnamTranslation = manager->getTranslation(parentInfo->formID, 0, TranslationType::kRuntime2);
+				if (rnamTranslation)
+				{
+					translation = rnamTranslation;
+				}
 			}
 
-			func(a_out, translation == nullptr ? source : translation, maxLen);
+			func(out, translation == nullptr ? source : translation, maxLen);	
 		};
 		static inline REL::Relocation<decltype(thunk)> func;
 
