@@ -8,9 +8,8 @@
     "simpleini",
     "glaze",
     "boost-unordered",
-    "frozen",
     "mergemapper",
     "clib-util"
   ],
-  "builtin-baseline": "8ce02b3d9a447071083436ad36f318dd19dd19ad"
+  "builtin-baseline": "ee12231b20c95013c6638d845d04c91559a1d1ff"
 }

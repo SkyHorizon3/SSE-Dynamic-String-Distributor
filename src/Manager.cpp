@@ -271,7 +271,7 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	case TranslationType::kGameSetting:
 	case TranslationType::kReference: // add to const translation
 	{
-		m_constTranslation.emplace_back(runtimeFormID, entry.string, translationType, entry.index, entry.editor_id);
+		m_constTranslation.emplace_back(runtimeFormID, translationType, entry.string, entry.index, entry.editor_id);
 	}
 	break;
 	case TranslationType::kRuntime1: // add to first runtime map

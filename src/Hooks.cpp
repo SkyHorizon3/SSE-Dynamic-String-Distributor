@@ -42,7 +42,8 @@ namespace Hook
 			const char* translation = nullptr;
 			if (ownerQuest && item)
 			{
-				translation = Manager::GetSingleton()->getTranslation(ownerQuest->formID, item->index, TranslationType::kRuntimeLegacy, result);
+				const std::uint32_t uniqueID = item->index + ownerQuest->currentStage;
+				translation = Manager::GetSingleton()->getTranslation(ownerQuest->formID, uniqueID, TranslationType::kRuntimeLegacy, result);
 			}
 
 			return translation == nullptr ? result : translation;
@@ -70,6 +71,9 @@ namespace Hook
 				manager->enumerateLoadOrder();
 				manager->parseTranslationFiles();
 				});
+
+			if (!npcFullname)
+				return;
 
 			const auto npc = skyrim_cast<const RE::TESForm*>(npcFullname);
 			const char* translation = nullptr;
