@@ -323,7 +323,7 @@ const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t
 	break;
 	case TranslationType::kRuntime2:
 	{
-		auto combined = hash::szudzik_pair(index, formID);
+		const auto combined = hash::szudzik_pair(index, formID);
 		const auto it = m_runtimeMap2.find(combined);
 		if (it != m_runtimeMap2.end())
 			return it->second.c_str();
@@ -335,7 +335,7 @@ const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t
 		if (itL != m_legacyMap.end())
 			return itL->second.c_str();
 
-		auto combined = hash::szudzik_pair(index, formID);
+		const auto combined = hash::szudzik_pair(index, formID);
 		const auto itR = m_runtimeMap2.find(combined);
 		if (itR != m_runtimeMap2.end())
 			return itR->second.c_str();
@@ -578,7 +578,7 @@ void Manager::setActivateOverrideStrings(RE::TESForm* form, std::string_view new
 	}
 }
 
-void Manager::setReferenceStrings(RE::TESForm* form, std::string_view newString) // TODO: find out if there are map markers that are not persistent
+void Manager::setReferenceStrings(RE::TESForm* form, std::string_view newString)
 {
 	const auto ref = form->As<RE::TESObjectREFR>();
 	if (!ref)

@@ -32,7 +32,7 @@ namespace Utils
 			return {};
 
 		std::string_view filename = file ? file->GetFilename() : "";
-		return string::tolower(filename.data());
+		return string::tolower(filename);
 	}
 
 	RE::FormID getTrimmedFormID(const RE::TESForm* const form)

@@ -3,36 +3,6 @@
 
 namespace Hook
 {
-	// TODO: Port this to constTranslation
-	struct MapMarkerDataHook //REFR FULL
-	{
-		static RE::TESFullName* thunk(RE::TESObjectREFR* marker)
-		{
-			auto result = func(marker);
-
-			if (marker && !marker->IsPersistent())
-			{
-				SKSE::log::info("Not persistent: {:08X}", marker->formID);
-			}
-
-			/*std::string newDescription{};
-			if (result && Manager::GetSingleton()->getREFR(marker->formID, newDescription))
-			{
-				result->SetFullName(newDescription.c_str());
-			}*/
-
-			return result;
-		};
-		static inline REL::Relocation<decltype(thunk)> func;
-
-
-		static void Install()
-		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(18755, 19216), REL::Relocate(0xA6, 0xE4) };
-			stl::write_thunk_call<MapMarkerDataHook>(target1.address());
-		}
-	};
-
 	struct GetLogEntryHook //QUST CNAM
 	{
 		static const char* thunk(RE::TESQuestStageItem* item, const RE::TESQuest* ownerQuest)
@@ -153,7 +123,6 @@ namespace Hook
 			}
 
 			const auto manager = Manager::GetSingleton();
-
 			for (auto response = result->head; response; response = response->next)
 			{
 				if (!response)
@@ -181,7 +150,7 @@ namespace Hook
 
 	struct DialogueMenuTextHook //DIAL FULL, INFO RNAM
 	{
-		static void thunk(RE::MenuTopicManager::Dialogue& out, const char* source, std::uint64_t maxLen) //Skyrim is not only passing BSStrings into this function
+		static void thunk(RE::MenuTopicManager::Dialogue& out, const char* source, std::uint64_t maxLen)
 		{	
 			const auto manager = Manager::GetSingleton();
 			const char* translation = nullptr;
@@ -226,7 +195,6 @@ namespace Hook
 		NpcNameFileStreamHook::Install();
 		GetDescription::Install();
 		GetLogEntryHook::Install();
-		//MapMarkerDataHook::Install();
 		GetResponseListHook::Install();
 		DialogueMenuTextHook::Install();
 
