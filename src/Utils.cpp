@@ -5,7 +5,7 @@ namespace Utils
 	// Get the file that defines the record through the formID index
 	// The problem is that the internal file array is wrong in an edge case with REFR forms:
 	// It returns wrong file for REFR records defined in esm files when another esm file adds the persistent flag in an override
-	// It's not bug, just bullshit caused by the plugin system since it obviously can't know if 
+	// It's not a bug, just bullshit caused by the plugin system since it obviously can't know if 
 	// a record is persistent if the flag is added later in another plugin
 	const RE::TESFile* getFormBasePlugin(const RE::TESForm* const form)
 	{
