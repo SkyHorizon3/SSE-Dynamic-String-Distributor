@@ -19,7 +19,7 @@ namespace RE
 	inline void setBSFixedString(RE::BSFixedString& str, const char* data)
 	{
 		using func_t = decltype(&setBSFixedString);
-		static REL::Relocation<func_t> func{ REL::VariantID(15291, 15453, 0x0) };
+		static REL::Relocation<func_t> func{ REL::VariantID(15291, 15453, 0x1CB050) };
 		func(str, data);
 	}
 }

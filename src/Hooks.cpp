@@ -22,7 +22,7 @@ namespace Hook
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target{ REL::VariantID(24778, 25259, 0x0) };
+			REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(24778, 25259) };
 			stl::hook_function_prologue<GetLogEntryHook, 6>(target.address());
 		}
 	};
@@ -143,7 +143,7 @@ namespace Hook
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target{ REL::VariantID(25083, 0, 0x0) };
+			REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(25083, 25626) };
 			stl::hook_function_prologue<GetResponseListHook, 6>(target.address());
 		}
 	};
