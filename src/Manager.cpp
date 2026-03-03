@@ -14,6 +14,17 @@ void Manager::LoadINI()
 	m_debugInfo = ini.GetBoolValue(section, "EnableDebugInfo");
 }
 
+void Manager::reloadTranslation()
+{
+	m_runtimeMap1.clear();
+	m_runtimeMap2.clear();
+	m_legacyMap.clear();
+
+	enumerateLoadOrder();
+	parseTranslationFiles();
+	runConstTranslation();
+}
+
 void Manager::enumerateLoadOrder()
 {
 	const auto handler = RE::TESDataHandler::GetSingleton();

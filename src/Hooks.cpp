@@ -190,6 +190,27 @@ namespace Hook
 		}
 	};
 
+	struct MainMenuProcessMessage
+	{
+		static RE::UI_MESSAGE_RESULTS thunk(RE::MainMenu* menu, RE::UIMessage& message)
+		{
+			auto result = func(menu, message);
+			if (menu && message.type == RE::UI_MESSAGE_TYPE::kShow)
+			{
+				Manager::GetSingleton()->reloadTranslation();
+			}
+
+			return result;
+		}
+		static inline REL::Relocation<decltype(thunk)> func;
+
+		static void Install()
+		{
+			REL::Relocation<std::uintptr_t> Vtbl{ RE::VTABLE_MainMenu[0] };
+			func = Vtbl.write_vfunc(0x4, &thunk);
+		}
+	};
+
 	void InstallHooks()
 	{
 		NpcNameFileStreamHook::Install();
@@ -199,5 +220,10 @@ namespace Hook
 		DialogueMenuTextHook::Install();
 
 		SKSE::log::info("Installed Hooks!");
+	}
+
+	void OnDataLoaded()
+	{
+		MainMenuProcessMessage::Install();
 	}
 }

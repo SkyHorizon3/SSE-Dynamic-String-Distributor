@@ -25,6 +25,8 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 	{
 		Manager::GetSingleton()->runConstTranslation();
 		SKSE::log::info("ConstTranslation successful!");
+
+		Hook::OnDataLoaded();
 	}
 	break;
 

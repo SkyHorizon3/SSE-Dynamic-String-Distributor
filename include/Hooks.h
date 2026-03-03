@@ -3,4 +3,5 @@
 namespace Hook
 {
 	void InstallHooks();
+	void OnDataLoaded();
 }

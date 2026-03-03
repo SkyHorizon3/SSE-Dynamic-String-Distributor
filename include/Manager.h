@@ -8,6 +8,7 @@ public:
 	void LoadINI();
 	bool isDebugLogEnabled() const noexcept { return m_debugLog; }
 
+	void reloadTranslation();
 	void enumerateLoadOrder();
 	void parseTranslationFiles();
 	void runConstTranslation();
