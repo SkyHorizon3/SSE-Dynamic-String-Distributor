@@ -9,9 +9,17 @@ namespace RE
 		return func(setting, str);
 	}
 
-	[[nodiscard]] inline static RE::BSTHashMap<RE::FormID, RE::BSFixedString>& getActivateTextOverrideMap() // ACTI RNAM
+	[[nodiscard]] inline static RE::BSTHashMap<RE::FormID, RE::BSFixedString>& getActivateTextOverrideMap() // ACTI RNAM, FLOR RNAM
 	{
 		REL::Relocation<RE::BSTHashMap<RE::FormID, RE::BSFixedString>*> map{ REL::VariantID(501445, 360165, 0x1E71EA0), -0x18 }; // ptr to sentinal - offset to start of hashmap
 		return *map;
+	}
+
+	// case sensitive BSFixedString change
+	inline void setBSFixedString(RE::BSFixedString& str, const char* data)
+	{
+		using func_t = decltype(&setBSFixedString);
+		static REL::Relocation<func_t> func{ REL::VariantID(15291, 15453, 0x1CB050) };
+		func(str, data);
 	}
 }

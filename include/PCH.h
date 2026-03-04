@@ -1,21 +1,24 @@
 #pragma once
+
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include "RE/Skyrim.h"
 #include "REX/REX/Singleton.h"
 #include "SKSE/SKSE.h"
 
-#include <ShlObj.h>
-
 #include <MergeMapperPluginAPI.h>
-#include <spdlog/sinks/basic_file_sink.h>
 #include <boost/unordered/unordered_flat_map.hpp>
 #include <xbyak/xbyak.h>
 #include <SimpleIni.h>
 #include <glaze/glaze.hpp>
 #include <ClibUtil/string.hpp>
+#include "RE.h"
 
 using namespace std::literals;
 using namespace clib_util::string::literals;
 namespace string = clib_util::string;
+namespace hash = clib_util::hash;
 
 namespace stl
 {

@@ -1,0 +1,207 @@
+[
+  {
+    "form_id": "0x0176CD|Skyrim.esm",
+    "editor_id": "DeadSalmon01",
+    "type": "FLOR FULL",
+    "string": "Replaced FLOR FULL DeadSalmon01"
+  },
+  {
+    "form_id": "0x0176CD|Skyrim.esm",
+    "editor_id": "DeadSalmon01",
+    "type": "FLOR RNAM",
+    "string": ""
+  },
+  {
+    "form_id": "0x0176B2|Skyrim.esm",
+    "editor_id": "DeadSalmon02",
+    "type": "FLOR FULL",
+    "string": "Replaced FLOR FULL DeadSalmon02"
+  },
+  {
+    "form_id": "0x0176B2|Skyrim.esm",
+    "editor_id": "DeadSalmon02",
+    "type": "FLOR RNAM",
+    "string": "Replaced FLOR RNAM DeadSalmon02"
+  },
+  {
+    "form_id": "0x0A2C46|Skyrim.esm",
+    "editor_id": "MineOreIron01",
+    "type": "ACTI FULL",
+    "string": "Replaced ACTI FULL MineOreIron01"
+  },
+  {
+    "form_id": "0x0A2C46|Skyrim.esm",
+    "editor_id": "MineOreIron01",
+    "type": "ACTI RNAM",
+    "string": "Replaced ACTI RNAM MineOreIron01"
+  },
+  {
+    "form_id": "000AA8CE|Skyrim.esm",
+    "editor_id": "NorDefaultPuzzlePillar01",
+    "type": "ACTI RNAM",
+    "string": "Added ACTI RNAM NorDefaultPuzzlePillar01"
+  },
+  {
+    "form_id": "000F86FE|Skyrim.esm",
+    "editor_id": "Book3ValuableDragonborn",
+    "type": "BOOK CNAM",
+    "string": "Added BOOK CNAM Book3ValuableDragonborn"
+  },
+  {
+    "form_id": "000F86FE|Skyrim.esm",
+    "editor_id": "Book3ValuableDragonborn",
+    "type": "BOOK DESC",
+    "string": "Replaced BOOK DESC Book3ValuableDragonborn"
+  },
+  {
+    "form_id": "0004D0F4|Skyrim.esm",
+    "type": "REFR FULL",
+    "string": "Replaced REFR FULL for Solitude"
+  },
+  {
+    "form_id": "000133C6|Skyrim.esm",
+    "type": "CELL FULL",
+    "string": "Replaced CELL FULL for WS"
+  },
+  {
+    "form_id": "00013CA9|Skyrim.esm",
+    "editor_id": "Flames",
+    "type": "MGEF DNAM",
+    "string": "Added MGEF DNAM Flames"
+  },
+  {
+    "form_id": "00070408|Skyrim.esm",
+    "editor_id": "WeatherWhiterun",
+    "type": "REGN RDMP",
+    "string": "Replaced REGN RDMP WeatherWhiterun"
+  },
+  {
+    "form_id": "00079AF5|Skyrim.esm",
+    "type": "PERK EPF2",
+    "index": 1,
+    "string": "replaced PERK EPF2 1"
+  },
+  {
+    "form_id": "00079AF5|Skyrim.esm",
+    "type": "PERK EPF2",
+    "index": 2,
+    "string": "replaced PERK EPF2 2"
+  },
+  {
+    "form_id": "00079AF5|Skyrim.esm",
+    "type": "PERK EPF2",
+    "index": 3,
+    "string": "replaced PERK EPF2 3"
+  },
+  {
+    "form_id": "00079AF5|Skyrim.esm",
+    "type": "PERK EPF2",
+    "index": 4,
+    "string": "replaced PERK EPF2 4"
+  },
+  {
+    "form_id": "0002BA1D|Skyrim.esm",
+    "type": "PERK EPFD",
+    "index": 0,
+    "string": "replaced PERK EPFD 1"
+  },
+  {
+    "form_id": "000D6F0B|Skyrim.esm",
+    "editor_id": "Book2CommonOnIceWraiths",
+    "type": "BOOK DESC",
+    "string": "Replaced BOOK DESC Book2CommonOnIceWraiths"
+  },
+  {
+     "form_id": "000D48B7|Skyrim.esm",
+     "editor_id": "sCurrentLocation",
+     "type": "GMST DATA",
+     "string": "Replaced GMST DATA sCurrentLocation"
+  },
+  {
+     "form_id": "0001DDB7|Skyrim.esm",
+     "editor_id": "AlchemyBench",
+     "type": "LSCR DESC",
+     "string": "Replaced LSCR DESC AlchemyBench"
+  },
+  {
+     "form_id": "00013E24|Skyrim.esm",
+     "editor_id": "WordDah",
+     "type": "WOOP TNAM",
+     "string": "Replaced WOOP TNAM WordDah"
+  },
+  {
+     "form_id": "00016837|Skyrim.esm",
+     "editor_id": "doomLadyMSG",
+	 "index": 0, 
+     "type": "MESG ITXT",
+     "string": "Replaced MESG ITXT 0"
+  },
+  {
+     "form_id": "00016837|Skyrim.esm",
+     "editor_id": "doomLadyMSG",
+	 "index": 1, 
+     "type": "MESG ITXT",
+     "string": "Replaced MESG ITXT 1"
+  },
+  {
+     "form_id": "000242AF|Skyrim.esm",
+     "editor_id": "DA16",
+	 "index": 200, 
+     "type": "QUST CNAM",
+     "string": "Replaced QUST CNAM 0"
+  },
+  {
+     "form_id": "000242AF|Skyrim.esm",
+     "editor_id": "DA16",
+	 "index": 201, 
+     "type": "QUST CNAM",
+     "string": "Replaced QUST CNAM 1"
+  },
+  {
+     "form_id": "000242AF|Skyrim.esm",
+     "editor_id": "DA16",
+	 "index": 202, 
+     "type": "QUST CNAM",
+     "string": "Replaced QUST CNAM 2"
+  },
+  {
+     "form_id": "000242AF|Skyrim.esm",
+     "editor_id": "DA16",
+	 "index": 40, 
+     "type": "QUST NNAM",
+     "string": "Replaced QUST NNAM 40"
+  },
+  {
+     "form_id": "00013BBF|Skyrim.esm",
+     "editor_id": "Nazeem",
+     "type": "NPC_ FULL",
+     "string": "Replaced NPC_ FULL Nazeem"
+  },
+  {
+     "form_id": "0607F430|Alternate Start - Live Another Life.esp",
+     "editor_id": "ARTHLALBanditQuestBranchTopic",
+     "type": "DIAL FULL",
+     "string": "Replaced DIAL FULL ARTHLALBanditQuestBranchTopic"
+  },
+  {
+     "form_id": "0600C747|Alternate Start - Live Another Life.esp",
+     "editor_id": "",
+     "type": "INFO RNAM",
+     "string": "Replaced INFO RNAM 0600C747"
+  },
+  {
+     "form_id": "000242AF|Skyrim.esm",
+     "editor_id": "DA16",
+	 "index": 200, 
+     "type": "QUST CNAM",
+	 "original": "I've made my decision, and allowed Erandur to live. The Skull of Corruption has been destroyed and Erandur has offered his services as a companion if I should ever need his assistance.",
+     "string": "Replaced QUST CNAM 0 with original string"
+  },
+  {
+     "form_id": "06053608|Alternate Start - Live Another Life.esp",
+     "editor_id": "ARTHLALStartQuestShipSharedLine",
+	 "index": 1,
+     "type": "INFO NAM1",
+     "string": "Replaced INFO NAM1 06053608 ARTHLALStartQuestShipSharedLine"
+  }
+]
