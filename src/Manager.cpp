@@ -16,6 +16,8 @@ void Manager::LoadINI()
 
 void Manager::reloadTranslation()
 {
+	SKSE::log::debug("Reloading translation files!");
+
 	m_runtimeMap1.clear();
 	m_runtimeMap2.clear();
 	m_legacyMap.clear();
