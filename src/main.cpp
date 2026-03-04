@@ -11,11 +11,11 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 		if (g_mergeMapperInterface)
 		{
 			const auto version = g_mergeMapperInterface->GetBuildNumber();
-			SKSE::log::info("Got MergeMapper interface buildnumber {}", version);
+			SKSE::log::info("Got MergeMapper interface buildnumber {}.", version);
 		}
 		else
 		{
-			SKSE::log::info("MergeMapper not detected");
+			SKSE::log::info("MergeMapper (https://www.nexusmods.com/skyrimspecialedition/mods/74689) not detected.");
 		}
 
 		Hook::InstallHooks();
