@@ -1,0 +1,5 @@
+name: dsd
+title: Dynamic String Distributor
+version: ~
+nav:
+  - modules/ROOT/nav.adoc

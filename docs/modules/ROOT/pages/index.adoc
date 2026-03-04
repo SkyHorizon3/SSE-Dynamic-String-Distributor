@@ -1,0 +1,31 @@
+= Introduction
+
+[.text-center]
+image:get_it_on_nexus_mods.png[width=193,height=60,link=https://www.nexusmods.com/skyrimspecialedition/mods/107676]
+image:view_source_code_on_github.png[width=193,height=60,link=https://github.com/SkyHorizon3/SSE-Dynamic-String-Distributor]
+image:support_me_on_kofi.png[width=193,height=60,link=https://ko-fi.com/skyhorizon]
+
+== Description
+
+-
+
+== Features
+
+-
+
+== JSON Configuration
+
+-
+
+== JSON format details
+
+-
+
+== Automation
+
+-
+
+== About this documentation
+
+This documentation is meant to give you all information you need to efficiently create and edit Dynamic String Distributor JSON files.
+If you have further questions regarding the Dynamic String Distributor or this documentation, please do not hesitate to ask them on the link:https://discord.gg/pqEHdWDf8z[Official Modding Forge Discord server].
