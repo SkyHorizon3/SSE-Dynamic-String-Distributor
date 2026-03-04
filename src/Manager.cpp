@@ -295,7 +295,7 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	case TranslationType::kRuntime2: // add to second runtime map, strings associated with an index
 	{
 		const auto index = entry.index.has_value() ? entry.index.value() : 0;
-		auto combined = hash::szudzik_pair(index, runtimeFormID);
+		const auto combined = hash::szudzik_pair(index, runtimeFormID);
 		m_runtimeMap2.insert_or_assign(combined, entry.string);
 	}
 	break;
@@ -308,7 +308,7 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 		}
 
 		const auto index = entry.index.has_value() ? entry.index.value() : 0;
-		auto combined = hash::szudzik_pair(index, runtimeFormID);
+		const auto combined = hash::szudzik_pair(index, runtimeFormID);
 		m_runtimeMap2.insert_or_assign(combined, entry.string);
 	}
 	break;

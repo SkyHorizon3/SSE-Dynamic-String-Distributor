@@ -190,14 +190,36 @@ namespace Hook
 		}
 	};
 
+	struct QuitToMainMenu
+	{
+		static inline bool m_called = false;
+		
+		static void thunk()
+		{
+			func();
+			QuitToMainMenu::m_called = true;
+		};
+		static inline REL::Relocation<decltype(thunk)> func;
+
+		static void Install()
+		{
+			REL::Relocation<std::uintptr_t> target1{ REL::VariantID(54870, 55503, 0x9ADAA0), REL::Relocate(0x2171, 0x2422, 0x2543)}; // papyrus
+			stl::write_thunk_lea<QuitToMainMenu>(target1.address());
+
+			REL::Relocation<std::uintptr_t> target2{ REL::VariantID(52365, 53261, 0x923100), REL::Relocate(0x8F, 0x93) }; // journal menu callback
+			stl::write_thunk_lea<QuitToMainMenu>(target2.address());
+		}
+	};
+
 	struct MainMenuProcessMessage
 	{
 		static RE::UI_MESSAGE_RESULTS thunk(RE::MainMenu* menu, RE::UIMessage& message)
 		{
 			auto result = func(menu, message);
-			if (menu && message.type == RE::UI_MESSAGE_TYPE::kShow)
+			if (menu && QuitToMainMenu::m_called && message.type == RE::UI_MESSAGE_TYPE::kShow)
 			{
 				Manager::GetSingleton()->reloadTranslation();
+				QuitToMainMenu::m_called = false;
 			}
 
 			return result;
@@ -218,12 +240,9 @@ namespace Hook
 		GetLogEntryHook::Install();
 		GetResponseListHook::Install();
 		DialogueMenuTextHook::Install();
+		QuitToMainMenu::Install();
+		MainMenuProcessMessage::Install();
 
 		SKSE::log::info("Installed Hooks!");
-	}
-
-	void OnDataLoaded()
-	{
-		MainMenuProcessMessage::Install();
 	}
 }

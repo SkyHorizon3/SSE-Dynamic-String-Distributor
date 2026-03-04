@@ -25,8 +25,6 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 	{
 		Manager::GetSingleton()->runConstTranslation();
 		SKSE::log::info("ConstTranslation successful!");
-
-		Hook::OnDataLoaded();
 	}
 	break;
 
@@ -79,7 +77,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 		spdlog::flush_on(spdlog::level::info);
 	}
 
-	SKSE::AllocTrampoline(130);
+	SKSE::AllocTrampoline(144);
 
 	SKSE::GetMessagingInterface()->RegisterListener(MessageListener);
 
