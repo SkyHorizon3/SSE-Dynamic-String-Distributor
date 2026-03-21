@@ -8,7 +8,7 @@
 #include "SKSE/SKSE.h"
 
 #include <MergeMapperPluginAPI.h>
-#include <boost/unordered/unordered_flat_map.hpp>
+#include <boost/unordered/unordered_node_map.hpp>
 #include <xbyak/xbyak.h>
 #include <SimpleIni.h>
 #include <glaze/glaze.hpp>
@@ -88,7 +88,7 @@ namespace stl
 }
 
 template <class K, class D, class H = boost::hash<K>, class KEqual = std::equal_to<K>>
-using FlatMap = boost::unordered_flat_map<K, D, H, KEqual>;
+using FlatMap = boost::unordered_node_map<K, D, H, KEqual>;
 
 struct string_hash
 {

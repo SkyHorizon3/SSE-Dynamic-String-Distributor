@@ -28,7 +28,6 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_DEBUG OFF)
 # Set Boost options
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_STATIC_RUNTIME OFF CACHE BOOL "")
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "")
 
 #pdb
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
@@ -82,9 +81,8 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src
 ${MERGEMAPPER_INCLUDE_DIRS})
 
 # Link libraries
-target_link_libraries("${PROJECT_NAME}" PUBLIC 
+target_link_libraries("${PROJECT_NAME}" PRIVATE 
 CommonLibSSE::CommonLibSSE
-PRIVATE
 glaze::glaze
 Boost::unordered
 )
