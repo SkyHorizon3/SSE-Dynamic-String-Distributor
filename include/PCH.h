@@ -11,7 +11,7 @@
 #include <boost/unordered/unordered_node_map.hpp>
 #include <xbyak/xbyak.h>
 #include <SimpleIni.h>
-#include <glaze/glaze.hpp>
+#include <glaze/json.hpp>
 #include <ClibUtil/string.hpp>
 #include "RE.h"
 

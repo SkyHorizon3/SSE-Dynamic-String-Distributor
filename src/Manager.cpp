@@ -33,9 +33,8 @@ void Manager::enumerateLoadOrder()
 	if (!handler)
 		return;
 
-	auto& files = handler->files;
 	std::uint32_t index = 0;
-	for (const auto& file : files)
+	for (const auto& file : handler->files)
 	{
 		if (file && file->compileIndex != 0xFF) // only the files that are truely active
 		{
@@ -402,8 +401,8 @@ void Manager::setGameSettingString(const std::optional<std::string>& name, const
 		return;
 	}
 
-	const auto settingStr = (*name).c_str();
-	const auto setting = RE::GameSettingCollection::GetSingleton()->GetSetting(settingStr);
+	const auto& settingStr = name.value();
+	const auto setting = RE::GameSettingCollection::GetSingleton()->GetSetting(settingStr.c_str());
 	if (!setting)
 	{
 		SKSE::log::debug("Failed to set GameSetting string for {}.", settingStr);
@@ -482,14 +481,15 @@ void Manager::setPerkMessageBoxButtonStrings(RE::TESForm* form, std::string_view
 void Manager::setRegionDataStrings(RE::TESForm* form, std::string_view newString) //REGN RDMP
 {
 	const auto regionData = form->As<RE::TESRegion>();
+	const auto regionDataList = regionData ? regionData->dataList : nullptr;
 
-	if (!regionData || !regionData->dataList)
+	if (!regionDataList)
 	{
 		report(form);
 		return;
 	}
 
-	for (const auto& region : regionData->dataList->regionDataList)
+	for (const auto& region : regionDataList->regionDataList)
 	{
 		if (!region || region->GetType() != RE::TESRegionData::Type::kMap)
 			continue;
