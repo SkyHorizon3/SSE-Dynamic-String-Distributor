@@ -1,4 +1,4 @@
-= Introduction
+= Dynamic String Distributor
 
 [.text-center]
 image:get_it_on_nexus_mods.png[width=193,height=60,link=https://www.nexusmods.com/skyrimspecialedition/mods/107676]
@@ -7,25 +7,122 @@ image:support_me_on_kofi.png[width=193,height=60,link=https://ko-fi.com/skyhoriz
 
 == Description
 
--
+The **Dynamic String Distributor (DSD)** is an SKSE plugin for Skyrim Special Edition that allows mod authors and users to dynamically overwrite, add, or change in-game texts and strings (like names, descriptions, button texts, etc.) at runtime. This is done entirely via JSON files, reducing compatibility issues and avoiding unnecessary ESP/ESL files (so-called "string patches" or "translation patches").
 
 == Features
 
--
+* **No ESP/ESL limit:** Avoids additional plugins in your load order that just contain text changes or simple translations.
+* **Dynamic loading:** Uses JSON configuration files loaded at game startup.
+* **MergeMapper Support:** Works seamlessly with MergeMapper to correctly resolve FormIDs for merged plugins and dynamically assign strings.
+* **Sorting & Conflict Resolution:** DSD uses the Skyrim plugin load order to ensure that overwrites and patch JSONs are always loaded in the correct priority.
 
 == JSON Configuration
 
--
+The general format of a configuration is a JSON array containing objects that define the strings to be modified.
+Files must be placed in the following directory:
 
-== JSON format details
+`Data/SKSE/Plugins/DynamicStringDistributor/<Plugin-Name>/<Filename>.json`
 
--
+Example:
+`Data/SKSE/Plugins/DynamicStringDistributor/Skyrim.esm/MyCustomStrings.json`
+
+=== File Management Mechanics
+* **Folder names:** Folders must exactly match the name of an active plugin in your game's load order (e.g., `Skyrim.esm`, `Dawnguard.esm`, or `YourMod.esp`).
+* **Load order:** Folders are loaded and processed according to the actual load order priority of their respective plugins. Later plugins in the load order overwrite earlier JSON changes.
+* **`overwrite` folder:** A folder named `overwrite` is processed at the very end (after all load order plugins) and has the highest priority.
+* **Files in a folder:** Multiple JSON files in the same folder are processed alphabetically by filename.
+
+== JSON Format Details
+
+Each entry in the JSON array is an object with the following supported properties:
+
+[cols="1,1,3", options="header"]
+|===
+| Parameter | Type | Description
+
+| `form_id` | String | The unique identifier of the object in the game. Format: `"FormID\|PluginName.esp"` (e.g. `"0x0176CD\|Skyrim.esm"`). Required.
+| `type` | String | Defines which string type is modified (see supported types below). Required.
+| `string` | String | The new text to be loaded or injected into the game. Required.
+| `editor_id` | String (Optional) | A human-readable name (e.g., the EditorID from the Creation Kit / xEdit). Has no effect in-game and is meant for code readability.
+| `index` | Integer (Optional) | Specifies the exact index for variables containing multiple strings (e.g., arrays for `PERK EPF2` or quest objectives `QUST NNAM`).
+| `original` | String (Optional) | Specifically for legacy mapping (e.g., for certain `QUST CNAM` objectives). Specifies the original string to be replaced.
+|===
+
+=== Example
+
+[source,json]
+----
+[
+  {
+    "form_id": "0x0176CD|Skyrim.esm",
+    "editor_id": "DeadSalmon01",
+    "type": "FLOR FULL",
+    "string": "Fresh Salmon"
+  },
+  {
+    "form_id": "0x0A2C46|Skyrim.esm",
+    "editor_id": "MineOreIron01",
+    "type": "ACTI RNAM",
+    "string": "Mine Iron Ore"
+  },
+  {
+    "form_id": "00079AF5|Skyrim.esm",
+    "type": "PERK EPF2",
+    "index": 1,
+    "string": "New Perk Button"
+  }
+]
+----
+
+== Supported Types (`type`)
+
+Here is the list of record types currently supported by the Dynamic String Distributor. You can use these in the `type` field of your JSON configuration:
+
+**Names / Full Names (`FULL`)**
+* `ACTI FULL`, `ALCH FULL`, `AMMO FULL`, `APPA FULL`, `ARMO FULL`, `AVIF FULL`, `BOOK FULL`, `CELL FULL`, `CONT FULL`, `CLAS FULL`, `DOOR FULL`, `ENCH FULL`, `EXPL FULL`, `FLOR FULL`, `FURN FULL`, `HAZD FULL`, `INGR FULL`, `KEYM FULL`, `LCTN FULL`, `LIGH FULL`, `MESG FULL`, `MGEF FULL`, `MISC FULL`, `NPC_ FULL`, `PERK FULL`, `PROJ FULL`, `QUST FULL`, `RACE FULL`, `SCRL FULL`, `SHOU FULL`, `SLGM FULL`, `SPEL FULL`, `TACT FULL`, `TREE FULL`, `WATR FULL`, `WEAP FULL`, `WOOP FULL`, `WRLD FULL`, `REFR FULL`, `DIAL FULL`
+
+**Short Names (`SHRT`)**
+* `NPC_ SHRT`
+
+**Descriptions (`DESC` / `DNAM` / `RDMP` / `DATA`)**
+* `AMMO DESC`, `ARMO DESC`, `AVIF DESC`, `BOOK DESC`, `MESG DESC`, `PERK DESC`, `RACE DESC`, `SCRL DESC`, `SHOU DESC`, `SPEL DESC`, `WEAP DESC`
+* `LSCR DESC` (Loading Screen)
+* `MGEF DNAM` (Magic Effect Name)
+* `REGN RDMP` (Region)
+* `GMST DATA` (Game Setting Value)
+
+**Actions and Display Buttons**
+* `ACTI RNAM` / `FLOR RNAM` / `INFO RNAM` (Activate/Tooltip texts)
+* `PERK EPF2` / `PERK EPFD` (Perk UI & Verbs)
+* `MESG ITXT` (Message Box Button - often requires the `index` parameter)
+
+**Quests & Others**
+* `QUST NNAM` (Quest Objective - often requires `index`)
+* `QUST CNAM` (Legacy Objective - optionally requested by `original`)
+* `WOOP TNAM` (Word of Power Name)
+* `BOOK CNAM` (Book)
+* `INFO NAM1`
 
 == Automation
 
--
+An automatic xEdit exporter (`DSD - Export plugins.pas`) is included in the `xEdit/` folder of this workspace. This script can be loaded in **SSEEdit (xEdit)** to automatically generate ready-to-use JSON files for the Dynamic String Distributor out of existing ESP patches. This helps you convert existing translation or string patch mods quickly into DSD formats.
+
+== Settings (INI Config)
+
+The settings are located in `Data/SKSE/Plugins/DynamicStringDistributor.ini`. They take effect on startup:
+
+[source,ini]
+----
+[Debug]
+; Adds more logging during the startup and for DESC and INFO NAM1 replacements.
+EnableDebugLog = false
+
+; Adds the FormID and Plugin as a prefix to all replacement strings in the game.
+; (Extremely useful for finding IDs in-game).
+EnableDebugInfo = false
+----
 
 == About this documentation
 
 This documentation is meant to give you all information you need to efficiently create and edit Dynamic String Distributor JSON files.
-If you have further questions regarding the Dynamic String Distributor or this documentation, please do not hesitate to ask them on the link:https://discord.gg/pqEHdWDf8z[Official Modding Forge Discord server].
+If you have further questions regarding the Dynamic String Distributor or this documentation, please do not hesitate to ask them on the link:https://discord.gg/pqEHdWDf8z[Official Modding Forge Discord Server].
