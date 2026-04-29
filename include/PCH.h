@@ -59,32 +59,6 @@ namespace stl
 
 		T::func = reinterpret_cast<std::uintptr_t>(alloc);
 	}
-
-	template <class T>
-	void write_thunk_lea(std::uintptr_t a_src) //only use on x64, e.g. rexw (0x48), rexrw (0x4C)
-	{
-		auto bytes = a_src;
-		const auto opCode = *reinterpret_cast<std::uint8_t*>(++bytes);
-
-		if (opCode == 0x8D) // check if it's lea
-		{
-			const auto operand1 = *reinterpret_cast<std::uint8_t*>(++bytes); // mostly 0x05 in case of lea
-			const auto writeAddress = bytes;
-
-			// get original displacement
-			std::int32_t disp = 0;
-			for (std::uint8_t i = 0; i < 4; ++i)
-			{
-				disp |= *reinterpret_cast<std::uint8_t*>(++bytes) << (i * 8);
-			}
-
-			SKSE::GetTrampoline().write_call<5>(writeAddress, T::thunk); // overwrite last 5 bytes of lea instruction
-
-			REL::safe_write(writeAddress, operand1); // write back the operand which got modified by write_call
-
-			T::func = a_src + 7 + disp; // address + lea size + displacement
-		}
-	}
 }
 
 template <class K, class D, class H = boost::hash<K>, class KEqual = std::equal_to<K>>

@@ -1,6 +1,6 @@
 {
   "name": "dynamicstringdistributor",
-  "version-string": "1.4.0",
+  "version-string": "1.4.1",
   "description": "This is an SKSE plugin for dynamically replacing text in Skyrim SE.",
   "license": "GPL-3.0",
   "dependencies": [
