@@ -101,25 +101,34 @@ std::vector<std::string> Manager::processFiles(const std::string_view folder)
 	return files;
 }
 
-std::tuple<RE::FormID, RE::TESFile*> Manager::extractFormIDAndPlugin(const std::string& formIDWithPlugin)
+std::tuple<RE::FormID, RE::TESFile*> Manager::extractFormIDAndPlugin(const std::string& formIDEntry, const std::string& file)
 {
-	if (const auto split = string::split(formIDWithPlugin, "|"); split.size() == 2)
+	const auto split = string::split(formIDEntry, "|");
+	if (split.size() != 2)
 	{
-		RE::FormID formID = Utils::convertToFormID(split[0]);
-		std::string plugin = split[1];
+		SKSE::log::error("Failed to extract formID \"{}\" out of file {}", formIDEntry, file);
+		return { 0, nullptr };
+	}
 
-		if (g_mergeMapperInterface)
-		{
-			auto mergeForm = g_mergeMapperInterface->GetNewFormID(plugin.c_str(), formID);
-			plugin = mergeForm.first;
-			formID = mergeForm.second;
-		}
+	RE::FormID formID = Utils::convertToFormID(split[0]);
+	std::string plugin = split[1];
+	if (formID == 0 || plugin.empty())
+	{
+		SKSE::log::error("Failed to extract formID \"{}\" out of file {}", formIDEntry, file);
+		return { 0, nullptr };
+	}
 
-		const auto it = m_loadOrder.find(plugin);
-		if (it != m_loadOrder.end())
-		{
-			return { formID, it->second.first };
-		}
+	if (g_mergeMapperInterface)
+	{
+		auto mergeForm = g_mergeMapperInterface->GetNewFormID(plugin.c_str(), formID);
+		plugin = mergeForm.first;
+		formID = mergeForm.second;
+	}
+
+	const auto it = m_loadOrder.find(plugin);
+	if (it != m_loadOrder.end())
+	{
+		return { formID, it->second.first };
 	}
 
 	return { 0, nullptr };
@@ -237,12 +246,15 @@ TranslationType Manager::getTranslationType(std::string_view formType)
 	{
 		return TranslationType::kRuntimeLegacy;
 	}
-	case "INFO NAM1"_h:
 	case "NPC_ FULL"_h:
 	case "BOOK CNAM"_h:
 	case "INFO RNAM"_h:
 	{
 		return TranslationType::kRuntime2;
+	}
+	case "INFO NAM1"_h:
+	{
+		return TranslationType::kRuntimeIndex;
 	}
 	default:
 	{
@@ -253,12 +265,9 @@ TranslationType Manager::getTranslationType(std::string_view formType)
 
 void Manager::processEntry(ParseData& entry, const std::string& file)
 {
-	auto [formID, plugin] = extractFormIDAndPlugin(entry.form_id);
+	auto [formID, plugin] = extractFormIDAndPlugin(entry.form_id, file);
 	if (formID == 0 || !plugin)
-	{
-		SKSE::log::error("Failed to extract formID \"{}\" out of file {}!", entry.form_id, file);
 		return;
-	}
 
 	const auto runtimeFormID = Utils::getRuntimeFormID(plugin, formID);
 	if (m_debugInfo)
@@ -291,7 +300,13 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 		m_runtimeMap1.insert_or_assign(runtimeFormID, entry.string);
 	}
 	break;
-	case TranslationType::kRuntime2: // add to second runtime map, strings associated with an index
+	case TranslationType::kRuntime2: // add to second runtime map (some form types have two different string subrecords)
+	{
+		const auto combined = hash::szudzik_pair(0, runtimeFormID); // don't have an index, but ensure to fix wrong jsons
+		m_runtimeMap2.insert_or_assign(combined, entry.string);
+	}
+	break;
+	case TranslationType::kRuntimeIndex:
 	{
 		const auto index = entry.index.has_value() ? entry.index.value() : 0;
 		const auto combined = hash::szudzik_pair(index, runtimeFormID);
@@ -313,7 +328,7 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	break;
 	case TranslationType::kUnknown:
 	{
-		SKSE::log::error("File {} contains unknown or not visible type: {}", file, entry.type);
+		SKSE::log::debug("File {} contains unknown or not visible type: {}", file, entry.type);
 	}
 	break;
 
@@ -333,24 +348,20 @@ const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t
 			return it->second.c_str();
 	}
 	break;
-	case TranslationType::kRuntime2:
-	{
-		const auto combined = hash::szudzik_pair(index, formID);
-		const auto it = m_runtimeMap2.find(combined);
-		if (it != m_runtimeMap2.end())
-			return it->second.c_str();
-	}
-	break;
 	case TranslationType::kRuntimeLegacy:
 	{
 		const auto itL = m_legacyMap.find(original);
 		if (itL != m_legacyMap.end())
 			return itL->second.c_str();
-
+	}
+	[[fallthrough]];
+	case TranslationType::kRuntime2:
+	case TranslationType::kRuntimeIndex:
+	{
 		const auto combined = hash::szudzik_pair(index, formID);
-		const auto itR = m_runtimeMap2.find(combined);
-		if (itR != m_runtimeMap2.end())
-			return itR->second.c_str();
+		const auto it = m_runtimeMap2.find(combined);
+		if (it != m_runtimeMap2.end())
+			return it->second.c_str();
 	}
 	break;
 	default:

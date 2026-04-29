@@ -130,7 +130,7 @@ namespace Hook
 
 				SKSE::log::debug("Original string: {} - TopicInfoFormID: {:08X} - LinkedResponseFormID: {:08X} - ResponseNumber: {}", response->responseText.c_str(), topicInfo->formID, responseTopicInfo->formID, response->responseNumber);
 
-				const auto translation = manager->getTranslation(responseTopicInfo->formID, response->responseNumber, TranslationType::kRuntime2);
+				const auto translation = manager->getTranslation(responseTopicInfo->formID, response->responseNumber, TranslationType::kRuntimeIndex);
 				if (translation)
 				{
 					RE::setBSFixedString(response->responseText, translation);
@@ -151,7 +151,7 @@ namespace Hook
 	struct DialogueMenuTextHook //DIAL FULL, INFO RNAM
 	{
 		static void thunk(RE::MenuTopicManager::Dialogue& out, const char* source, std::uint64_t maxLen)
-		{	
+		{
 			const auto manager = Manager::GetSingleton();
 			const char* translation = nullptr;
 
@@ -171,7 +171,7 @@ namespace Hook
 				}
 			}
 
-			func(out, translation == nullptr ? source : translation, maxLen);	
+			func(out, translation == nullptr ? source : translation, maxLen);
 		};
 		static inline REL::Relocation<decltype(thunk)> func;
 
@@ -193,7 +193,7 @@ namespace Hook
 	struct QuitToMainMenu
 	{
 		static inline bool m_called = false;
-		
+
 		static void thunk()
 		{
 			func();
@@ -203,7 +203,7 @@ namespace Hook
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target1{ REL::VariantID(54870, 55503, 0x9ADAA0), REL::Relocate(0x2171, 0x2422, 0x2543)}; // papyrus
+			REL::Relocation<std::uintptr_t> target1{ REL::VariantID(54870, 55503, 0x9ADAA0), REL::Relocate(0x2171, 0x2422, 0x2543) }; // papyrus
 			stl::write_thunk_lea<QuitToMainMenu>(target1.address());
 
 			REL::Relocation<std::uintptr_t> target2{ REL::VariantID(52365, 53261, 0x923100), REL::Relocate(0x8F, 0x93) }; // journal menu callback

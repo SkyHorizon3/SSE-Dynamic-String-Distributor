@@ -18,6 +18,7 @@ enum class TranslationType :
 	kPerkVerb, // PERK EPFD
 	kRuntime1,
 	kRuntime2,
+	kRuntimeIndex,
 	kRuntimeLegacy, // QUST CNAM
 
 	kUnknown

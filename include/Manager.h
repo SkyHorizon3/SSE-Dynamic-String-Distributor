@@ -21,7 +21,7 @@ private:
 
 	std::vector<std::string> processFolders();
 	std::vector<std::string> processFiles(const std::string_view folder);
-	std::tuple<RE::FormID, RE::TESFile*> extractFormIDAndPlugin(const std::string& formIDWithPlugin);
+	std::tuple<RE::FormID, RE::TESFile*> extractFormIDAndPlugin(const std::string& formIDEntry, const std::string& file);
 	TranslationType getTranslationType(std::string_view formType);
 	void processEntry(ParseData& entry, const std::string& file);
 
