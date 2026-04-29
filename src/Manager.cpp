@@ -14,19 +14,6 @@ void Manager::LoadINI()
 	m_debugInfo = ini.GetBoolValue(section, "EnableDebugInfo");
 }
 
-void Manager::reloadTranslation()
-{
-	SKSE::log::debug("Reloading translation files!");
-
-	m_runtimeMap1.clear();
-	m_runtimeMap2.clear();
-	m_legacyMap.clear();
-
-	enumerateLoadOrder();
-	parseTranslationFiles();
-	runConstTranslation();
-}
-
 void Manager::enumerateLoadOrder()
 {
 	const auto handler = RE::TESDataHandler::GetSingleton();
@@ -302,7 +289,7 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	break;
 	case TranslationType::kRuntime2: // add to second runtime map (some form types have two different string subrecords)
 	{
-		const auto combined = hash::szudzik_pair(0, runtimeFormID); // don't have an index, but ensure to fix wrong jsons
+		const auto combined = hash::szudzik_pair(0, runtimeFormID); // don't have an index, but ensure 0 to fix wrong jsons
 		m_runtimeMap2.insert_or_assign(combined, entry.string);
 	}
 	break;
@@ -626,6 +613,8 @@ void Manager::report(const RE::TESForm* const form) const
 
 void Manager::runConstTranslation()
 {
+	SKSE::log::debug("Run ConstTranslation!");
+
 	for (const auto& entry : m_constTranslation)
 	{
 		RE::TESForm* form = nullptr;
@@ -748,6 +737,6 @@ void Manager::runConstTranslation()
 
 	}
 
-	m_constTranslation.clear();
-	m_constTranslation.shrink_to_fit();
+	//m_constTranslation.clear();
+	//m_constTranslation.shrink_to_fit();
 }

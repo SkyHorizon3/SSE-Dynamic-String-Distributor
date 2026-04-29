@@ -4,7 +4,7 @@ enum class TranslationType :
 	std::uint8_t
 {
 	kFullName, // XXXX FULL
-	kShortName, // XXXX SHRT
+	kShortName, // NPC_ SHRT
 	kWordOfPower, // WOOP TNAM
 	kGameSetting, // GMST DATA
 	kRegion, // REGN RDMP
@@ -16,9 +16,9 @@ enum class TranslationType :
 	kActivationText, // ACTI RNAM, FLOR RNAM
 	kReference, // REFR FULL
 	kPerkVerb, // PERK EPFD
-	kRuntime1,
-	kRuntime2,
-	kRuntimeIndex,
+	kRuntime1, // XXXX DESC, DIAL FULL
+	kRuntime2, // INFO RNAM, BOOK CNAM, NPC_ FULL
+	kRuntimeIndex, // INFO NAM1
 	kRuntimeLegacy, // QUST CNAM
 
 	kUnknown

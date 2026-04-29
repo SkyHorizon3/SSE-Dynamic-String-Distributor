@@ -190,46 +190,22 @@ namespace Hook
 		}
 	};
 
-	struct QuitToMainMenu
+	struct ReconstructForms
 	{
-		static inline bool m_called = false;
-
-		static void thunk()
+		// runs on save load right after finished
+		// runs in the big main reset the game performs for example on main menu quit
+		static void thunk(RE::BGSConstructFormsInAllFilesMap* data, bool stillLoading)
 		{
-			func();
-			QuitToMainMenu::m_called = true;
-		};
-		static inline REL::Relocation<decltype(thunk)> func;
+			func(data, stillLoading);
 
-		static void Install()
-		{
-			REL::Relocation<std::uintptr_t> target1{ REL::VariantID(54870, 55503, 0x9ADAA0), REL::Relocate(0x2171, 0x2422, 0x2543) }; // papyrus
-			stl::write_thunk_lea<QuitToMainMenu>(target1.address());
-
-			REL::Relocation<std::uintptr_t> target2{ REL::VariantID(52365, 53261, 0x923100), REL::Relocate(0x8F, 0x93) }; // journal menu callback
-			stl::write_thunk_lea<QuitToMainMenu>(target2.address());
-		}
-	};
-
-	struct MainMenuProcessMessage
-	{
-		static RE::UI_MESSAGE_RESULTS thunk(RE::MainMenu* menu, RE::UIMessage& message)
-		{
-			auto result = func(menu, message);
-			if (menu && QuitToMainMenu::m_called && message.type == RE::UI_MESSAGE_TYPE::kShow)
-			{
-				Manager::GetSingleton()->reloadTranslation();
-				QuitToMainMenu::m_called = false;
-			}
-
-			return result;
+			Manager::GetSingleton()->runConstTranslation();
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> Vtbl{ RE::VTABLE_MainMenu[0] };
-			func = Vtbl.write_vfunc(0x4, &thunk);
+			REL::Relocation<std::uintptr_t> target1{ REL::VariantID(34644, 35566, 0x581D10), REL::Relocate(0x3AA, 0x25F) };
+			stl::write_thunk_call<ReconstructForms>(target1.address());
 		}
 	};
 
@@ -240,8 +216,7 @@ namespace Hook
 		GetLogEntryHook::Install();
 		GetResponseListHook::Install();
 		DialogueMenuTextHook::Install();
-		QuitToMainMenu::Install();
-		MainMenuProcessMessage::Install();
+		ReconstructForms::Install();
 
 		SKSE::log::info("Installed Hooks!");
 	}
