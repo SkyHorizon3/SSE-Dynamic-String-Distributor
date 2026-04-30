@@ -11,7 +11,7 @@ public:
 	void enumerateLoadOrder();
 	void parseTranslationFiles();
 	void runConstTranslation();
-	void reloadConstTranslation(const RE::TESForm* const form);
+	void reloadConstTranslation(RE::TESForm* form);
 
 	const char* getTranslation(const RE::FormID formID, const std::uint32_t index, const TranslationType type, std::string_view original = {});
 
@@ -35,7 +35,7 @@ private:
 	void setActivateOverrideStrings(RE::TESForm* form, std::string_view newString);
 	void setReferenceStrings(RE::TESForm* form, std::string_view newString);
 	void report(const RE::TESForm* const form) const;
-	void setConstString(const RE::FormID runtimeFormID, const ConstTranslationData& entry);
+	void setConstString(RE::TESForm* form, const ConstTranslationData& entry);
 
 	StringMap<std::pair<RE::TESFile*, std::uint32_t>> m_loadOrder;
 	FlatMap<RE::FormID, ConstTranslationData> m_constTranslation;

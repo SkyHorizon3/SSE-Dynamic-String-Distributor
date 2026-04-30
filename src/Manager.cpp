@@ -279,7 +279,8 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	case TranslationType::kGameSetting:
 	case TranslationType::kReference: // add to const translation
 	{
-		m_constTranslation.insert_or_assign(runtimeFormID, ConstTranslationData(translationType, entry.string, entry.index, entry.editor_id));
+		auto data = ConstTranslationData(translationType, entry.string, entry.index, entry.editor_id);
+		m_constTranslation.insert_or_assign(runtimeFormID, data);
 	}
 	break;
 	case TranslationType::kRuntime1: // add to first runtime map
@@ -611,20 +612,8 @@ void Manager::report(const RE::TESForm* const form) const
 	SKSE::log::error("Tried to cast {:08X} to an invalid form type - Actual Formtype: {} - Plugin: {}", form->formID, RE::FormTypeToString(form->GetFormType()), Utils::getModName(form));
 }
 
-void Manager::setConstString(const RE::FormID runtimeFormID, const ConstTranslationData& entry)
+void Manager::setConstString(RE::TESForm* form, const ConstTranslationData& entry)
 {
-	RE::TESForm* form = nullptr;
-
-	if (entry.translationType != TranslationType::kGameSetting)
-	{
-		form = RE::TESForm::LookupByID(runtimeFormID);
-		if (!form)
-		{
-			SKSE::log::error("Couldn't find formID {:08X}!", runtimeFormID);
-			return;
-		}
-	}
-
 	switch (entry.translationType)
 	{
 	case TranslationType::kFullName:
@@ -722,7 +711,7 @@ void Manager::setConstString(const RE::FormID runtimeFormID, const ConstTranslat
 		setReferenceStrings(form, entry.replacerText);
 	}
 	break;
-	case TranslationType::kGameSetting:
+	case TranslationType::kGameSetting: // no formID needed
 	{
 		setGameSettingString(entry.editor_id, entry.replacerText);
 	}
@@ -736,17 +725,28 @@ void Manager::runConstTranslation()
 {
 	SKSE::log::debug("Run ConstTranslation!");
 
-	for (const auto& val : m_constTranslation)
+	for (const auto& [runtimeFormID, entry] : m_constTranslation)
 	{
-		setConstString(val.first, val.second);
+		RE::TESForm* form = nullptr;
+		if (entry.translationType != TranslationType::kGameSetting)
+		{
+			form = RE::TESForm::LookupByID(runtimeFormID);
+			if (!form)
+			{
+				SKSE::log::error("Couldn't find formID {:08X}!", runtimeFormID);
+				continue;
+			}
+		}
+
+		setConstString(form, entry);
 	}
 }
 
-void Manager::reloadConstTranslation(const RE::TESForm* const form)
+void Manager::reloadConstTranslation(RE::TESForm* form)
 {
 	const auto it = m_constTranslation.find(form->formID);
 	if (it != m_constTranslation.end())
 	{
-		setConstString(form->formID, it->second);
+		setConstString(form, it->second);
 	}
 }
