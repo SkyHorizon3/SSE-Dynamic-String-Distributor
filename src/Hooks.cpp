@@ -197,8 +197,22 @@ namespace Hook
 		static void thunk(RE::BGSConstructFormsInAllFilesMap* data, bool stillLoading)
 		{
 			func(data, stillLoading);
+			if (!data)
+				return;
 
-			Manager::GetSingleton()->runConstTranslation();
+			const auto mgr = Manager::GetSingleton();
+			for (int i = 0; i < 3; i++)
+			{
+				const auto& list = data->constructedForms.data[i];
+				for (const auto& entry : list)
+				{
+					const auto& form = entry.form;
+					if (!form)
+						continue;
+
+					mgr->reloadConstTranslation(form);
+				}
+			}
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
 

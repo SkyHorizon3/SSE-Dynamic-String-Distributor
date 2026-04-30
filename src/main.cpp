@@ -21,10 +21,9 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 		Hook::InstallHooks();
 	}
 	break;
-	case SKSE::MessagingInterface::kNewGame:
+	case SKSE::MessagingInterface::kDataLoaded:
 	{
 		Manager::GetSingleton()->runConstTranslation();
-		//SKSE::log::info("New Game!");
 	}
 	break;
 	default:

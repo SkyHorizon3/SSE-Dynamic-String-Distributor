@@ -279,7 +279,7 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	case TranslationType::kGameSetting:
 	case TranslationType::kReference: // add to const translation
 	{
-		m_constTranslation.emplace_back(runtimeFormID, translationType, entry.string, entry.index, entry.editor_id);
+		m_constTranslation.insert_or_assign(runtimeFormID, ConstTranslationData(translationType, entry.string, entry.index, entry.editor_id));
 	}
 	break;
 	case TranslationType::kRuntime1: // add to first runtime map
@@ -611,132 +611,142 @@ void Manager::report(const RE::TESForm* const form) const
 	SKSE::log::error("Tried to cast {:08X} to an invalid form type - Actual Formtype: {} - Plugin: {}", form->formID, RE::FormTypeToString(form->GetFormType()), Utils::getModName(form));
 }
 
+void Manager::setConstString(const RE::FormID runtimeFormID, const ConstTranslationData& entry)
+{
+	RE::TESForm* form = nullptr;
+
+	if (entry.translationType != TranslationType::kGameSetting)
+	{
+		form = RE::TESForm::LookupByID(runtimeFormID);
+		if (!form)
+		{
+			SKSE::log::error("Couldn't find formID {:08X}!", runtimeFormID);
+			return;
+		}
+	}
+
+	switch (entry.translationType)
+	{
+	case TranslationType::kFullName:
+	{
+		const auto OrigString = form->As<RE::TESFullName>();
+		if (!OrigString)
+		{
+			report(form);
+			return;
+		}
+
+		OrigString->SetFullName(entry.replacerText.c_str());
+	}
+	break;
+	case TranslationType::kLoadScreenDescription: // TODO: maybe add formType checks
+	{
+		auto loadScreen = form->As<RE::TESLoadScreen>();
+		if (!loadScreen)
+		{
+			report(form);
+			return;
+		}
+
+		fixedStringChange(loadScreen->loadingText, entry.replacerText);
+	}
+	break;
+	case TranslationType::kMagicDescription:
+	{
+		auto effect = form->As<RE::EffectSetting>();
+		if (!effect)
+		{
+			report(form);
+			return;
+		}
+
+		fixedStringChange(effect->magicItemDescription, entry.replacerText);
+	}
+	break;
+	case TranslationType::kShortName:
+	{
+		auto npc = form->As<RE::TESNPC>();
+		if (!npc)
+		{
+			report(form);
+			return;
+		}
+
+		fixedStringChange(npc->shortName, entry.replacerText);
+	}
+	break;
+	case TranslationType::kRegion:
+	{
+		setRegionDataStrings(form, entry.replacerText);
+	}
+	break;
+	case TranslationType::kWordOfPower:
+	{
+		auto word = form->As<RE::TESWordOfPower>();
+		if (!word)
+		{
+			report(form);
+			return;
+		}
+
+		fixedStringChange(word->translation, entry.replacerText);
+	}
+	break;
+	case TranslationType::kButtonText1:
+	{
+		setMessageBoxButtonStrings(form, entry.replacerText, entry.index);
+	}
+	break;
+	case TranslationType::kButtonText2:
+	{
+		setPerkMessageBoxButtonStrings(form, entry.replacerText, entry.index);
+	}
+	break;
+	case TranslationType::kQuestObjective:
+	{
+		setQuestObjectiveStrings(form, entry.replacerText, entry.index);
+	}
+	break;
+	case TranslationType::kPerkVerb:
+	{
+		setEntryPointStrings(form, entry.replacerText, entry.index);
+	}
+	break;
+	case TranslationType::kActivationText:
+	{
+		setActivateOverrideStrings(form, entry.replacerText);
+	}
+	break;
+	case TranslationType::kReference:
+	{
+		setReferenceStrings(form, entry.replacerText);
+	}
+	break;
+	case TranslationType::kGameSetting:
+	{
+		setGameSettingString(entry.editor_id, entry.replacerText);
+	}
+	break;
+	default:
+		std::unreachable();
+	}
+}
+
 void Manager::runConstTranslation()
 {
 	SKSE::log::debug("Run ConstTranslation!");
 
-	for (const auto& entry : m_constTranslation)
+	for (const auto& val : m_constTranslation)
 	{
-		RE::TESForm* form = nullptr;
-
-		if (entry.translationType != TranslationType::kGameSetting)
-		{
-			form = RE::TESForm::LookupByID(entry.runtimeFormID);
-			if (!form)
-			{
-				SKSE::log::error("Couldn't find formID {:08X}!", entry.runtimeFormID);
-				continue;
-			}
-		}
-
-		switch (entry.translationType)
-		{
-		case TranslationType::kFullName:
-		{
-			const auto OrigString = form->As<RE::TESFullName>();
-			if (!OrigString)
-			{
-				report(form);
-				continue;
-			}
-
-			OrigString->SetFullName(entry.replacerText.c_str());
-		}
-		break;
-		case TranslationType::kLoadScreenDescription: // TODO: add formType checks
-		{
-			auto loadScreen = form->As<RE::TESLoadScreen>();
-			if (!loadScreen)
-			{
-				report(form);
-				continue;
-			}
-
-			fixedStringChange(loadScreen->loadingText, entry.replacerText);
-		}
-		break;
-		case TranslationType::kMagicDescription:
-		{
-			auto effect = form->As<RE::EffectSetting>();
-			if (!effect)
-			{
-				report(form);
-				continue;
-			}
-
-			fixedStringChange(effect->magicItemDescription, entry.replacerText);
-		}
-		break;
-		case TranslationType::kShortName:
-		{
-			auto npc = form->As<RE::TESNPC>();
-			if (!npc)
-			{
-				report(form);
-				continue;
-			}
-
-			fixedStringChange(npc->shortName, entry.replacerText);
-		}
-		break;
-		case TranslationType::kRegion:
-		{
-			setRegionDataStrings(form, entry.replacerText);
-		}
-		break;
-		case TranslationType::kWordOfPower:
-		{
-			auto word = form->As<RE::TESWordOfPower>();
-			if (!word)
-			{
-				report(form);
-				continue;
-			}
-
-			fixedStringChange(word->translation, entry.replacerText);
-		}
-		break;
-		case TranslationType::kButtonText1:
-		{
-			setMessageBoxButtonStrings(form, entry.replacerText, entry.index);
-		}
-		break;
-		case TranslationType::kButtonText2:
-		{
-			setPerkMessageBoxButtonStrings(form, entry.replacerText, entry.index);
-		}
-		break;
-		case TranslationType::kQuestObjective:
-		{
-			setQuestObjectiveStrings(form, entry.replacerText, entry.index);
-		}
-		break;
-		case TranslationType::kPerkVerb:
-		{
-			setEntryPointStrings(form, entry.replacerText, entry.index);
-		}
-		break;
-		case TranslationType::kActivationText:
-		{
-			setActivateOverrideStrings(form, entry.replacerText);
-		}
-		break;
-		case TranslationType::kReference:
-		{
-			setReferenceStrings(form, entry.replacerText);
-		}
-		break;
-		case TranslationType::kGameSetting:
-		{
-			setGameSettingString(entry.editor_id, entry.replacerText);
-		}
-		break;
-		default:
-			std::unreachable();
-		}
-
+		setConstString(val.first, val.second);
 	}
+}
 
-	//m_constTranslation.clear();
-	//m_constTranslation.shrink_to_fit();
+void Manager::reloadConstTranslation(const RE::TESForm* const form)
+{
+	const auto it = m_constTranslation.find(form->formID);
+	if (it != m_constTranslation.end())
+	{
+		setConstString(form->formID, it->second);
+	}
 }

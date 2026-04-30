@@ -36,7 +36,6 @@ struct ParseData
 
 struct ConstTranslationData
 {
-	RE::FormID runtimeFormID{ 0 };
 	TranslationType translationType{ TranslationType::kUnknown };
 	std::string replacerText;
 	std::optional<std::uint32_t> index;
