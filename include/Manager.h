@@ -38,7 +38,7 @@ private:
 	void setConstString(RE::TESForm* form, const ConstTranslationData& entry);
 
 	StringMap<std::pair<RE::TESFile*, std::uint32_t>> m_loadOrder;
-	FlatMap<RE::FormID, ConstTranslationData> m_constTranslation;
+	MultiMap<RE::FormID, ConstTranslationData> m_constTranslation;
 	FlatMap<RE::FormID, std::string> m_runtimeMap1;
 	FlatMap<std::uint64_t, std::string> m_runtimeMap2;
 	StringMap<std::string> m_legacyMap;

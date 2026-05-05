@@ -58,7 +58,9 @@ std::vector<std::string> Manager::processFolders()
 		{
 			const auto itA = m_loadOrder.find(a);
 			const auto itB = m_loadOrder.find(b);
-			return itA->second.second < itB->second.second;
+
+			// reverse order smallest index at the end
+			return itA->second.second > itB->second.second;
 		});
 
 	return folders;
@@ -84,7 +86,8 @@ std::vector<std::string> Manager::processFiles(const std::string_view folder)
 		}
 	}
 
-	std::ranges::sort(files.begin(), files.end());
+	// reverse order Z first, A last
+	std::ranges::sort(files.begin(), files.end(), std::greater<>{});
 	return files;
 }
 
@@ -265,53 +268,89 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	const auto translationType = getTranslationType(entry.type);
 	switch (translationType)
 	{
+	case TranslationType::kGameSetting: // add to const translation (editorID is needed)
+	{
+		if (!m_constTranslation.contains(runtimeFormID))
+		{
+			auto data = ConstTranslationData{ translationType, entry.string, 0, entry.editor_id };
+			m_constTranslation.emplace(runtimeFormID, data);
+		}
+	}
+	break;
 	case TranslationType::kFullName:
 	case TranslationType::kLoadScreenDescription:
 	case TranslationType::kMagicDescription:
 	case TranslationType::kShortName:
 	case TranslationType::kRegion:
 	case TranslationType::kWordOfPower:
+	case TranslationType::kActivationText:
+	case TranslationType::kReference: // add to const translation (no index)
+	{
+		if (!m_constTranslation.contains(runtimeFormID))
+		{
+			auto data = ConstTranslationData{ translationType, entry.string, 0, {} };
+			m_constTranslation.emplace(runtimeFormID, data);
+		}
+	}
+	break;
 	case TranslationType::kButtonText1:
 	case TranslationType::kButtonText2:
 	case TranslationType::kQuestObjective:
-	case TranslationType::kPerkVerb:
-	case TranslationType::kActivationText:
-	case TranslationType::kGameSetting:
-	case TranslationType::kReference: // add to const translation
+	case TranslationType::kPerkVerb: // add to const translation (index)
 	{
-		auto data = ConstTranslationData(translationType, entry.string, entry.index, entry.editor_id);
-		m_constTranslation.insert_or_assign(runtimeFormID, data);
+		auto [begin, end] = m_constTranslation.equal_range(formID);
+
+		bool exists = false;
+		for (auto it = begin; it != end; it++)
+		{
+			if (it->second.translationType == translationType &&
+				it->second.index == entry.index)
+			{
+				// skip values that are already included 
+				// since we would overwrite values otherwise in ConstTranslation 
+				// not good, but better than 200 lines more code running randomly
+				exists = true;
+				break;
+			}
+		}
+
+		if (!exists)
+		{
+			const auto index = entry.index.has_value() ? entry.index.value() : 0;
+			auto data = ConstTranslationData{ translationType, entry.string, index, {} };
+			m_constTranslation.emplace(runtimeFormID, data);
+		}
 	}
 	break;
 	case TranslationType::kRuntime1: // add to first runtime map
 	{
-		m_runtimeMap1.insert_or_assign(runtimeFormID, entry.string);
+		m_runtimeMap1.emplace(runtimeFormID, entry.string);
 	}
 	break;
 	case TranslationType::kRuntime2: // add to second runtime map (some form types have two different string subrecords)
 	{
 		const auto combined = hash::szudzik_pair(0, runtimeFormID); // don't have an index, but ensure 0 to fix wrong jsons
-		m_runtimeMap2.insert_or_assign(combined, entry.string);
+		m_runtimeMap2.emplace(combined, entry.string);
 	}
 	break;
 	case TranslationType::kRuntimeIndex:
 	{
 		const auto index = entry.index.has_value() ? entry.index.value() : 0;
 		const auto combined = hash::szudzik_pair(index, runtimeFormID);
-		m_runtimeMap2.insert_or_assign(combined, entry.string);
+		m_runtimeMap2.emplace(combined, entry.string);
 	}
 	break;
 	case TranslationType::kRuntimeLegacy: // add to legacy string key map
 	{
 		if (entry.original.has_value())
 		{
-			m_legacyMap.insert_or_assign(entry.original.value(), entry.string);
+			m_legacyMap.emplace(entry.original.value(), entry.string);
 			return;
 		}
 
 		const auto index = entry.index.has_value() ? entry.index.value() : 0;
 		const auto combined = hash::szudzik_pair(index, runtimeFormID);
-		m_runtimeMap2.insert_or_assign(combined, entry.string);
+		m_runtimeMap2.emplace(combined, entry.string);
 	}
 	break;
 	case TranslationType::kUnknown:
@@ -367,13 +406,14 @@ void Manager::parseTranslationFiles()
 		const auto files = processFiles(folder);
 		for (const auto& file : files)
 		{
-			std::string buffer{};
-			std::vector<ParseData> jsonData{};
+			std::string buffer;
+			std::vector<ParseData> jsonData;
 
 			auto err = glz::read_file_json < glz::opts{ .error_on_unknown_keys = false } > (jsonData, file, buffer);
 			if (err)
 			{
-				SKSE::log::error("Error parsing file: {} - Error: {}", file, glz::format_error(err, buffer));
+				const auto errStr = glz::format_error(err, buffer);
+				SKSE::log::error("Error parsing file: {} - Error: {}", file, errStr);
 				continue;
 			}
 
@@ -609,7 +649,9 @@ void Manager::setReferenceStrings(RE::TESForm* form, std::string_view newString)
 
 void Manager::report(const RE::TESForm* const form) const
 {
-	SKSE::log::error("Tried to cast {:08X} to an invalid form type - Actual Formtype: {} - Plugin: {}", form->formID, RE::FormTypeToString(form->GetFormType()), Utils::getModName(form));
+	const auto formtype = RE::FormTypeToString(form->GetFormType());
+	const auto modname = Utils::getModName(form);
+	SKSE::log::error("Tried to cast {:08X} to an invalid form type - Actual Formtype: {} - Plugin: {}", form->formID, formtype, modname);
 }
 
 void Manager::setConstString(RE::TESForm* form, const ConstTranslationData& entry)
@@ -744,8 +786,8 @@ void Manager::runConstTranslation()
 
 void Manager::reloadConstTranslation(RE::TESForm* form)
 {
-	const auto it = m_constTranslation.find(form->formID);
-	if (it != m_constTranslation.end())
+	auto [begin, end] = m_constTranslation.equal_range(form->formID);
+	for (auto it = begin; it != end; it++)
 	{
 		setConstString(form, it->second);
 	}

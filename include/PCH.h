@@ -9,6 +9,7 @@
 
 #include <MergeMapperPluginAPI.h>
 #include <boost/unordered/unordered_node_map.hpp>
+#include <boost/unordered/unordered_map.hpp>
 #include <xbyak/xbyak.h>
 #include <SimpleIni.h>
 #include <glaze/json.hpp>
@@ -63,6 +64,9 @@ namespace stl
 
 template <class K, class D, class H = boost::hash<K>, class KEqual = std::equal_to<K>>
 using FlatMap = boost::unordered_node_map<K, D, H, KEqual>;
+
+template <class K, class D, class H = boost::hash<K>, class KEqual = std::equal_to<K>>
+using MultiMap = boost::unordered_multimap<K, D, H, KEqual>;
 
 struct string_hash
 {

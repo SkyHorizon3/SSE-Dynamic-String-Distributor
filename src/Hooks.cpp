@@ -197,7 +197,7 @@ namespace Hook
 		static void thunk(RE::BGSConstructFormsInAllFilesMap* data, bool stillLoading)
 		{
 			func(data, stillLoading);
-			if (!data)
+			if (!data || data->unk78 == 0) // unk78 is sum size of all three arrays
 				return;
 
 			const auto mgr = Manager::GetSingleton();
