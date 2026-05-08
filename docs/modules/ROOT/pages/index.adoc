@@ -56,8 +56,8 @@ Each entry in the JSON array is an object with the following supported propertie
 |===
 
 The JSON file and especially the included strings have to follow the JSON link:https://datatracker.ietf.org/doc/html/rfc8259[RFC 8259] standard! In other words the strings have to be link:https://www.freeformatter.com/json-escape.html#before-output[correctly escaped].
+DSD accepts multiple ways to write the formID in the `form_id` field:
 
-DSD acceptes multiple ways to write the formID in the `form_id` field:
 * Full FormID: 050176CD, 0x0176CD, 0X0176CD, 176CD
 * Light FormID: FE0176CD, 0x6CD, 0X6CD, 6CD
 
@@ -66,7 +66,7 @@ DSD acceptes multiple ways to write the formID in the `form_id` field:
 Here is explanation of how to replace strings for the supported record types. For a list of all form types you can visit link:https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format[UESP].
 You can use these in the `type` field of your JSON configuration:
 
-EditorID required:
+=== EditorID required
 * `GMST DATA`
 
 [source,json]
@@ -81,7 +81,7 @@ EditorID required:
 ]
 ----
 
-No index required:
+=== No index required
 * `XXXX FULL` (fullname of any record)
 * `XXXX DESC` (description of any record)
 * `NPC_ SHRT`,`WOOP TNAM`,`INFO RNAM`,`BOOK CNAM`,`MGEF DNAM`,`REGN RDMP`,`ACTI RNAM`,`FLOR RNAM`
@@ -132,7 +132,7 @@ No index required:
 ]
 ----
 
-Index required:
+=== Index required
 * `QUST CNAM`: INDX - Stage Index + Entry index of the log entry
 * `QUST NNAM`: QOBJ - Objective index
 * `INFO NAM1`: Response number of TRDT - Response Data
