@@ -37,9 +37,7 @@ namespace Hook
 			std::call_once(flag, [&]() {
 				// Run our parser here, DataHandler already build the file list. 
 				// The reason is, that there is no reliable way in which I could tell which template the NPC copied from at DataLoaded
-				const auto manager = Manager::GetSingleton();
-				manager->enumerateLoadOrder();
-				manager->parseTranslationFiles();
+				Manager::GetSingleton()->parseTranslationFiles();
 				});
 
 			if (!npcFullname)

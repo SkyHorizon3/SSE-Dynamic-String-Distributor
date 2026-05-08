@@ -8,7 +8,6 @@ public:
 	void LoadINI();
 	bool isDebugLogEnabled() const noexcept { return m_debugLog; }
 
-	void enumerateLoadOrder();
 	void parseTranslationFiles();
 	void runConstTranslation();
 	void reloadConstTranslation(RE::TESForm* form);
@@ -19,6 +18,7 @@ private:
 	inline static constexpr const char* DSD_PATH = "Data/SKSE/Plugins/DynamicStringDistributor";
 	inline static constexpr const char* EMPTY = " ";
 
+	void enumerateLoadOrder();
 	std::vector<std::string> processFolders();
 	std::vector<std::string> processFiles(const std::string_view folder);
 	std::tuple<RE::FormID, RE::TESFile*> extractFormIDAndPlugin(const std::string& formIDEntry, const std::string& file);

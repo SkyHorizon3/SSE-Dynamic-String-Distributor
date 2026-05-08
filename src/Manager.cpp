@@ -21,7 +21,10 @@ void Manager::enumerateLoadOrder()
 		return;
 
 	std::uint32_t index = 0;
-	for (const auto& file : handler->files)
+	auto& files = handler->files;
+
+	m_loadOrder.reserve(files.size() + 1);
+	for (const auto& file : files)
 	{
 		if (file && file->compileIndex != 0xFF) // only the files that are truely active
 		{
@@ -265,12 +268,32 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 		entry.string.insert(0, std::format("Debug Info: {:08X}|{}| ", runtimeFormID, plugin->GetFilename()));
 	}
 
+	const auto constTransContains = [&](const RE::FormID formID, const TranslationType translationType) -> bool
+		{
+			auto [begin, end] = m_constTranslation.equal_range(formID);
+			for (auto it = begin; it != end; it++)
+			{
+				const auto& data = it->second;
+
+				if (data.translationType == translationType &&
+					data.index == entry.index)
+				{
+					// skip values that are already included 
+					// since we would overwrite values otherwise in ConstTranslation 
+					// not good, but better than 200 lines more code running randomly
+					return true;
+				}
+			}
+
+			return false;
+		};
+
 	const auto translationType = getTranslationType(entry.type);
 	switch (translationType)
 	{
 	case TranslationType::kGameSetting: // add to const translation (editorID is needed)
 	{
-		if (!m_constTranslation.contains(runtimeFormID))
+		if (!constTransContains(runtimeFormID, translationType))
 		{
 			auto data = ConstTranslationData{ translationType, entry.string, std::nullopt, entry.editor_id };
 			m_constTranslation.emplace(runtimeFormID, data);
@@ -286,7 +309,7 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	case TranslationType::kActivationText:
 	case TranslationType::kReference: // add to const translation (no index)
 	{
-		if (!m_constTranslation.contains(runtimeFormID))
+		if (!constTransContains(runtimeFormID, translationType))
 		{
 			auto data = ConstTranslationData{ translationType, entry.string, std::nullopt, std::nullopt };
 			m_constTranslation.emplace(runtimeFormID, data);
@@ -298,23 +321,7 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	case TranslationType::kQuestObjective:
 	case TranslationType::kPerkVerb: // add to const translation (index)
 	{
-		auto [begin, end] = m_constTranslation.equal_range(formID);
-
-		bool exists = false;
-		for (auto it = begin; it != end; it++)
-		{
-			if (it->second.translationType == translationType &&
-				it->second.index == entry.index)
-			{
-				// skip values that are already included 
-				// since we would overwrite values otherwise in ConstTranslation 
-				// not good, but better than 200 lines more code running randomly
-				exists = true;
-				break;
-			}
-		}
-
-		if (!exists)
+		if (!constTransContains(runtimeFormID, translationType))
 		{
 			const auto index = entry.index.has_value() ? entry.index : std::nullopt;
 			auto data = ConstTranslationData{ translationType, entry.string, index, std::nullopt };
@@ -400,6 +407,8 @@ const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t
 
 void Manager::parseTranslationFiles()
 {
+	enumerateLoadOrder();
+
 	const auto folders = processFolders();
 	for (const auto& folder : folders)
 	{
@@ -765,7 +774,7 @@ void Manager::setConstString(RE::TESForm* form, const ConstTranslationData& entr
 
 void Manager::runConstTranslation()
 {
-	SKSE::log::debug("Run ConstTranslation!");
+	SKSE::log::debug("Start ConstTranslation...");
 
 	for (const auto& [runtimeFormID, entry] : m_constTranslation)
 	{
@@ -782,6 +791,8 @@ void Manager::runConstTranslation()
 
 		setConstString(form, entry);
 	}
+
+	SKSE::log::debug("... Finished ConstTranslation!");
 }
 
 void Manager::reloadConstTranslation(RE::TESForm* form)
