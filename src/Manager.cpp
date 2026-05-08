@@ -272,7 +272,7 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	{
 		if (!m_constTranslation.contains(runtimeFormID))
 		{
-			auto data = ConstTranslationData{ translationType, entry.string, 0, entry.editor_id };
+			auto data = ConstTranslationData{ translationType, entry.string, std::nullopt, entry.editor_id };
 			m_constTranslation.emplace(runtimeFormID, data);
 		}
 	}
@@ -288,7 +288,7 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	{
 		if (!m_constTranslation.contains(runtimeFormID))
 		{
-			auto data = ConstTranslationData{ translationType, entry.string, 0, {} };
+			auto data = ConstTranslationData{ translationType, entry.string, std::nullopt, std::nullopt };
 			m_constTranslation.emplace(runtimeFormID, data);
 		}
 	}
@@ -316,8 +316,8 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 
 		if (!exists)
 		{
-			const auto index = entry.index.has_value() ? entry.index.value() : 0;
-			auto data = ConstTranslationData{ translationType, entry.string, index, {} };
+			const auto index = entry.index.has_value() ? entry.index : std::nullopt;
+			auto data = ConstTranslationData{ translationType, entry.string, index, std::nullopt };
 			m_constTranslation.emplace(runtimeFormID, data);
 		}
 	}
@@ -417,7 +417,7 @@ void Manager::parseTranslationFiles()
 				continue;
 			}
 
-			for (auto& entry : jsonData)
+			for (auto& entry : std::views::reverse(jsonData))
 			{
 				processEntry(entry, file);
 			}
