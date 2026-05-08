@@ -7,30 +7,37 @@ image:support_me_on_kofi.png[width=193,height=60,link=https://ko-fi.com/skyhoriz
 
 == Description
 
-The **Dynamic String Distributor (DSD)** is an SKSE plugin for Skyrim Special Edition that allows mod authors and users to dynamically overwrite, add, or change in-game texts and strings (like names, descriptions, button texts, etc.) at runtime. This is done entirely via JSON files, reducing compatibility issues and avoiding unnecessary ESP/ESL files (so-called "string patches" or "translation patches").
+**Dynamic String Distributor (DSD)** is an SKSE plugin for Skyrim SE that allows mod authors and users to dynamically overwrite, add, or change all in-game texts/strings (like names, descriptions, button texts, etc.) at runtime. 
 
 == Features
 
-* **No ESP/ESL limit:** Avoids additional plugins in your load order that just contain text changes or simple translations.
-* **Dynamic loading:** Uses JSON configuration files loaded at game startup.
-* **MergeMapper Support:** Works seamlessly with MergeMapper to correctly resolve FormIDs for merged plugins and dynamically assign strings.
-* **Sorting & Conflict Resolution:** DSD uses the Skyrim plugin load order to ensure that overwrites and patch JSONs are always loaded in the correct priority.
+* Plugin file (ESP/ESL/ESM) independent translations and text replacements reducing the risk of potential conflicts and translation file version mismatch
+* Uses JSON configuration files parsed once at game startup
+* link:https://www.nexusmods.com/skyrimspecialedition/mods/74689[MergeMapper Support] is provided
 
 == JSON Configuration
 
 The general format of a configuration is a JSON array containing objects that define the strings to be modified.
-Files must be placed in the following directory:
+The json files can be placed in the folder named after the ESP/ESM/ESL you want to create a translation for:
 
 `Data/SKSE/Plugins/DynamicStringDistributor/<Plugin-Name>/<Filename>.json`
 
 Example:
 `Data/SKSE/Plugins/DynamicStringDistributor/Skyrim.esm/MyCustomStrings.json`
 
-=== File Management Mechanics
-* **Folder names:** Folders must exactly match the name of an active plugin in your game's load order (e.g., `Skyrim.esm`, `Dawnguard.esm`, or `YourMod.esp`).
-* **Load order:** Folders are loaded and processed according to the actual load order priority of their respective plugins. Later plugins in the load order overwrite earlier JSON changes.
-* **`overwrite` folder:** A folder named `overwrite` is processed at the very end (after all load order plugins) and has the highest priority.
-* **Files in a folder:** Multiple JSON files in the same folder are processed alphabetically by filename.
+* It is possible to replace strings in a different plugin than the one you named the folder after
+* The folders named after the ESP/ESM/ESL files are handled case insensitive (e.g. you can even write skYrim.esm if you wish)
+* The JSON files are only loaded from the folder if the corresponding plugin is active in your plugin list
+
+=== JSON Load Order
+* The conflict system works similar to the ESP/ESM/ESL-plugin list
+* Conflicting strings in plugin folders overwrite each other depending on the load order of the corresponding plugin in your load order
+* Inside of a plugin folder conflicting strings overwrite each other alphabetically
+
+* A folder named `overwrite` is processed at the very end (after all load order plugins) and has the highest priority
+
+Example:
+`Data/SKSE/Plugins/DynamicStringDistributor/overwrite/ZZZZ.json`
 
 == JSON Format Details
 
@@ -40,85 +47,144 @@ Each entry in the JSON array is an object with the following supported propertie
 |===
 | Parameter | Type | Description
 
-| `form_id` | String | The unique identifier of the object in the game. Format: `"FormID\|PluginName.esp"` (e.g. `"0x0176CD\|Skyrim.esm"`). Required.
+| `form_id` | String | The formID and the file defining this record. Format: `"FormID\|PluginName.esp"` (e.g. `"0x0176CD\|Skyrim.esm"`). Required.
 | `type` | String | Defines which string type is modified (see supported types below). Required.
 | `string` | String | The new text to be loaded or injected into the game. Required.
-| `editor_id` | String (Optional) | A human-readable name (e.g., the EditorID from the Creation Kit / xEdit). Has no effect in-game and is meant for code readability.
-| `index` | Integer (Optional) | Specifies the exact index for variables containing multiple strings (e.g., arrays for `PERK EPF2` or quest objectives `QUST NNAM`).
-| `original` | String (Optional) | Specifically for legacy mapping (e.g., for certain `QUST CNAM` objectives). Specifies the original string to be replaced.
+| `editor_id` | String (Optional) | The EditorID of the record.
+| `index` | Integer (Optional) | Specifies the exact index for records containing multiple strings.
+| `original` | String (Optional) | Specifies the original string to be replaced. Deprecated since version 1.4.0!
 |===
 
-=== Example
+The JSON file and especially the included strings have to follow the JSON link:https://datatracker.ietf.org/doc/html/rfc8259[RFC 8259] standard! In other words the strings have to be link:https://www.freeformatter.com/json-escape.html#before-output[correctly escaped].
+
+DSD acceptes multiple ways to write the formID in the `form_id` field:
+* Full FormID: 050176CD, 0x0176CD, 0X0176CD, 176CD
+* Light FormID: FE0176CD, 0x6CD, 0X6CD, 6CD
+
+== Type Specializations (`type`)
+
+Here is explanation of how to replace strings for the supported record types. For a list of all form types you can visit link:https://en.uesp.net/wiki/Skyrim_Mod:Mod_File_Format[UESP].
+You can use these in the `type` field of your JSON configuration:
+
+EditorID required:
+* `GMST DATA`
 
 [source,json]
 ----
 [
-  {
-    "form_id": "0x0176CD|Skyrim.esm",
-    "editor_id": "DeadSalmon01",
-    "type": "FLOR FULL",
-    "string": "Fresh Salmon"
-  },
-  {
-    "form_id": "0x0A2C46|Skyrim.esm",
-    "editor_id": "MineOreIron01",
-    "type": "ACTI RNAM",
-    "string": "Mine Iron Ore"
-  },
-  {
-    "form_id": "00079AF5|Skyrim.esm",
-    "type": "PERK EPF2",
-    "index": 1,
-    "string": "New Perk Button"
-  }
+ 	{
+        "form_id": "000D48B7|Skyrim.esm",
+        "editor_id": "sCurrentLocation",
+        "type": "GMST DATA",
+        "string": "New string"
+    }
 ]
 ----
 
-== Supported Types (`type`)
+No index required:
+* `XXXX FULL` (fullname of any record)
+* `XXXX DESC` (description of any record)
+* `NPC_ SHRT`,`WOOP TNAM`,`INFO RNAM`,`BOOK CNAM`,`MGEF DNAM`,`REGN RDMP`,`ACTI RNAM`,`FLOR RNAM`
 
-Here is the list of record types currently supported by the Dynamic String Distributor. You can use these in the `type` field of your JSON configuration:
+[source,json]
+----
+[
+    {
+        "form_id": "000133C6|Skyrim.esm",
+        "type": "CELL FULL",
+        "string": "New full name"
+    },
+    {
+        "form_id": "000ACC37|Skyrim.esm",
+        "type": "WEAP FULL",
+        "string": "New full name"
+    },
+    {
+        "form_id": "0004D0F4|Skyrim.esm",
+        "type": "REFR FULL",
+        "string": "New full name"
+    },
+    {
+        "form_id": "0003FA35|Skyrim.esm",
+        "type": "DIAL FULL",
+        "string": "New sentence"
+    },
+    {
+        "form_id": "0001AD07|Skyrim.esm",
+        "type": "BOOK DESC",
+        "string": "<font face='$HandwrittenFont'>\r\nDelvin,\r\nhier ist die Rezeptur für die Verbesserte Knochenrüstung, die ich in meinem letzten Brief erwähnt habe. Behaltet das Gold, das Ihr durch den Verkauf einnehmt, und stellt sicher, dass es unserer kleinen Schwester an nichts mangelt.\r\n\r\nZutaten:\r\n- 4 Tassen Knochenstaub\r\n- 1 Tasse Salz\r\n- 1 Flasche Netchgelee\r\n- 1 Tasse gemahlenen Mammutstoßzahn\r\n- 1 Eimer frisches Wasser\r\n\r\nGebt den Knochenstaub und das Salz ins Wasser und lasst sie dort mindestens einen Tag lang einweichen. Dann gebt das Netchgelee und den Mammutstoßzahn hinzu. Rührt alles über einer heißen Flamme um, bis die Mischung sich langsam erhärtet. Gießt sie anschließend in die gewünschte Form und platziert die Form in der Mitte Eurer Schmiede. Erhitzt die Mischung mindestens einen halben Tag lang, dann lasst sie auskühlen und entfernt sie aus der Form.\r\n\r\n- Glover Mallory"
+    },
+    {
+        "form_id": "000E40D3|Skyrim.esm",
+        "type": "MGEF DNAM",
+        "string": "<mag>-prozentige Krankheitsresistenz."
+    },
+    {
+        "form_id": "000A2C46|Skyrim.esm",
+        "type": "ACTI RNAM",
+        "string": "Hallo!"
+    },
+	{
+        "form_id": "000176CD|Skyrim.esm",
+        "type": "FLOR RNAM",
+        "string": "Hallo2!"
+    }
+]
+----
 
-**Names / Full Names (`FULL`)**
-* `ACTI FULL`, `ALCH FULL`, `AMMO FULL`, `APPA FULL`, `ARMO FULL`, `AVIF FULL`, `BOOK FULL`, `CELL FULL`, `CONT FULL`, `CLAS FULL`, `DOOR FULL`, `ENCH FULL`, `EXPL FULL`, `FLOR FULL`, `FURN FULL`, `HAZD FULL`, `INGR FULL`, `KEYM FULL`, `LCTN FULL`, `LIGH FULL`, `MESG FULL`, `MGEF FULL`, `MISC FULL`, `NPC_ FULL`, `PERK FULL`, `PROJ FULL`, `QUST FULL`, `RACE FULL`, `SCRL FULL`, `SHOU FULL`, `SLGM FULL`, `SPEL FULL`, `TACT FULL`, `TREE FULL`, `WATR FULL`, `WEAP FULL`, `WOOP FULL`, `WRLD FULL`, `REFR FULL`, `DIAL FULL`
+Index required:
+* `QUST CNAM`: INDX - Stage Index + Entry index of the log entry
+* `QUST NNAM`: QOBJ - Objective index
+* `INFO NAM1`: Response number of TRDT - Response Data
+* `MESG ITXT`: List index like you can see them in xEdit. Starting with 0.
+* `PERK EPF2`: Fragment Index in EPF3
+* `PERK EPFD`: List index like you can see them in xEdit. Starting with 0. Only PERK EPFD strings are counted, no other entries count to this order!
 
-**Short Names (`SHRT`)**
-* `NPC_ SHRT`
+[source,json]
+----
+[
+    {
+        "form_id": "000E6C43|Skyrim.esm",
+        "type": "INFO NAM1",
+        "index": 2,
+        "string": "new sentence"
+    },
+    {
+        "form_id": "0004B2A1|Skyrim.esm",
+        "type": "QUST NNAM",
+        "index": 60,
+        "string": "new objective sentence"
+    },
+    {
+        "form_id": "00016837|Skyrim.esm",
+        "type": "MESG ITXT",
+        "index": 0,
+        "string": "Replaces Accept Sign"
+    }
+]
+----
 
-**Descriptions (`DESC` / `DNAM` / `RDMP` / `DATA`)**
-* `AMMO DESC`, `ARMO DESC`, `AVIF DESC`, `BOOK DESC`, `MESG DESC`, `PERK DESC`, `RACE DESC`, `SCRL DESC`, `SHOU DESC`, `SPEL DESC`, `WEAP DESC`
-* `LSCR DESC` (Loading Screen)
-* `MGEF DNAM` (Magic Effect Name)
-* `REGN RDMP` (Region)
-* `GMST DATA` (Game Setting Value)
-
-**Actions and Display Buttons**
-* `ACTI RNAM` / `FLOR RNAM` / `INFO RNAM` (Activate/Tooltip texts)
-* `PERK EPF2` / `PERK EPFD` (Perk UI & Verbs)
-* `MESG ITXT` (Message Box Button - often requires the `index` parameter)
-
-**Quests & Others**
-* `QUST NNAM` (Quest Objective - often requires `index`)
-* `QUST CNAM` (Legacy Objective - optionally requested by `original`)
-* `WOOP TNAM` (Word of Power Name)
-* `BOOK CNAM` (Book)
-* `INFO NAM1`
+For more examples visit link:https://github.com/SkyHorizon3/SSE-Dynamic-String-Distributor/blob/main/tests/generalTestAll.json[this file on GitHub].
 
 == Automation
 
-An automatic xEdit exporter (`DSD - Export plugins.pas`) is included in the `xEdit/` folder of this workspace. This script can be loaded in **SSEEdit (xEdit)** to automatically generate ready-to-use JSON files for the Dynamic String Distributor out of existing ESP patches. This helps you convert existing translation or string patch mods quickly into DSD formats.
+An automatic xEdit exporter (`DSD - Export plugins.pas`) is available on the modpage. This script can be loaded in **SSEEdit (xEdit)** to automatically generate ready-to-use JSON files for the DSD out of existing plugin files. 
+This helps you convert existing translation or string patch mods quickly into DSD formats.
 
-== Settings (INI Config)
+Furthermore, link:https://moddingforge.com/docs/sse-at/[SSE Auto Translator - SSE-AT] is available to translate whole load orders at once.
+
+== Settings
 
 The settings are located in `Data/SKSE/Plugins/DynamicStringDistributor.ini`. They take effect on startup:
 
 [source,ini]
 ----
 [Debug]
-; Adds more logging during the startup and for DESC and INFO NAM1 replacements.
+; Adds more logging during file parsing and logs subtitles (INFO NAM1)
 EnableDebugLog = false
 
 ; Adds the FormID and Plugin as a prefix to all replacement strings in the game.
-; (Extremely useful for finding IDs in-game).
+; This is for example useful if you want to see if a string is modified by DSD.
 EnableDebugInfo = false
 ----
 
