@@ -336,14 +336,14 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	break;
 	case TranslationType::kRuntime2: // add to second runtime map (some form types have two different string subrecords)
 	{
-		const auto combined = hash::szudzik_pair(0, runtimeFormID); // don't have an index, but ensure 0 to fix wrong jsons
+		const auto combined = Utils::packU32(0, runtimeFormID); // don't have an index, but ensure 0 to fix wrong jsons
 		m_runtimeMap2.emplace(combined, entry.string);
 	}
 	break;
 	case TranslationType::kRuntimeIndex:
 	{
 		const auto index = entry.index.has_value() ? entry.index.value() : 0;
-		const auto combined = hash::szudzik_pair(index, runtimeFormID);
+		const auto combined = Utils::packU32(index, runtimeFormID);
 		m_runtimeMap2.emplace(combined, entry.string);
 	}
 	break;
@@ -356,7 +356,7 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 		}
 
 		const auto index = entry.index.has_value() ? entry.index.value() : 0;
-		const auto combined = hash::szudzik_pair(index, runtimeFormID);
+		const auto combined = Utils::packU32(index, runtimeFormID);
 		m_runtimeMap2.emplace(combined, entry.string);
 	}
 	break;
@@ -392,7 +392,7 @@ const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t
 	case TranslationType::kRuntime2:
 	case TranslationType::kRuntimeIndex:
 	{
-		const auto combined = hash::szudzik_pair(index, formID);
+		const auto combined = Utils::packU32(index, formID);
 		const auto it = m_runtimeMap2.find(combined);
 		if (it != m_runtimeMap2.end())
 			return it->second.c_str();
