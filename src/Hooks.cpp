@@ -27,43 +27,6 @@ namespace Hook
 		}
 	};
 
-	struct NpcNameFileStreamHook //NPC FULL - Why this way? Because templates use one of their templates names and it's horrible to change it based on formID
-	{
-		static void thunk(RE::TESFullName* npcFullname, RE::TESFile* file)
-		{
-			func(npcFullname, file);
-
-			static std::once_flag flag;
-			std::call_once(flag, [&]() {
-				// Run our parser here, DataHandler already build the file list. 
-				// The reason is, that there is no reliable way in which I could tell which template the NPC copied from at DataLoaded
-				Manager::GetSingleton()->parseTranslationFiles();
-				});
-
-			if (!npcFullname)
-				return;
-
-			const auto npc = skyrim_cast<const RE::TESForm*>(npcFullname);
-			const char* translation = nullptr;
-			if (npc)
-			{
-				translation = Manager::GetSingleton()->getTranslation(npc->formID, 0, TranslationType::kRuntime2);
-			}
-
-			if (translation)
-			{
-				npcFullname->SetFullName(translation);
-			}
-		}
-		static inline REL::Relocation<decltype(thunk)> func;
-
-		static void Install()
-		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(24159, 24663), REL::Relocate(0x7CE, 0x924) };
-			stl::write_thunk_call<NpcNameFileStreamHook>(target1.address());
-		}
-	};
-
 	struct GetDescription
 	{
 		static void thunk(RE::TESDescription* description, RE::BSString& out, const RE::TESForm* parent, std::uint32_t chunkID)
@@ -188,6 +151,61 @@ namespace Hook
 		}
 	};
 
+	struct DataHandlerInitAllForms
+	{
+		// This can run multiple times, rebuild our stuff here too (since there can be new plugin files)
+		static void thunk(RE::TESDataHandler* handler)
+		{
+			Manager::GetSingleton()->parseTranslationFiles();
+			func(handler); // first NPCFullNameCopyComponent calls run here
+		}
+		static inline REL::Relocation<decltype(thunk)> func;
+
+		static void Install()
+		{
+			// datahandler compile files
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(13645, 0), REL::Relocate(0x341, 0x0) };
+			stl::write_thunk_call<DataHandlerInitAllForms>(target1.address());
+
+			// plugin hot reload
+			REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(13672, 0), REL::Relocate(0xB05, 0x0) };
+			stl::write_thunk_call<DataHandlerInitAllForms>(target2.address());
+		}
+	};
+
+	struct NPCFullNameCopyComponent
+	{
+		// NPCs copy their FullName all the time, keep our data updated 
+		static void thunk(RE::TESFullName* to, RE::BaseFormComponent* from)
+		{
+			auto fromForm = skyrim_cast<RE::TESNPC*>(from);
+			if (fromForm)
+			{
+				Manager::GetSingleton()->reloadConstTranslation(fromForm);
+			}
+
+			func(to, from);
+
+			/*auto fromForm = skyrim_cast<const RE::TESNPC*>(from);
+			auto fromID = fromForm ? fromForm->formID : 0;
+
+			auto toForm = skyrim_cast<const RE::TESNPC*>(to);
+			auto toID = toForm ? toForm->formID : 0;
+
+			SKSE::log::info("Name: {} - From: {:08X} - To: {:08X}", fromForm->GetFullName(), fromID, toID);*/
+		}
+		static inline REL::Relocation<decltype(thunk)> func;
+
+		static void Install()
+		{
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(24216, 0), REL::Relocate(0x15C, 0x0) };
+			stl::write_thunk_call<NPCFullNameCopyComponent>(target1.address());
+
+			REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(24160, 0), REL::Relocate(0xA0, 0x0) };
+			stl::write_thunk_call<NPCFullNameCopyComponent>(target2.address());
+		}
+	};
+
 	struct ReconstructForms
 	{
 		// runs on save load right after finished
@@ -223,7 +241,8 @@ namespace Hook
 
 	void InstallHooks()
 	{
-		NpcNameFileStreamHook::Install();
+		DataHandlerInitAllForms::Install();
+		NPCFullNameCopyComponent::Install();
 		GetDescription::Install();
 		GetLogEntryHook::Install();
 		GetResponseListHook::Install();

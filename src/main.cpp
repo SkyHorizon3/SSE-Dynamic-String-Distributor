@@ -1,6 +1,13 @@
 ﻿#include "Manager.h"
 #include "Hooks.h"
 
+bool CompileFiles(RE::TESDataHandler* a_data, bool downloadedContent)
+{
+	using func_t = decltype(&CompileFiles);
+	static REL::Relocation<func_t> func{ RELOCATION_ID(13645, 0) };
+	return func(a_data, downloadedContent);
+}
+
 void MessageListener(SKSE::MessagingInterface::Message* message)
 {
 	switch (message->type)
@@ -24,6 +31,8 @@ void MessageListener(SKSE::MessagingInterface::Message* message)
 	case SKSE::MessagingInterface::kDataLoaded:
 	{
 		Manager::GetSingleton()->runConstTranslation();
+
+		SKSE::log::info("Data Loaded!");
 	}
 	break;
 	default:
@@ -75,7 +84,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 		spdlog::flush_on(spdlog::level::info);
 	}
 
-	SKSE::AllocTrampoline(144);
+	SKSE::AllocTrampoline(200);
 
 	SKSE::GetMessagingInterface()->RegisterListener(MessageListener);
 

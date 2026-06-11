@@ -1,5 +1,6 @@
 #include "Manager.h"
 #include "Utils.h"
+#include "StrHelper.h"
 
 void Manager::LoadINI()
 {
@@ -168,6 +169,7 @@ TranslationType Manager::getTranslationType(std::string_view formType)
 	case "WEAP FULL"_h:
 	case "WOOP FULL"_h:
 	case "WRLD FULL"_h:
+	case "NPC_ FULL"_h:
 	{
 		return TranslationType::kFullName;
 	}
@@ -239,7 +241,6 @@ TranslationType Manager::getTranslationType(std::string_view formType)
 	{
 		return TranslationType::kRuntimeLegacy;
 	}
-	case "NPC_ FULL"_h:
 	case "BOOK CNAM"_h:
 	case "INFO RNAM"_h:
 	{
@@ -407,6 +408,13 @@ const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t
 
 void Manager::parseTranslationFiles()
 {
+	SKSE::log::debug("Start parseTranslationFiles...");
+
+	m_constTranslation.clear();
+	m_runtimeMap1.clear();
+	m_runtimeMap2.clear();
+	m_legacyMap.clear();
+
 	enumerateLoadOrder();
 
 	const auto folders = processFolders();
@@ -434,233 +442,8 @@ void Manager::parseTranslationFiles()
 	}
 
 	m_loadOrder.clear();
-}
 
-void Manager::fixedStringChange(RE::BSFixedString& to, std::string_view from)
-{
-	RE::setBSFixedString(to, from.empty() ? EMPTY : from.data());
-}
-
-void Manager::setGameSettingString(const std::optional<std::string>& name, const std::string_view newString) // GMST DATA
-{
-	if (!name.has_value())
-	{
-		SKSE::log::error("Couldn't inject string \"{}\"! The editorID is missing!", newString);
-		return;
-	}
-
-	const auto& settingStr = name.value();
-	const auto setting = RE::GameSettingCollection::GetSingleton()->GetSetting(settingStr.c_str());
-	if (!setting)
-	{
-		SKSE::log::debug("Failed to set GameSetting string for {}.", settingStr);
-		return;
-	}
-
-	if (setting->GetType() == RE::Setting::Type::kString)
-	{
-		RE::setStringValue(setting, newString.data());
-	}
-}
-
-void Manager::setMessageBoxButtonStrings(RE::TESForm* form, std::string_view newString, const std::optional<std::uint32_t>& index) //MESG ITXT
-{
-	if (!index.has_value())
-	{
-		SKSE::log::error("Couldn't inject string \"{}\"! The index is missing!", newString);
-		return;
-	}
-
-	const auto message = form->As<RE::BGSMessage>();
-	if (!message)
-	{
-		report(form);
-		return;
-	}
-
-	std::uint32_t pos = 0;
-	for (const auto& button : message->menuButtons)
-	{
-		if (button && pos == (*index))
-		{
-			fixedStringChange(button->text, newString);
-		}
-
-		pos++;
-	}
-}
-
-void Manager::setPerkMessageBoxButtonStrings(RE::TESForm* form, std::string_view newString, const std::optional<std::uint32_t>& index)  //PERK EPF2
-{
-	if (!index.has_value())
-	{
-		SKSE::log::error("Couldn't inject string \"{}\"! The index is missing!", newString);
-		return;
-	}
-
-	const auto perk = form->As<RE::BGSPerk>();
-	if (!perk)
-	{
-		report(form);
-		return;
-	}
-
-	for (const auto& entry : perk->perkEntries)
-	{
-		if (!entry || entry->GetType() != RE::PERK_ENTRY_TYPE::kEntryPoint)
-			continue;
-
-		const auto* entryPoint = static_cast<RE::BGSEntryPointPerkEntry*>(entry);
-		if (!entryPoint)
-			continue;
-
-		const auto data = entryPoint->functionData;
-		if (!data || data->GetType() != RE::BGSEntryPointFunctionData::ENTRY_POINT_FUNCTION_DATA::kActivateChoice)
-			continue;
-
-		const auto func = static_cast<RE::BGSEntryPointFunctionDataActivateChoice*>(data);
-		if (func && func->GetID() == (*index))
-		{
-			fixedStringChange(func->label, newString);
-		}
-	}
-}
-
-void Manager::setRegionDataStrings(RE::TESForm* form, std::string_view newString) //REGN RDMP
-{
-	const auto regionData = form->As<RE::TESRegion>();
-	const auto regionDataList = regionData ? regionData->dataList : nullptr;
-
-	if (!regionDataList)
-	{
-		report(form);
-		return;
-	}
-
-	for (const auto& region : regionDataList->regionDataList)
-	{
-		if (!region || region->GetType() != RE::TESRegionData::Type::kMap)
-			continue;
-
-		auto* mapData = static_cast<RE::TESRegionDataMap*>(region);
-		if (!mapData)
-			continue;
-
-		fixedStringChange(mapData->mapName, newString);
-	}
-}
-
-void Manager::setEntryPointStrings(RE::TESForm* form, std::string_view newString, const std::optional<std::uint32_t>& index) //PERK EPFD
-{
-	if (!index.has_value())
-	{
-		SKSE::log::error("Couldn't inject string \"{}\"! The index is missing!", newString);
-		return;
-	}
-
-	const auto perk = form->As<RE::BGSPerk>();
-	if (!perk)
-	{
-		report(form);
-		return;
-	}
-
-	const std::uint32_t entryCount = perk->perkEntries.size();
-	std::uint32_t textFuncFound = 0;
-
-	for (std::int32_t i = entryCount - 1; i >= 0; --i)
-	{
-		const auto& entry = perk->perkEntries[i];
-		if (!entry)
-			continue;
-
-		if (entry->GetType() != RE::PERK_ENTRY_TYPE::kEntryPoint)
-			continue;
-
-		const auto* entryPoint = static_cast<RE::BGSEntryPointPerkEntry*>(entry);
-		if (!entryPoint)
-			continue;
-
-		const auto data = entryPoint->functionData;
-		if (!data || data->GetType() != RE::BGSEntryPointFunctionData::ENTRY_POINT_FUNCTION_DATA::kText)
-			continue;
-
-		if (textFuncFound == (*index))
-		{
-			const auto func = static_cast<RE::BGSEntryPointFunctionDataText*>(data);
-			if (func)
-			{
-				fixedStringChange(func->text, newString);
-			}
-		}
-
-		++textFuncFound;
-	}
-}
-
-void Manager::setQuestObjectiveStrings(RE::TESForm* form, std::string_view newString, const std::optional<std::uint32_t>& index) //QUST NNAM
-{
-	if (!index.has_value())
-	{
-		SKSE::log::error("Couldn't inject string: \"{}\"! The index is missing!", newString);
-		return;
-	}
-
-	const auto quest = form->As<RE::TESQuest>();
-	if (!quest)
-	{
-		report(form);
-		return;
-	}
-
-	for (const auto& objective : quest->objectives)
-	{
-		if (objective && objective->index == (*index))
-		{
-			fixedStringChange(objective->displayText, newString);
-		}
-	}
-}
-
-void Manager::setActivateOverrideStrings(RE::TESForm* form, std::string_view newString)
-{
-	auto& overrideMap = RE::getActivateTextOverrideMap();
-
-	const auto it = overrideMap.find(form->formID);
-	if (it != overrideMap.end())
-	{
-		fixedStringChange(it->second, newString);
-	}
-	else
-	{
-		RE::BSFixedString temp;
-		fixedStringChange(temp, newString);
-		overrideMap.emplace(form->formID, temp);
-	}
-}
-
-void Manager::setReferenceStrings(RE::TESForm* form, std::string_view newString)
-{
-	const auto ref = form->As<RE::TESObjectREFR>();
-	if (!ref)
-	{
-		report(form);
-		return;
-	}
-
-	const auto marker = ref ? ref->extraList.GetByType<RE::ExtraMapMarker>() : nullptr;
-	const auto data = marker ? marker->mapData : nullptr;
-	if (data)
-	{
-		data->locationName.SetFullName(newString.data());
-	}
-}
-
-void Manager::report(const RE::TESForm* const form) const
-{
-	const auto formtype = RE::FormTypeToString(form->GetFormType());
-	const auto modname = Utils::getModName(form);
-	SKSE::log::error("Tried to cast {:08X} to an invalid form type - Actual Formtype: {} - Plugin: {}", form->formID, formtype, modname);
+	SKSE::log::debug("... Finished parseTranslationFiles!");
 }
 
 void Manager::setConstString(RE::TESForm* form, const ConstTranslationData& entry)
@@ -672,23 +455,23 @@ void Manager::setConstString(RE::TESForm* form, const ConstTranslationData& entr
 		const auto OrigString = form->As<RE::TESFullName>();
 		if (!OrigString)
 		{
-			report(form);
+			StrHelper::report(form);
 			return;
 		}
 
 		OrigString->SetFullName(entry.replacerText.c_str());
 	}
 	break;
-	case TranslationType::kLoadScreenDescription: // TODO: maybe add formType checks
+	case TranslationType::kLoadScreenDescription:
 	{
 		auto loadScreen = form->As<RE::TESLoadScreen>();
 		if (!loadScreen)
 		{
-			report(form);
+			StrHelper::report(form);
 			return;
 		}
 
-		fixedStringChange(loadScreen->loadingText, entry.replacerText);
+		StrHelper::fixedStringChange(loadScreen->loadingText, entry.replacerText);
 	}
 	break;
 	case TranslationType::kMagicDescription:
@@ -696,11 +479,11 @@ void Manager::setConstString(RE::TESForm* form, const ConstTranslationData& entr
 		auto effect = form->As<RE::EffectSetting>();
 		if (!effect)
 		{
-			report(form);
+			StrHelper::report(form);
 			return;
 		}
 
-		fixedStringChange(effect->magicItemDescription, entry.replacerText);
+		StrHelper::fixedStringChange(effect->magicItemDescription, entry.replacerText);
 	}
 	break;
 	case TranslationType::kShortName:
@@ -708,16 +491,16 @@ void Manager::setConstString(RE::TESForm* form, const ConstTranslationData& entr
 		auto npc = form->As<RE::TESNPC>();
 		if (!npc)
 		{
-			report(form);
+			StrHelper::report(form);
 			return;
 		}
 
-		fixedStringChange(npc->shortName, entry.replacerText);
+		StrHelper::fixedStringChange(npc->shortName, entry.replacerText);
 	}
 	break;
 	case TranslationType::kRegion:
 	{
-		setRegionDataStrings(form, entry.replacerText);
+		StrHelper::setRegionDataStrings(form, entry.replacerText);
 	}
 	break;
 	case TranslationType::kWordOfPower:
@@ -725,46 +508,46 @@ void Manager::setConstString(RE::TESForm* form, const ConstTranslationData& entr
 		auto word = form->As<RE::TESWordOfPower>();
 		if (!word)
 		{
-			report(form);
+			StrHelper::report(form);
 			return;
 		}
 
-		fixedStringChange(word->translation, entry.replacerText);
+		StrHelper::fixedStringChange(word->translation, entry.replacerText);
 	}
 	break;
 	case TranslationType::kButtonText1:
 	{
-		setMessageBoxButtonStrings(form, entry.replacerText, entry.index);
+		StrHelper::setMessageBoxButtonStrings(form, entry.replacerText, entry.index);
 	}
 	break;
 	case TranslationType::kButtonText2:
 	{
-		setPerkMessageBoxButtonStrings(form, entry.replacerText, entry.index);
+		StrHelper::setPerkMessageBoxButtonStrings(form, entry.replacerText, entry.index);
 	}
 	break;
 	case TranslationType::kQuestObjective:
 	{
-		setQuestObjectiveStrings(form, entry.replacerText, entry.index);
+		StrHelper::setQuestObjectiveStrings(form, entry.replacerText, entry.index);
 	}
 	break;
 	case TranslationType::kPerkVerb:
 	{
-		setEntryPointStrings(form, entry.replacerText, entry.index);
+		StrHelper::setEntryPointStrings(form, entry.replacerText, entry.index);
 	}
 	break;
 	case TranslationType::kActivationText:
 	{
-		setActivateOverrideStrings(form, entry.replacerText);
+		StrHelper::setActivateOverrideStrings(form, entry.replacerText);
 	}
 	break;
 	case TranslationType::kReference:
 	{
-		setReferenceStrings(form, entry.replacerText);
+		StrHelper::setReferenceStrings(form, entry.replacerText);
 	}
 	break;
 	case TranslationType::kGameSetting: // no formID needed
 	{
-		setGameSettingString(entry.editor_id, entry.replacerText);
+		StrHelper::setGameSettingString(entry.editor_id, entry.replacerText);
 	}
 	break;
 	default:

@@ -17,7 +17,7 @@ enum class TranslationType :
 	kReference, // REFR FULL
 	kPerkVerb, // PERK EPFD
 	kRuntime1, // XXXX DESC, DIAL FULL
-	kRuntime2, // INFO RNAM, BOOK CNAM, NPC_ FULL
+	kRuntime2, // INFO RNAM, BOOK CNAM
 	kRuntimeIndex, // INFO NAM1
 	kRuntimeLegacy, // QUST CNAM
 
