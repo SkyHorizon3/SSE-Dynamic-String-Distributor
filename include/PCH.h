@@ -1,24 +1,69 @@
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN
+
+#define NOGDICAPMASKS
+#define NOVIRTUALKEYCODES
+//#define NOWINMESSAGES
+#define NOWINSTYLES
+#define NOSYSMETRICS
+#define NOMENUS
+#define NOICONS
+#define NOKEYSTATES
+#define NOSYSCOMMANDS
+#define NORASTEROPS
+#define NOSHOWWINDOW
+#define OEMRESOURCE
+#define NOATOM
+#define NOCLIPBOARD
+#define NOCOLOR
+#define NOCTLMGR
+#define NODRAWTEXT
+#define NOGDI
+#define NOKERNEL
+//#define NOUSER
+//#define NONLS
+#define NOMB
+#define NOMEMMGR
+#define NOMETAFILE
 #define NOMINMAX
+//#define NOMSG
+#define NOOPENFILE
+#define NOSCROLL
+#define NOSERVICE
+#define NOSOUND
+#define NOTEXTMETRIC
+#define NOWH
+#define NOWINOFFSETS
+#define NOCOMM
+#define NOKANJI
+#define NOHELP
+#define NOPROFILER
+#define NODEFERWINDOWPOS
+#define NOMCX
 
 #include "RE/Skyrim.h"
 #include "REX/REX/Singleton.h"
 #include "SKSE/SKSE.h"
 
 #include <MergeMapperPluginAPI.h>
+#include "RE.h"
+
+#include <ClibUtil/string.hpp>
+#include <ClibUtil/distribution.hpp>
+
 #include <boost/unordered/unordered_node_map.hpp>
 #include <boost/unordered/unordered_map.hpp>
 #include <xbyak/xbyak.h>
 #include <SimpleIni.h>
 #include <glaze/json.hpp>
-#include <ClibUtil/string.hpp>
-#include "RE.h"
+#include <srell.hpp>
+
+namespace string = clib_util::string;
+namespace dist = clib_util::distribution;
 
 using namespace std::literals;
 using namespace clib_util::string::literals;
-namespace string = clib_util::string;
 
 namespace stl
 {

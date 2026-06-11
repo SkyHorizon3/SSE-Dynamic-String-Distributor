@@ -9,7 +9,8 @@
     "glaze",
     "boost-unordered",
     "mergemapper",
-    "clib-util"
+    "clib-util",
+    "srell"
   ],
-  "builtin-baseline": "ee12231b20c95013c6638d845d04c91559a1d1ff"
+  "builtin-baseline": "32305df7d0b9a308e6ac454dd98ebfe550342c09"
 }

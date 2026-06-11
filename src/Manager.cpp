@@ -776,9 +776,10 @@ void Manager::runConstTranslation()
 {
 	SKSE::log::debug("Start ConstTranslation...");
 
+	RE::TESForm* form = nullptr;
 	for (const auto& [runtimeFormID, entry] : m_constTranslation)
 	{
-		RE::TESForm* form = nullptr;
+		form = nullptr;
 		if (entry.translationType != TranslationType::kGameSetting)
 		{
 			form = RE::TESForm::LookupByID(runtimeFormID);
