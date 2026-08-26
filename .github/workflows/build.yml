@@ -1,0 +1,76 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: '32305df7d0b9a308e6ac454dd98ebfe550342c09'
+
+      - name: Configure CMake
+        run: |
+          cmake --preset ALL -B build
+
+      - name: Build
+        run: |
+          cmake --build build --config Release
+
+      - name: Prepare Artifacts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist/SKSE/Plugins
+          Get-ChildItem -Path build -Filter "DynamicStringDistributor.dll" -Recurse | ForEach-Object {
+            Copy-Item $_.FullName -Destination dist/SKSE/Plugins/ -Force
+          }
+          Get-ChildItem -Path build -Filter "DynamicStringDistributor.pdb" -Recurse | ForEach-Object {
+            Copy-Item $_.FullName -Destination dist/SKSE/Plugins/ -Force
+          }
+          if (Test-Path config) {
+            Copy-Item -Recurse config/* dist/
+          }
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DynamicStringDistributor
+          path: dist/
+
+      - name: Create Release Archive
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        run: |
+          Compress-Archive -Path dist/* -DestinationPath "DynamicStringDistributor-${{ github.ref_name }}.zip" -Force
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: DynamicStringDistributor-*.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

@@ -8,7 +8,12 @@ vcpkg_from_github(
 )
 
 # Install codes
-set(CLIBUTIL_SOURCE	${SOURCE_PATH}/include/ClibUtil)
-file(INSTALL ${CLIBUTIL_SOURCE} DESTINATION ${CURRENT_PACKAGES_DIR}/include)
+if(EXISTS "${SOURCE_PATH}/include/CLIBUtil")
+    file(INSTALL "${SOURCE_PATH}/include/CLIBUtil" DESTINATION "${CURRENT_PACKAGES_DIR}/include")
+    file(INSTALL "${SOURCE_PATH}/include/CLIBUtil" DESTINATION "${CURRENT_PACKAGES_DIR}/include" RENAME ClibUtil)
+else()
+    file(INSTALL "${SOURCE_PATH}/include/ClibUtil" DESTINATION "${CURRENT_PACKAGES_DIR}/include")
+    file(INSTALL "${SOURCE_PATH}/include/ClibUtil" DESTINATION "${CURRENT_PACKAGES_DIR}/include" RENAME CLIBUtil)
+endif()
 
 vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")

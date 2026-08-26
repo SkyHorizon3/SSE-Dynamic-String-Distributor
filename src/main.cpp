@@ -1,43 +1,55 @@
-﻿#include "Manager.h"
+#include "Manager.h"
 #include "Hooks.h"
 
 bool CompileFiles(RE::TESDataHandler* a_data, bool downloadedContent)
 {
 	using func_t = decltype(&CompileFiles);
-	static REL::Relocation<func_t> func{ RELOCATION_ID(13645, 0) };
+	static REL::Relocation<func_t> func{ RELOCATION_ID(13645, 13745) };
 	return func(a_data, downloadedContent);
 }
 
 void MessageListener(SKSE::MessagingInterface::Message* message)
 {
-	switch (message->type)
-	{
-	case SKSE::MessagingInterface::kPostPostLoad:
-	{
-		MergeMapperPluginAPI::GetMergeMapperInterface001();
-		if (g_mergeMapperInterface)
-		{
-			const auto version = g_mergeMapperInterface->GetBuildNumber();
-			SKSE::log::info("Got MergeMapper interface buildnumber {}.", version);
-		}
-		else
-		{
-			SKSE::log::info("MergeMapper (https://www.nexusmods.com/skyrimspecialedition/mods/74689) not detected.");
-		}
+	if (!message)
+		return;
 
-		Hook::InstallHooks();
-	}
-	break;
-	case SKSE::MessagingInterface::kDataLoaded:
+	try
 	{
-		Manager::GetSingleton()->runConstTranslation();
+		switch (message->type)
+		{
+		case SKSE::MessagingInterface::kPostPostLoad:
+		{
+			MergeMapperPluginAPI::GetMergeMapperInterface001();
+			if (g_mergeMapperInterface)
+			{
+				const auto version = g_mergeMapperInterface->GetBuildNumber();
+				SKSE::log::info("Got MergeMapper interface buildnumber {}.", version);
+			}
+			else
+			{
+				SKSE::log::info("MergeMapper (https://www.nexusmods.com/skyrimspecialedition/mods/74689) not detected.");
+			}
 
-		SKSE::log::info("Data Loaded!");
-	}
-	break;
-	default:
+			Hook::InstallHooks();
+		}
 		break;
-
+		case SKSE::MessagingInterface::kDataLoaded:
+		{
+			Manager::GetSingleton()->runConstTranslation();
+			SKSE::log::info("Data Loaded!");
+		}
+		break;
+		default:
+			break;
+		}
+	}
+	catch (const std::exception& e)
+	{
+		SKSE::log::critical("Fatal exception in MessageListener (type {}): {}", message->type, e.what());
+	}
+	catch (...)
+	{
+		SKSE::log::critical("Unknown fatal exception in MessageListener (type {})", message->type);
 	}
 }
 
@@ -65,28 +77,41 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface*, 
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
-	SKSE::Init(skse, true);
-	spdlog::set_pattern("[%H:%M:%S:%e] [%l] %v"s);
-
-	SKSE::log::info("Game version: {}", skse->RuntimeVersion());
-
-	const auto manager = Manager::GetSingleton();
-	manager->LoadINI();
-
-	if (manager->isDebugLogEnabled())
+	try
 	{
-		spdlog::set_level(spdlog::level::trace);
-		spdlog::flush_on(spdlog::level::trace);
+		SKSE::Init(skse, true);
+		spdlog::set_pattern("[%H:%M:%S:%e] [%l] %v"s);
+
+		SKSE::log::info("Game version: {}", skse->RuntimeVersion());
+
+		const auto manager = Manager::GetSingleton();
+		manager->LoadINI();
+
+		if (manager->isDebugLogEnabled())
+		{
+			spdlog::set_level(spdlog::level::trace);
+			spdlog::flush_on(spdlog::level::trace);
+		}
+		else
+		{
+			spdlog::set_level(spdlog::level::info);
+			spdlog::flush_on(spdlog::level::info);
+		}
+
+		SKSE::AllocTrampoline(200);
+
+		SKSE::GetMessagingInterface()->RegisterListener(MessageListener);
+
+		return true;
 	}
-	else
+	catch (const std::exception& e)
 	{
-		spdlog::set_level(spdlog::level::info);
-		spdlog::flush_on(spdlog::level::info);
+		SKSE::log::critical("Fatal exception in SKSEPluginLoad: {}", e.what());
+		return false;
 	}
-
-	SKSE::AllocTrampoline(200);
-
-	SKSE::GetMessagingInterface()->RegisterListener(MessageListener);
-
-	return true;
+	catch (...)
+	{
+		SKSE::log::critical("Unknown fatal exception in SKSEPluginLoad");
+		return false;
+	}
 }

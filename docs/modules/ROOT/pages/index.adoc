@@ -55,7 +55,7 @@ Each entry in the JSON array is an object with the following supported propertie
 | `original` | String (Optional) | Specifies the original string to be replaced. Deprecated since version 1.4.0!
 |===
 
-The JSON file and especially the included strings have to follow the JSON link:https://datatracker.ietf.org/doc/html/rfc8259[RFC 8259] standard! In other words the strings have to be link:https://www.freeformatter.com/json-escape.html#before-output[correctly escaped].
+The JSON file and especially the included strings have to follow the JSON link:https://datatracker.ietf.org/doc/html/rfc8259[RFC 8259] standard! In other words the strings have to be link:https://jsonformatter.org/json-escape[correctly escaped].
 DSD accepts multiple ways to write the formID in the `form_id` field:
 
 * Full FormID: 050176CD, 0x0176CD, 0X0176CD, 176CD

@@ -9,21 +9,41 @@ namespace Hook
 		{
 			auto result = func(item, ownerQuest);
 
-			const char* translation = nullptr;
-			if (ownerQuest && item)
+			try
 			{
-				const std::uint32_t uniqueID = item->index + ownerQuest->currentStage;
-				translation = Manager::GetSingleton()->getTranslation(ownerQuest->formID, uniqueID, TranslationType::kRuntimeLegacy, result);
-			}
+				const char* translation = nullptr;
+				if (ownerQuest && item)
+				{
+					const std::uint32_t uniqueID = item->index + ownerQuest->currentStage;
+					translation = Manager::GetSingleton()->getTranslation(ownerQuest->formID, uniqueID, TranslationType::kRuntimeLegacy, result);
+				}
 
-			return translation == nullptr ? result : translation;
+				return translation == nullptr ? result : translation;
+			}
+			catch (const std::exception& e)
+			{
+				SKSE::log::error("Exception in GetLogEntryHook: {}", e.what());
+				return result;
+			}
+			catch (...)
+			{
+				SKSE::log::error("Unknown exception in GetLogEntryHook");
+				return result;
+			}
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(24778, 25259) };
-			stl::hook_function_prologue<GetLogEntryHook, 6>(target.address());
+			try
+			{
+				REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(24778, 25259) };
+				stl::hook_function_prologue<GetLogEntryHook, 6>(target.address());
+			}
+			catch (const std::exception& e)
+			{
+				SKSE::log::error("Failed to install GetLogEntryHook: {}", e.what());
+			}
 		}
 	};
 
@@ -31,36 +51,54 @@ namespace Hook
 	{
 		static void thunk(RE::TESDescription* description, RE::BSString& out, const RE::TESForm* parent, std::uint32_t chunkID)
 		{
-			// In SE we hook LoadDescriptionFromFile func where the game already castet the description to TESForm
-			// AE inlined, we hook the GetDescription func where the game didn't cast it yet
-			const auto safeForm = parent ? parent : skyrim_cast<const RE::TESForm*>(description);
-
-			func(description, out, safeForm, chunkID); // call original func with our cast, so we don't cast twice at least
-			if (!safeForm)
-				return;
-
-			const char* translation = nullptr;
-
-			// 0x4D414E43 == 'MANC' (CNAM)
-			const bool isCNAM = chunkID == 'MANC';
-			const bool isDESC = chunkID == 'CSED';
-			if (isDESC || isCNAM) // skip garbage data, not caused by Skyrim but other modders
+			try
 			{
-				const auto type = isDESC ? TranslationType::kRuntime1 : TranslationType::kRuntime2;
-				translation = Manager::GetSingleton()->getTranslation(safeForm->formID, 0, type);
+				// In SE we hook LoadDescriptionFromFile func where the game already castet the description to TESForm
+				// AE inlined, we hook the GetDescription func where the game didn't cast it yet
+				const auto safeForm = parent ? parent : skyrim_cast<const RE::TESForm*>(description);
+
+				func(description, out, safeForm, chunkID); // call original func with our cast, so we don't cast twice at least
+				if (!safeForm)
+					return;
+
+				const char* translation = nullptr;
+
+				// 0x4D414E43 == 'MANC' (CNAM)
+				const bool isCNAM = chunkID == 'MANC';
+				const bool isDESC = chunkID == 'CSED';
+				if (isDESC || isCNAM) // skip garbage data, not caused by Skyrim but other modders
+				{
+					const auto type = isDESC ? TranslationType::kRuntime1 : TranslationType::kRuntime2;
+					translation = Manager::GetSingleton()->getTranslation(safeForm->formID, 0, type);
+				}
+
+				if (translation)
+				{
+					out = translation;
+				}
 			}
-
-			if (translation)
+			catch (const std::exception& e)
 			{
-				out = translation;
+				SKSE::log::error("Exception in GetDescription: {}", e.what());
+			}
+			catch (...)
+			{
+				SKSE::log::error("Unknown exception in GetDescription");
 			}
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target{ REL::VariantID(14401, 14552, 0x1A0300) };
-			stl::hook_function_prologue<GetDescription, 6>(target.address());
+			try
+			{
+				REL::Relocation<std::uintptr_t> target{ REL::VariantID(14401, 14552, 0x1A0300) };
+				stl::hook_function_prologue<GetDescription, 6>(target.address());
+			}
+			catch (const std::exception& e)
+			{
+				SKSE::log::error("Failed to install GetDescription: {}", e.what());
+			}
 		}
 	};
 
@@ -72,30 +110,41 @@ namespace Hook
 			if (!topicInfo || !result)
 				return result;
 
-			auto responseTopicInfo = topicInfo;
-			auto linkedResponseInfo = topicInfo->dataInfo;
-
-			if (linkedResponseInfo)
+			try
 			{
-				for (auto i = linkedResponseInfo; i; i = i->dataInfo)
+				auto responseTopicInfo = topicInfo;
+				auto linkedResponseInfo = topicInfo->dataInfo;
+
+				if (linkedResponseInfo)
 				{
-					responseTopicInfo = i;
+					for (auto i = linkedResponseInfo; i; i = i->dataInfo)
+					{
+						responseTopicInfo = i;
+					}
+				}
+
+				const auto manager = Manager::GetSingleton();
+				for (auto response = result->head; response; response = response->next)
+				{
+					if (!response)
+						continue;
+
+					SKSE::log::debug("Original string: {} - TopicInfoFormID: {:08X} - LinkedResponseFormID: {:08X} - ResponseNumber: {}", response->responseText.c_str(), topicInfo->formID, responseTopicInfo->formID, response->responseNumber);
+
+					const auto translation = manager->getTranslation(responseTopicInfo->formID, response->responseNumber, TranslationType::kRuntimeIndex);
+					if (translation)
+					{
+						RE::setBSFixedString(response->responseText, translation);
+					}
 				}
 			}
-
-			const auto manager = Manager::GetSingleton();
-			for (auto response = result->head; response; response = response->next)
+			catch (const std::exception& e)
 			{
-				if (!response)
-					continue;
-
-				SKSE::log::debug("Original string: {} - TopicInfoFormID: {:08X} - LinkedResponseFormID: {:08X} - ResponseNumber: {}", response->responseText.c_str(), topicInfo->formID, responseTopicInfo->formID, response->responseNumber);
-
-				const auto translation = manager->getTranslation(responseTopicInfo->formID, response->responseNumber, TranslationType::kRuntimeIndex);
-				if (translation)
-				{
-					RE::setBSFixedString(response->responseText, translation);
-				}
+				SKSE::log::error("Exception in GetResponseListHook: {}", e.what());
+			}
+			catch (...)
+			{
+				SKSE::log::error("Unknown exception in GetResponseListHook");
 			}
 
 			return result;
@@ -104,8 +153,15 @@ namespace Hook
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(25083, 25626) };
-			stl::hook_function_prologue<GetResponseListHook, 6>(target.address());
+			try
+			{
+				REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(25083, 25626) };
+				stl::hook_function_prologue<GetResponseListHook, 6>(target.address());
+			}
+			catch (const std::exception& e)
+			{
+				SKSE::log::error("Failed to install GetResponseListHook: {}", e.what());
+			}
 		}
 	};
 
@@ -113,40 +169,60 @@ namespace Hook
 	{
 		static void thunk(RE::MenuTopicManager::Dialogue& out, const char* source, std::uint64_t maxLen)
 		{
-			const auto manager = Manager::GetSingleton();
-			const char* translation = nullptr;
-
-			const auto parent = out.parentTopic;
-			if (parent)
+			try
 			{
-				translation = manager->getTranslation(parent->formID, 0, TranslationType::kRuntime1);
-			}
+				const auto manager = Manager::GetSingleton();
+				const char* translation = nullptr;
 
-			const auto parentInfo = out.parentTopicInfo;
-			if (parentInfo)
-			{
-				const auto rnamTranslation = manager->getTranslation(parentInfo->formID, 0, TranslationType::kRuntime2);
-				if (rnamTranslation)
+				const auto parent = out.parentTopic;
+				if (parent)
 				{
-					translation = rnamTranslation;
+					translation = manager->getTranslation(parent->formID, 0, TranslationType::kRuntime1);
 				}
-			}
 
-			func(out, translation == nullptr ? source : translation, maxLen);
+				const auto parentInfo = out.parentTopicInfo;
+				if (parentInfo)
+				{
+					const auto rnamTranslation = manager->getTranslation(parentInfo->formID, 0, TranslationType::kRuntime2);
+					if (rnamTranslation)
+					{
+						translation = rnamTranslation;
+					}
+				}
+
+				func(out, translation == nullptr ? source : translation, maxLen);
+			}
+			catch (const std::exception& e)
+			{
+				SKSE::log::error("Exception in DialogueMenuTextHook: {}", e.what());
+				func(out, source, maxLen);
+			}
+			catch (...)
+			{
+				SKSE::log::error("Unknown exception in DialogueMenuTextHook");
+				func(out, source, maxLen);
+			}
 		};
 		static inline REL::Relocation<decltype(thunk)> func;
 
 		static void Install()
 		{
-			constexpr auto address = RELOCATION_ID(34434, 35254);
-
-			REL::Relocation<std::uintptr_t> target1{ address, REL::Relocate(0xCC, 0x226) };
-			stl::write_thunk_call<DialogueMenuTextHook>(target1.address());
-
-			if (REL::Module::IsAE())
+			try
 			{
-				REL::Relocation<std::uintptr_t> target2{ address, 0x115 };
-				stl::write_thunk_call<DialogueMenuTextHook>(target2.address());
+				constexpr auto address = RELOCATION_ID(34434, 35254);
+
+				REL::Relocation<std::uintptr_t> target1{ address, REL::Relocate(0xCC, 0x226) };
+				stl::write_thunk_call<DialogueMenuTextHook>(target1.address());
+
+				if (REL::Module::IsAE())
+				{
+					REL::Relocation<std::uintptr_t> target2{ address, 0x115 };
+					stl::write_thunk_call<DialogueMenuTextHook>(target2.address());
+				}
+			}
+			catch (const std::exception& e)
+			{
+				SKSE::log::error("Failed to install DialogueMenuTextHook: {}", e.what());
 			}
 		}
 	};
@@ -156,20 +232,37 @@ namespace Hook
 		// This can run multiple times, rebuild our stuff here too (since there can be new plugin files)
 		static void thunk(RE::TESDataHandler* handler)
 		{
-			Manager::GetSingleton()->parseTranslationFiles();
+			try
+			{
+				Manager::GetSingleton()->parseTranslationFiles();
+			}
+			catch (const std::exception& e)
+			{
+				SKSE::log::error("Exception in DataHandlerInitAllForms parseTranslationFiles: {}", e.what());
+			}
 			func(handler); // first NPCFullNameCopyComponent calls run here
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
 		static void Install()
 		{
-			// datahandler compile files
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(13645, 0), REL::Relocate(0x341, 0x0) };
-			stl::write_thunk_call<DataHandlerInitAllForms>(target1.address());
+			try
+			{
+				if (REL::Module::IsSE())
+				{
+					// datahandler compile files
+					REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(13645, 0), REL::Relocate(0x341, 0x0) };
+					stl::write_thunk_call<DataHandlerInitAllForms>(target1.address());
 
-			// plugin hot reload
-			REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(13672, 0), REL::Relocate(0xB05, 0x0) };
-			stl::write_thunk_call<DataHandlerInitAllForms>(target2.address());
+					// plugin hot reload
+					REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(13672, 0), REL::Relocate(0xB05, 0x0) };
+					stl::write_thunk_call<DataHandlerInitAllForms>(target2.address());
+				}
+			}
+			catch (const std::exception& e)
+			{
+				SKSE::log::error("Failed to install DataHandlerInitAllForms: {}", e.what());
+			}
 		}
 	};
 
@@ -178,31 +271,40 @@ namespace Hook
 		// NPCs copy their FullName all the time, keep our data updated 
 		static void thunk(RE::TESFullName* to, RE::BaseFormComponent* from)
 		{
-			auto fromForm = skyrim_cast<RE::TESNPC*>(from);
-			if (fromForm)
+			try
 			{
-				Manager::GetSingleton()->reloadConstTranslation(fromForm);
+				auto fromForm = skyrim_cast<RE::TESNPC*>(from);
+				if (fromForm)
+				{
+					Manager::GetSingleton()->reloadConstTranslation(fromForm);
+				}
+			}
+			catch (const std::exception& e)
+			{
+				SKSE::log::error("Exception in NPCFullNameCopyComponent reloadConstTranslation: {}", e.what());
 			}
 
 			func(to, from);
-
-			/*auto fromForm = skyrim_cast<const RE::TESNPC*>(from);
-			auto fromID = fromForm ? fromForm->formID : 0;
-
-			auto toForm = skyrim_cast<const RE::TESNPC*>(to);
-			auto toID = toForm ? toForm->formID : 0;
-
-			SKSE::log::info("Name: {} - From: {:08X} - To: {:08X}", fromForm->GetFullName(), fromID, toID);*/
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(24216, 0), REL::Relocate(0x15C, 0x0) };
-			stl::write_thunk_call<NPCFullNameCopyComponent>(target1.address());
+			try
+			{
+				if (REL::Module::IsSE())
+				{
+					REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(24216, 0), REL::Relocate(0x15C, 0x0) };
+					stl::write_thunk_call<NPCFullNameCopyComponent>(target1.address());
 
-			REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(24160, 0), REL::Relocate(0xA0, 0x0) };
-			stl::write_thunk_call<NPCFullNameCopyComponent>(target2.address());
+					REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(24160, 0), REL::Relocate(0xA0, 0x0) };
+					stl::write_thunk_call<NPCFullNameCopyComponent>(target2.address());
+				}
+			}
+			catch (const std::exception& e)
+			{
+				SKSE::log::error("Failed to install NPCFullNameCopyComponent: {}", e.what());
+			}
 		}
 	};
 
@@ -216,26 +318,44 @@ namespace Hook
 			if (!data || data->unk78 == 0) // unk78 is sum size of all three arrays
 				return;
 
-			const auto mgr = Manager::GetSingleton();
-			for (int i = 0; i < 3; i++)
+			try
 			{
-				const auto& list = data->constructedForms.data[i];
-				for (const auto& entry : list)
+				const auto mgr = Manager::GetSingleton();
+				for (int i = 0; i < 3; i++)
 				{
-					const auto& form = entry.form;
-					if (!form)
-						continue;
+					const auto& list = data->constructedForms.data[i];
+					for (const auto& entry : list)
+					{
+						const auto& form = entry.form;
+						if (!form)
+							continue;
 
-					mgr->reloadConstTranslation(form);
+						mgr->reloadConstTranslation(form);
+					}
 				}
+			}
+			catch (const std::exception& e)
+			{
+				SKSE::log::error("Exception in ReconstructForms: {}", e.what());
+			}
+			catch (...)
+			{
+				SKSE::log::error("Unknown exception in ReconstructForms");
 			}
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target1{ REL::VariantID(34644, 35566, 0x581D10), REL::Relocate(0x3AA, 0x25F) };
-			stl::write_thunk_call<ReconstructForms>(target1.address());
+			try
+			{
+				REL::Relocation<std::uintptr_t> target1{ REL::VariantID(34644, 35566, 0x581D10), REL::Relocate(0x3AA, 0x25F) };
+				stl::write_thunk_call<ReconstructForms>(target1.address());
+			}
+			catch (const std::exception& e)
+			{
+				SKSE::log::error("Failed to install ReconstructForms: {}", e.what());
+			}
 		}
 	};
 

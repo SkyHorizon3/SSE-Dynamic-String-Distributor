@@ -1,10 +1,10 @@
 {
-  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "commonlibsse-ng",
   "version-semver": "4.26.2",
   "port-version": 0,
   "description": "A fork of CommonLibSSE with advanced features for modern SKSE development.",
-  "homepage": "https://github.com/alandtse/CommonLibVR/tree/ng",
+  "homepage": "https://github.com/alandtse/CommonLibSSE-NG/tree/ng",
   "license": "MIT",
   "supports": "windows & x64",
   "dependencies": [
