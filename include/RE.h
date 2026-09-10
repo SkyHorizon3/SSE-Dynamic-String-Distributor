@@ -11,7 +11,9 @@ namespace RE
 	RE::Setting* setStringValue(RE::Setting* setting, const char* str);
 	// case sensitive BSFixedString change
 	void setBSFixedString(RE::BSFixedString& str, const char* data);
-	void enumReferencesCloseToRef(RE::TESDataHandler* handler, RE::TESObjectREFR* ref, float radius1, const RE::NiPoint3& point2, float radius2, bool(*enumFunc)(RE::TESObjectREFR*, std::uint64_t), std::uint64_t enumData);
+
+	// gets the last base of the actor reference that has the BaseData flag. But this can still be a template that inherited the full name
+	RE::FormID getFullNameFormIDForRef(const RE::TESObjectREFR& actor);
 
 	RE::OBJECT_TYPE stringToObjectType(std::string_view str);
 }

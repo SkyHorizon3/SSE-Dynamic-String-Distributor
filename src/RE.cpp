@@ -16,11 +16,11 @@ namespace RE
 		func(str, data);
 	}
 
-	void enumReferencesCloseToRef(RE::TESDataHandler* handler, RE::TESObjectREFR* ref, float radius1, const RE::NiPoint3& point2, float radius2, bool(*enumFunc)(RE::TESObjectREFR*, std::uint64_t), std::uint64_t enumData)
+	RE::FormID getFullNameFormIDForRef(const RE::TESObjectREFR& actor)
 	{
-		using func_t = decltype(&enumReferencesCloseToRef);
-		static REL::Relocation<func_t> func{ RELOCATION_ID(13605, 13701) };
-		func(handler, ref, radius1, point2, radius2, enumFunc, enumData);
+		using func_t = decltype(&getFullNameFormIDForRef);
+		static REL::Relocation<func_t> func{ RELOCATION_ID(23422, 23885) };
+		return func(actor);
 	}
 
 	RE::OBJECT_TYPE stringToObjectType(std::string_view str)
@@ -140,14 +140,4 @@ namespace RE
 		}
 		}
 	}
-
-	/*	TESBoundObject* __fastcall TESObjectREFR::GetOriginalObjectReference(TESObjectREFR* this)
-		{
-			TESBoundObject* result; // rax
-
-			result = (TESBoundObject*)ExtraDataList::GetLevCreaOriginalBase(this->spExtraList.pPtr);
-			if (!result)
-				return this->data.pObjectReference;
-			return result;
-		}*/
 }

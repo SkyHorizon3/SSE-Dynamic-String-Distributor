@@ -445,14 +445,15 @@ void Manager::parseTranslationFiles()
 	m_loadOrder.clear();
 
 	timer.stop();
-	SKSE::log::debug("{} Done! Time taken: {}", __FUNCTION__, timer.duration());
+	const auto duration = timer.duration();
+	SKSE::log::debug("{} Done! Time taken: {}", __FUNCTION__, duration);
 }
 
 void Manager::setConstString(RE::TESForm* form, const ConstTranslationData& entry)
 {
 	switch (entry.translationType)
 	{
-	case TranslationType::kFullName:
+	case TranslationType::kFullName: // ref
 	{
 		const auto OrigString = form->As<RE::TESFullName>();
 		if (!OrigString)
@@ -464,7 +465,7 @@ void Manager::setConstString(RE::TESForm* form, const ConstTranslationData& entr
 		OrigString->SetFullName(entry.replacerText.c_str());
 	}
 	break;
-	case TranslationType::kLoadScreenDescription:
+	case TranslationType::kLoadScreenDescription: // player
 	{
 		auto loadScreen = form->As<RE::TESLoadScreen>();
 		if (!loadScreen)
@@ -476,7 +477,7 @@ void Manager::setConstString(RE::TESForm* form, const ConstTranslationData& entr
 		StrHelper::fixedStringChange(loadScreen->loadingText, entry.replacerText);
 	}
 	break;
-	case TranslationType::kMagicDescription:
+	case TranslationType::kMagicDescription: // ref? Not sure
 	{
 		auto effect = form->As<RE::EffectSetting>();
 		if (!effect)
@@ -488,7 +489,7 @@ void Manager::setConstString(RE::TESForm* form, const ConstTranslationData& entr
 		StrHelper::fixedStringChange(effect->magicItemDescription, entry.replacerText);
 	}
 	break;
-	case TranslationType::kShortName:
+	case TranslationType::kShortName: // ref
 	{
 		auto npc = form->As<RE::TESNPC>();
 		if (!npc)
@@ -500,12 +501,12 @@ void Manager::setConstString(RE::TESForm* form, const ConstTranslationData& entr
 		StrHelper::fixedStringChange(npc->shortName, entry.replacerText);
 	}
 	break;
-	case TranslationType::kRegion:
+	case TranslationType::kRegion: // player?
 	{
 		StrHelper::setRegionDataStrings(form, entry.replacerText);
 	}
 	break;
-	case TranslationType::kWordOfPower:
+	case TranslationType::kWordOfPower: // player???
 	{
 		auto word = form->As<RE::TESWordOfPower>();
 		if (!word)
@@ -517,12 +518,12 @@ void Manager::setConstString(RE::TESForm* form, const ConstTranslationData& entr
 		StrHelper::fixedStringChange(word->translation, entry.replacerText);
 	}
 	break;
-	case TranslationType::kButtonText1:
+	case TranslationType::kButtonText1: // player
 	{
 		StrHelper::setMessageBoxButtonStrings(form, entry.replacerText, entry.index);
 	}
 	break;
-	case TranslationType::kButtonText2:
+	case TranslationType::kButtonText2: // player
 	{
 		StrHelper::setPerkMessageBoxButtonStrings(form, entry.replacerText, entry.index);
 	}
@@ -537,17 +538,17 @@ void Manager::setConstString(RE::TESForm* form, const ConstTranslationData& entr
 		StrHelper::setEntryPointStrings(form, entry.replacerText, entry.index);
 	}
 	break;
-	case TranslationType::kActivationText:
+	case TranslationType::kActivationText: // ref?
 	{
 		StrHelper::setActivateOverrideStrings(form, entry.replacerText);
 	}
 	break;
-	case TranslationType::kReference:
+	case TranslationType::kReference: // ref
 	{
 		StrHelper::setReferenceStrings(form, entry.replacerText);
 	}
 	break;
-	case TranslationType::kGameSetting: // no formID needed
+	case TranslationType::kGameSetting: // no formID needed // player
 	{
 		StrHelper::setGameSettingString(entry.editor_id, entry.replacerText);
 	}

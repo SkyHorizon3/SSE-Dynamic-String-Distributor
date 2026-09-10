@@ -154,6 +154,7 @@ namespace Hook
 	struct DataHandlerInitAllForms
 	{
 		// This can run multiple times, rebuild our stuff here too (since there can be new plugin files)
+		// called directly after all forms are loaded (but not fully initialized yet)
 		static void thunk(RE::TESDataHandler* handler)
 		{
 			Manager::GetSingleton()->parseTranslationFiles();
@@ -175,6 +176,7 @@ namespace Hook
 
 	struct NPCFullNameCopyComponent
 	{
+		// TODO: verify that this really covers all templates
 		static void thunk(RE::TESFullName* to, RE::BaseFormComponent* from)
 		{
 			auto fromForm = skyrim_cast<RE::TESForm*>(from);
@@ -230,55 +232,84 @@ namespace Hook
 		}
 	};
 
-	struct MainUpdate
-	{
-		static void thunk()
+	/*	struct TESNPCClone3D
 		{
-			func();
 
-			const auto ui = RE::UI::GetSingleton();
-			if (!ui || ui->GameIsPaused())
-				return;
+			// ref = ref; npc = baseObject
+			static RE::NiAVObject* thunk(RE::TESNPC* npcarg, RE::TESObjectREFR* ref)
+			{
+				auto result = func(npcarg, ref);
 
-			const auto datahandler = RE::TESDataHandler::GetSingleton();
-			const auto player = RE::PlayerCharacter::GetSingleton();
-			if (!player || !datahandler)
-				return;
-
-			const auto callback = [](RE::TESObjectREFR* ref, [[maybe_unused]] std::uint64_t data) -> bool
+				if (ref)
 				{
-					if (ref)
+					const auto base = ref->GetBaseObject();
+					const auto fullNameBase = RE::getFullNameFormIDForRef(*ref);
+					const std::string baseMessage = base ? std::format("{:08X} - {} - FullNameBase: {:08X}", base->GetFormID(), RE::FormTypeToString(base->GetFormType()), fullNameBase) : "Unknown";
+					SKSE::log::debug("Found Reference {:08X} - {} with base object {}", ref->GetFormID(), RE::FormTypeToString(ref->GetFormType()), baseMessage);
+					const auto npc = RE::TESForm::LookupByID<RE::TESNPC>(fullNameBase);
+					if (npc && npc->baseTemplateForm)
+					{
+						SKSE::log::debug("Found another template {:08X}", npc->baseTemplateForm->formID);
+						auto npc2 = npc->baseTemplateForm->As<RE::TESNPC>();
+						if (npc2 && npc2->baseTemplateForm)
+						{
+							SKSE::log::debug("Found another template 2222222 {:08X}", npc2->baseTemplateForm->formID);
+						}
+					}
+
+				}
+
+				return result;
+			}
+			static inline REL::Relocation<decltype(thunk)> func;
+
+			static void Install()
+			{
+				REL::Relocation<std::uintptr_t> Vtbl{ RE::VTABLE_TESNPC[0] };
+				func = Vtbl.write_vfunc(0x4A, &thunk);
+			}
+		};*/
+
+	struct PlayerCharacterUpdate
+	{
+		static void thunk(RE::PlayerCharacter* player, float delta)
+		{
+			func(player, delta);
+			if (delta <= 0.0f || !player)
+				return;
+
+			static float counter = 0.0f;
+			counter += delta;
+			if (counter < 3.0f) // normally around 3 seconds, changes with time scale which is fine since the refs move
+				return;
+
+			counter = 0.0f;
+
+			const auto tes = RE::TES::GetSingleton();
+			if (!tes)
+				return;
+
+			const auto callback = [](RE::TESObjectREFR* ref) -> RE::BSContainer::ForEachResult
+				{
+					/*if (ref && ref->IsPersistent())
 					{
 						const auto base = ref->GetBaseObject();
 						const std::string baseMessage = base ? std::format("{:08X} - {}", base->GetFormID(), RE::FormTypeToString(base->GetFormType())) : "Unknown";
 						SKSE::log::debug("Found Reference {:08X} - {} with base object {}", ref->GetFormID(), RE::FormTypeToString(ref->GetFormType()), baseMessage);
-					}
+					}*/
 
-					return false; // exit on true, continue on false
+					return RE::BSContainer::ForEachResult::kContinue;
 				};
 
-			constexpr float radius = 10000.0f;
-			RE::enumReferencesCloseToRef(datahandler, player, radius, player->data.location, radius, callback, 0);
-		};
+
+			tes->ForEachReference(callback);
+		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
 		static void Install()
 		{
-			const auto runtime = REL::Module::get().version();
-
-			// just kill me at this point
-			int AEOffset = 0xC26;
-			if (runtime >= SKSE::RUNTIME_SSE_1_7_99)
-			{
-				AEOffset = 0xC3D;
-			}
-			else if (runtime >= SKSE::RUNTIME_SSE_1_6_1130)
-			{
-				AEOffset = 0xC2B;
-			}
-
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(35565, 36564), REL::Relocate(0x748, AEOffset, 0x7EE) };
-			stl::write_thunk_call<MainUpdate>(target1.address());
+			REL::Relocation<std::uintptr_t> Vtbl{ RE::VTABLE_PlayerCharacter[0] };
+			func = Vtbl.write_vfunc(0xAD, &thunk);
 		}
 	};
 
@@ -291,7 +322,8 @@ namespace Hook
 		GetResponseListHook::Install();
 		DialogueMenuTextHook::Install();
 		ReconstructForms::Install();
-		MainUpdate::Install();
+		PlayerCharacterUpdate::Install();
+		//TESNPCClone3D::Install();
 
 		SKSE::log::info("{} Done!", __FUNCTION__);
 	}
