@@ -23,13 +23,14 @@ private:
 	std::tuple<RE::FormID, RE::TESFile*> extractFormIDAndPlugin(const std::string& formIDEntry, const std::string& file);
 	TranslationType getTranslationType(std::string_view formType);
 	void processEntry(ParseData& entry, const std::string& file);
-	void setConstString(RE::TESForm* form, const ConstTranslationData& entry);
+	bool constTranslationContains(const RE::FormID formID, const TranslationType type, const std::optional<std::uint32_t> index) const;
+	void setConstString(RE::TESForm* form, const ConstData& entry);
 
 	StringMap<std::pair<RE::TESFile*, std::uint32_t>> m_loadOrder;
-	MultiMap<RE::FormID, ConstTranslationData> m_constTranslation;
-	FlatMap<RE::FormID, std::string> m_runtimeMap1;
-	FlatMap<std::uint64_t, std::string> m_runtimeMap2;
-	StringMap<std::string> m_legacyMap;
+	MultiMap<RE::FormID, ConstData> m_constTranslation;
+	FlatMap<RE::FormID, RuntimeData> m_runtimeMap1;
+	FlatMap<std::uint64_t, RuntimeData> m_runtimeMap2;
+	StringMap<RuntimeData> m_legacyMap;
 
 	// INI
 	bool m_debugLog{ false };

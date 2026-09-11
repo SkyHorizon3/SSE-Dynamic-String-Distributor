@@ -32,12 +32,24 @@ struct ParseData
 	std::optional<std::string> original;
 	std::optional<std::uint32_t> index;
 	std::optional<std::string> editor_id;
+	std::optional<std::vector<std::string>> conditions;
 };
 
-struct ConstTranslationData
+struct ConstData
 {
-	TranslationType translationType{ TranslationType::kUnknown };
+	explicit ConstData(const TranslationType type, const ParseData& entry);
+
+	TranslationType translationType;
 	std::string replacerText;
 	std::optional<std::uint32_t> index;
 	std::optional<std::string> editor_id;
+	std::shared_ptr<RE::TESCondition> conditions;
+};
+
+struct RuntimeData
+{
+	explicit RuntimeData(const ParseData& entry);
+
+	std::string replacerText;
+	std::shared_ptr<RE::TESCondition> conditions;
 };

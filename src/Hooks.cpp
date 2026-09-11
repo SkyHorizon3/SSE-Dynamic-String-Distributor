@@ -289,7 +289,7 @@ namespace Hook
 			if (!tes)
 				return;
 
-			const auto callback = [](RE::TESObjectREFR* ref) -> RE::BSContainer::ForEachResult
+			const auto callback = []([[maybe_unused]] RE::TESObjectREFR* ref) -> RE::BSContainer::ForEachResult
 				{
 					/*if (ref && ref->IsPersistent())
 					{
