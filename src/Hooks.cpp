@@ -91,7 +91,7 @@ namespace Hook
 			{
 				SKSE::log::debug("Original string: {} - TopicInfoFormID: {:08X} - LinkedResponseFormID: {:08X} - ResponseNumber: {}", response->responseText.c_str(), topicInfo->formID, responseTopicInfo->formID, response->responseNumber);
 
-				const auto translation = manager->getTranslation(responseTopicInfo->formID, response->responseNumber, TranslationType::kRuntimeIndex, speaker, response->responseText);
+				const auto translation = manager->getTranslation(responseTopicInfo->formID, response->responseNumber, TranslationType::kRuntimeIndex, speaker, response->responseText.c_str());
 				if (translation)
 				{
 					RE::setBSFixedString(response->responseText, translation);
@@ -116,23 +116,24 @@ namespace Hook
 			const auto manager = Manager::GetSingleton();
 			const char* translation = nullptr;
 
+			auto player = RE::PlayerCharacter::GetSingleton();
 			const auto parent = out.parentTopic;
 			if (parent)
 			{
-				translation = manager->getTranslation(parent->formID, 0, TranslationType::kRuntime1, nullptr, {});
+				translation = manager->getTranslation(parent->formID, 0, TranslationType::kRuntime1, player, source);
 			}
 
 			const auto parentInfo = out.parentTopicInfo;
 			if (parentInfo)
 			{
-				const auto rnamTranslation = manager->getTranslation(parentInfo->formID, 0, TranslationType::kRuntime2, nullptr, {});
+				const auto rnamTranslation = manager->getTranslation(parentInfo->formID, 0, TranslationType::kRuntime2, player, source);
 				if (rnamTranslation)
 				{
 					translation = rnamTranslation;
 				}
 			}
 
-			func(out, translation == nullptr ? source : translation, maxLen);
+			func(out, translation ? translation : source, maxLen);
 		};
 		static inline REL::Relocation<decltype(thunk)> func;
 
