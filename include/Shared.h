@@ -35,6 +35,16 @@ struct ParseData
 	std::optional<std::vector<std::string>> conditions;
 };
 
+struct ConditionData
+{
+	bool buildConditions(const std::optional<std::vector<std::string>>& conditionList);
+	const char* decideText(RE::TESObjectREFR* ref, std::string_view currentText, std::string_view replacerText);
+
+	std::string originalText;
+	std::shared_ptr<RE::TESCondition> conditions;
+	bool lastConditionState{ false };
+};
+
 struct ConstData
 {
 	explicit ConstData(const TranslationType type, const ParseData& entry);
@@ -43,7 +53,7 @@ struct ConstData
 	std::string replacerText;
 	std::optional<std::uint32_t> index;
 	std::optional<std::string> editor_id;
-	std::shared_ptr<RE::TESCondition> conditions;
+	ConditionData data;
 };
 
 struct RuntimeData
@@ -51,5 +61,5 @@ struct RuntimeData
 	explicit RuntimeData(const ParseData& entry);
 
 	std::string replacerText;
-	std::shared_ptr<RE::TESCondition> conditions;
+	ConditionData data;
 };

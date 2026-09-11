@@ -1,6 +1,42 @@
 #include "Shared.h"
 #include "ConditionParser.h"
 
+bool ConditionData::buildConditions(const std::optional<std::vector<std::string>>& conditionList)
+{
+	if (conditionList && !conditionList->empty())
+	{
+		ConditionParser::BuildCondition(conditions, *conditionList);
+		return true;
+	}
+	return false;
+}
+
+const char* ConditionData::decideText(RE::TESObjectREFR* ref, std::string_view currentText, std::string_view replacerText)
+{
+	if (!conditions)
+		return replacerText.data();
+
+	const bool conditionTrue = ref && conditions->IsTrue(ref, ref);
+	if (conditionTrue)
+	{
+		if (!lastConditionState)
+		{
+			originalText = currentText;
+		}
+
+		lastConditionState = true;
+		return replacerText.data();
+	}
+
+	if (lastConditionState)
+	{
+		lastConditionState = false;
+		return originalText.c_str();
+	}
+
+	return nullptr;
+}
+
 ConstData::ConstData(const TranslationType type, const ParseData& entry) : translationType(type)
 {
 	switch (type)
@@ -39,16 +75,10 @@ ConstData::ConstData(const TranslationType type, const ParseData& entry) : trans
 	break;
 	}
 
-	if (const auto& cond = entry.conditions; cond && !cond->empty())
-	{
-		ConditionParser::BuildCondition(conditions, *cond);
-	}
+	data.buildConditions(entry.conditions);
 }
 
 RuntimeData::RuntimeData(const ParseData& entry) : replacerText(entry.string)
 {
-	if (const auto& cond = entry.conditions; cond && !cond->empty())
-	{
-		ConditionParser::BuildCondition(conditions, *cond);
-	}
+	data.buildConditions(entry.conditions);
 }

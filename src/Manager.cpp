@@ -344,7 +344,7 @@ bool Manager::constTranslationContains(const RE::FormID formID, const Translatio
 		});
 }
 
-const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t index, const TranslationType type, std::string_view original)
+const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t index, const TranslationType type, RE::TESObjectREFR* ref, std::string_view originalText)
 {
 	switch (type)
 	{
@@ -352,14 +352,20 @@ const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t
 	{
 		const auto it = m_runtimeMap1.find(formID);
 		if (it != m_runtimeMap1.end())
-			return it->second.replacerText.c_str();
+		{
+			auto& runtime = it->second;
+			return runtime.data.decideText(ref, originalText, runtime.replacerText);
+		}
 	}
 	break;
 	case TranslationType::kRuntimeLegacy:
 	{
-		const auto itL = m_legacyMap.find(original);
+		const auto itL = m_legacyMap.find(originalText);
 		if (itL != m_legacyMap.end())
-			return itL->second.replacerText.c_str();
+		{
+			auto& runtime = itL->second;
+			return runtime.data.decideText(ref, originalText, runtime.replacerText);
+		}
 	}
 	[[fallthrough]];
 	case TranslationType::kRuntime2:
@@ -368,7 +374,10 @@ const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t
 		const auto combined = Utils::packU32(index, formID);
 		const auto it = m_runtimeMap2.find(combined);
 		if (it != m_runtimeMap2.end())
-			return it->second.replacerText.c_str();
+		{
+			auto& runtime = it->second;
+			return runtime.data.decideText(ref, originalText, runtime.replacerText);
+		}
 	}
 	break;
 	default:

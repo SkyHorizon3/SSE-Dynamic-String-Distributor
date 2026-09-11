@@ -203,5 +203,12 @@
 	 "index": 1,
      "type": "INFO NAM1",
      "string": "Replaced INFO NAM1 06053608 ARTHLALStartQuestShipSharedLine"
+  },
+  {
+     "form_id": "000A9B33|Skyrim.esm",
+	 "index": 1,
+     "type": "INFO NAM1",
+     "string": "Replaced text INFO NAM1 000A9B33|Skyrim.esm",
+	 "conditions": ["PlayerRef IsOverEncumbered NONE NONE == 1"]
   }
 ]

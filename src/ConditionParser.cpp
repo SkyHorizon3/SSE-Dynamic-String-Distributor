@@ -355,7 +355,7 @@ std::int32_t ConditionParser::GetFuncID(std::string_view a_str)
 	case "IsAttacking"_h: return 672;
 	case "IsPowerAttacking"_h: return 673;
 	case "IsLastHostileActor"_h: return 674;
-	case  "GetGraphVariableInt"_h: return 675;
+	case "GetGraphVariableInt"_h: return 675;
 	case "GetCurrentShoutVariation"_h: return 676;
 	case "ShouldAttackKill"_h: return 678;
 	case "GetActivatorHeight"_h: return 680;

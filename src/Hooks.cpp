@@ -13,7 +13,7 @@ namespace Hook
 			if (ownerQuest && item)
 			{
 				const std::uint32_t uniqueID = item->index + ownerQuest->currentStage;
-				translation = Manager::GetSingleton()->getTranslation(ownerQuest->formID, uniqueID, TranslationType::kRuntimeLegacy, result);
+				translation = Manager::GetSingleton()->getTranslation(ownerQuest->formID, uniqueID, TranslationType::kRuntimeLegacy, nullptr, result);
 			}
 
 			return translation == nullptr ? result : translation;
@@ -47,7 +47,7 @@ namespace Hook
 			if (isDESC || isCNAM) // skip garbage data, not caused by Skyrim but other modders
 			{
 				const auto type = isDESC ? TranslationType::kRuntime1 : TranslationType::kRuntime2;
-				translation = Manager::GetSingleton()->getTranslation(safeForm->formID, 0, type);
+				translation = Manager::GetSingleton()->getTranslation(safeForm->formID, 0, type, nullptr, {});
 			}
 
 			if (translation)
@@ -83,15 +83,15 @@ namespace Hook
 				}
 			}
 
+			auto topicMgr = RE::MenuTopicManager::GetSingleton();
+			auto speaker = topicMgr ? topicMgr->speaker.get().get() : nullptr;
+
 			const auto manager = Manager::GetSingleton();
 			for (auto response = result->head; response; response = response->next)
 			{
-				if (!response)
-					continue;
-
 				SKSE::log::debug("Original string: {} - TopicInfoFormID: {:08X} - LinkedResponseFormID: {:08X} - ResponseNumber: {}", response->responseText.c_str(), topicInfo->formID, responseTopicInfo->formID, response->responseNumber);
 
-				const auto translation = manager->getTranslation(responseTopicInfo->formID, response->responseNumber, TranslationType::kRuntimeIndex);
+				const auto translation = manager->getTranslation(responseTopicInfo->formID, response->responseNumber, TranslationType::kRuntimeIndex, speaker, response->responseText);
 				if (translation)
 				{
 					RE::setBSFixedString(response->responseText, translation);
@@ -119,13 +119,13 @@ namespace Hook
 			const auto parent = out.parentTopic;
 			if (parent)
 			{
-				translation = manager->getTranslation(parent->formID, 0, TranslationType::kRuntime1);
+				translation = manager->getTranslation(parent->formID, 0, TranslationType::kRuntime1, nullptr, {});
 			}
 
 			const auto parentInfo = out.parentTopicInfo;
 			if (parentInfo)
 			{
-				const auto rnamTranslation = manager->getTranslation(parentInfo->formID, 0, TranslationType::kRuntime2);
+				const auto rnamTranslation = manager->getTranslation(parentInfo->formID, 0, TranslationType::kRuntime2, nullptr, {});
 				if (rnamTranslation)
 				{
 					translation = rnamTranslation;
