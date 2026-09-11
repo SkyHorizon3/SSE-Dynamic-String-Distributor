@@ -418,7 +418,7 @@ void Manager::parseTranslationFiles()
 
 	timer.stop();
 	const auto duration = timer.duration();
-	SKSE::log::debug("{} Done! Time taken: {}", __FUNCTION__, duration);
+	SKSE::log::debug("{} done! Time taken: {}", __FUNCTION__, duration);
 }
 
 void Manager::setConstString(RE::TESForm* form, const ConstData& entry)
@@ -532,7 +532,8 @@ void Manager::setConstString(RE::TESForm* form, const ConstData& entry)
 
 void Manager::runConstTranslation()
 {
-	SKSE::log::debug("Start ConstTranslation...");
+	clib_util::Timer timer;
+	timer.start();
 
 	RE::TESForm* form = nullptr;
 	for (const auto& [runtimeFormID, entry] : m_constTranslation)
@@ -551,7 +552,9 @@ void Manager::runConstTranslation()
 		setConstString(form, entry);
 	}
 
-	SKSE::log::debug("... Finished ConstTranslation!");
+	timer.stop();
+	const auto duration = timer.duration();
+	SKSE::log::debug("{} done! Time taken: {}", __FUNCTION__, duration);
 }
 
 void Manager::reloadConstTranslation(RE::TESForm* form)

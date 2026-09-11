@@ -325,6 +325,6 @@ namespace Hook
 		PlayerCharacterUpdate::Install();
 		//TESNPCClone3D::Install();
 
-		SKSE::log::info("{} Done!", __FUNCTION__);
+		SKSE::log::info("{} done!", __FUNCTION__);
 	}
 }
