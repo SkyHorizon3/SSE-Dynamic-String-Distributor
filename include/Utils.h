@@ -7,6 +7,7 @@ namespace Utils
 	RE::FormID getTrimmedFormID(const RE::TESForm* const form);
 	RE::FormID getRuntimeFormID(const RE::TESFile* file, const RE::FormID raw);
 	RE::FormID convertToFormID(std::string input);
+	RE::TESForm* getBaseObject(RE::TESObjectREFR* ref);
 
 	inline constexpr std::uint64_t packU32(const std::uint32_t a, const std::uint32_t b) noexcept
 	{

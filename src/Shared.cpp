@@ -34,6 +34,10 @@ const char* ConditionData::decideText(RE::TESObjectREFR* ref, std::string_view c
 		return originalText.c_str();
 	}
 
+	if (!originalText.empty())
+	{
+		originalText.clear();
+	}
 	return nullptr;
 }
 

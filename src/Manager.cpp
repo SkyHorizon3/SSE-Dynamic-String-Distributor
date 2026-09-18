@@ -574,3 +574,26 @@ void Manager::reloadConstTranslation(RE::TESForm* form)
 		setConstString(form, it->second);
 	}
 }
+
+void Manager::updateConditions(RE::TESObjectREFR* ref)
+{
+	auto base = Utils::getBaseObject(ref);
+	if (!base)
+		return;
+
+	switch (base->GetFormType())
+	{
+	case RE::FormType::Activator:
+	{
+
+	}
+	break;
+	case RE::FormType::NPC:
+	{
+
+	}
+	break;
+	default:
+		break;
+	}
+}

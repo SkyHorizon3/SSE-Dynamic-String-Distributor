@@ -88,4 +88,30 @@ namespace Utils
 
 		return std::stoul(input, nullptr, 16);
 	}
+
+	RE::TESForm* getBaseObject(RE::TESObjectREFR* ref)
+	{
+		if (!ref)
+			return nullptr;
+
+		switch (ref->GetFormType())
+		{
+		case RE::FormType::Reference: // REFR
+		{
+			return ref->GetBaseObject();
+		}
+		case RE::FormType::ActorCharacter: // ACHR
+		{
+			return RE::getNPCNameBase(ref);
+		}
+		/*	case RE::FormType::Hazard: // HAZD
+			{
+
+			}
+			break;*/
+		default:
+			return nullptr;
+		}
+
+	}
 }

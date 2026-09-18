@@ -2,6 +2,16 @@
 
 namespace RE
 {
+	namespace detail
+	{
+		bool isLeveledCreature(RE::TESObjectREFR* ref)
+		{
+			using func_t = decltype(&isLeveledCreature);
+			static REL::Relocation<func_t> func{ RELOCATION_ID(19824, 20229) };
+			return func(ref);
+		}
+	}
+
 	RE::Setting* setStringValue(RE::Setting* setting, const char* str)
 	{
 		using func_t = decltype(&setStringValue);
@@ -16,11 +26,40 @@ namespace RE
 		func(str, data);
 	}
 
-	RE::FormID getFullNameFormIDForRef(const RE::TESObjectREFR& actor)
+	RE::TESActorBase* getNPCNameBase(RE::TESObjectREFR* ref)
 	{
-		using func_t = decltype(&getFullNameFormIDForRef);
-		static REL::Relocation<func_t> func{ RELOCATION_ID(23422, 23885) };
-		return func(actor);
+		auto base = ref->GetBaseObject();
+		if (!base || base->IsNot(RE::FormType::NPC))
+			return nullptr;
+
+		auto actor = base->As<RE::TESActorBase>();
+		if (!actor)
+			return nullptr;
+
+		if (detail::isLeveledCreature(ref))
+		{
+			auto extraList = ref->extraList.GetByType<RE::ExtraLeveledCreature>();
+			actor = extraList ? extraList->originalBase : nullptr;
+			if (actor && actor->actorData.templateUseFlags.any(RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kBaseData))
+			{
+				actor = extraList->templateBase;
+			}
+		}
+
+		if (!actor)
+			return nullptr;
+
+		while (actor->actorData.templateUseFlags.any(RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kBaseData))
+		{
+			auto temp = actor->baseTemplateForm;
+			if (!temp || temp->IsNot(RE::FormType::NPC))
+				return nullptr;
+
+			actor = temp->As<RE::TESActorBase>();
+			if (!actor)
+				return nullptr;
+		}
+		return actor;
 	}
 
 	RE::OBJECT_TYPE stringToObjectType(std::string_view str)

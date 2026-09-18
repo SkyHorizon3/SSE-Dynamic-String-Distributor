@@ -13,7 +13,7 @@ namespace RE
 	void setBSFixedString(RE::BSFixedString& str, const char* data);
 
 	// gets the last base of the actor reference that has the BaseData flag. But this can still be a template that inherited the full name
-	RE::FormID getFullNameFormIDForRef(const RE::TESObjectREFR& actor);
+	RE::TESActorBase* getNPCNameBase(RE::TESObjectREFR* ref);
 
 	RE::OBJECT_TYPE stringToObjectType(std::string_view str);
 }

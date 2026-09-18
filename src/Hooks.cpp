@@ -91,7 +91,7 @@ namespace Hook
 			{
 				SKSE::log::debug("Original string: {} - TopicInfoFormID: {:08X} - LinkedResponseFormID: {:08X} - ResponseNumber: {}", response->responseText.c_str(), topicInfo->formID, responseTopicInfo->formID, response->responseNumber);
 
-				const auto translation = manager->getTranslation(responseTopicInfo->formID, response->responseNumber, TranslationType::kRuntimeIndex, speaker, response->responseText.c_str());
+				const auto translation = manager->getTranslation(responseTopicInfo->formID, response->responseNumber, TranslationType::kRuntimeIndex, speaker, response->responseText);
 				if (translation)
 				{
 					RE::setBSFixedString(response->responseText, translation);
@@ -271,17 +271,19 @@ namespace Hook
 			}
 		};*/
 
-	struct PlayerCharacterUpdate
+	struct MainUpdate
 	{
-		static void thunk(RE::PlayerCharacter* player, float delta)
+		static void thunk()
 		{
-			func(player, delta);
-			if (delta <= 0.0f || !player)
+			func();
+
+			static float* delta = reinterpret_cast<float*>(RELOCATION_ID(523660, 410199).address());
+			if (*delta <= 0.0f)
 				return;
 
 			static float counter = 0.0f;
-			counter += delta;
-			if (counter < 3.0f) // normally around 3 seconds, changes with time scale which is fine since the refs move
+			counter += *delta;
+			if (counter < 4.0f) // normally around 4 seconds, changes with time scale
 				return;
 
 			counter = 0.0f;
@@ -290,27 +292,35 @@ namespace Hook
 			if (!tes)
 				return;
 
-			const auto callback = []([[maybe_unused]] RE::TESObjectREFR* ref) -> RE::BSContainer::ForEachResult
+			const auto mgr = Manager::GetSingleton();
+			const auto callback = [mgr](RE::TESObjectREFR* ref) -> RE::BSContainer::ForEachResult
 				{
-					/*if (ref && ref->IsPersistent())
-					{
-						const auto base = ref->GetBaseObject();
-						const std::string baseMessage = base ? std::format("{:08X} - {}", base->GetFormID(), RE::FormTypeToString(base->GetFormType())) : "Unknown";
-						SKSE::log::debug("Found Reference {:08X} - {} with base object {}", ref->GetFormID(), RE::FormTypeToString(ref->GetFormType()), baseMessage);
-					}*/
-
+					mgr->updateConditions(ref);
 					return RE::BSContainer::ForEachResult::kContinue;
 				};
 
-
 			tes->ForEachReference(callback);
+			//tes->ForEachCell();
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> Vtbl{ RE::VTABLE_PlayerCharacter[0] };
-			func = Vtbl.write_vfunc(0xAD, &thunk);
+			const auto runtime = REL::Module::get().version();
+
+			// just kill me at this point
+			int AEOffset = 0xC26;
+			if (runtime >= SKSE::RUNTIME_SSE_1_7_99)
+			{
+				AEOffset = 0xC3D;
+			}
+			else if (runtime >= SKSE::RUNTIME_SSE_1_6_1130)
+			{
+				AEOffset = 0xC2B;
+			}
+
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(35565, 36564), REL::Relocate(0x748, AEOffset, 0x7EE) };
+			stl::write_thunk_call<MainUpdate>(target1.address());
 		}
 	};
 
@@ -323,8 +333,7 @@ namespace Hook
 		GetResponseListHook::Install();
 		DialogueMenuTextHook::Install();
 		ReconstructForms::Install();
-		PlayerCharacterUpdate::Install();
-		//TESNPCClone3D::Install();
+		MainUpdate::Install();
 
 		SKSE::log::info("{} done!", __FUNCTION__);
 	}

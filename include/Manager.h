@@ -13,6 +13,7 @@ public:
 	void reloadConstTranslation(RE::TESForm* form);
 
 	const char* getTranslation(const RE::FormID formID, const std::uint32_t index, const TranslationType type, RE::TESObjectREFR* ref, std::string_view originalText);
+	void updateConditions(RE::TESObjectREFR* ref);
 
 private:
 	inline static constexpr const char* DSD_PATH = "Data/SKSE/Plugins/DynamicStringDistributor";
