@@ -217,7 +217,7 @@ namespace StrHelper
 			auto result = entry.decideText(ref, it->second, newString);
 			if (result)
 			{
-				fixedStringChange(it->second, newString);
+				fixedStringChange(it->second, result);
 			}
 		}
 		else
@@ -226,7 +226,7 @@ namespace StrHelper
 			auto result = entry.decideText(ref, temp, newString);
 			if (result)
 			{
-				fixedStringChange(temp, newString);
+				fixedStringChange(temp, result);
 				overrideMap.emplace(form->formID, temp);
 			}
 		}

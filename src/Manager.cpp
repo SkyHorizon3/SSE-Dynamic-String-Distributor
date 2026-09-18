@@ -447,6 +447,12 @@ void Manager::setConstString(RE::TESForm* form, ConstData& entry, RE::TESObjectR
 		if (replacerText)
 		{
 			OrigString->SetFullName(replacerText);
+			/*auto pl = RE::PlayerCharacter::GetSingleton();
+			if (ref && pl)
+			{
+				pl->UpdateCrosshairs();
+				SKSE::log::info("Run");
+			}*/
 		}
 	}
 	break;
@@ -474,7 +480,7 @@ void Manager::setConstString(RE::TESForm* form, ConstData& entry, RE::TESObjectR
 		StrHelper::fixedStringChange(effect->magicItemDescription, entry.replacerText);
 	}
 	break;
-	case TranslationType::kShortName: // ref
+	case TranslationType::kShortName:
 	{
 		auto npc = form->As<RE::TESNPC>();
 		if (!npc)
@@ -608,6 +614,7 @@ void Manager::updateConditions(RE::TESObjectREFR* ref)
 	switch (base->GetFormType())
 	{
 	case RE::FormType::Activator:
+	case RE::FormType::Flora:
 	case RE::FormType::NPC:
 	{
 		reloadConstTranslation(base, ref);
