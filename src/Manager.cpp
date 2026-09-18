@@ -354,7 +354,8 @@ const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t
 		if (it != m_runtimeMap1.end())
 		{
 			auto& runtime = it->second;
-			return runtime.decideText(ref, originalText, runtime.replacerText);
+			auto [str, update] = runtime.decideText(ref, originalText, runtime.replacerText);
+			return str;
 		}
 	}
 	break;
@@ -364,7 +365,8 @@ const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t
 		if (itL != m_legacyMap.end())
 		{
 			auto& runtime = itL->second;
-			return runtime.decideText(ref, originalText, runtime.replacerText);
+			auto [str, update] = runtime.decideText(ref, originalText, runtime.replacerText);
+			return str;
 		}
 	}
 	[[fallthrough]];
@@ -376,7 +378,8 @@ const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t
 		if (it != m_runtimeMap2.end())
 		{
 			auto& runtime = it->second;
-			return runtime.decideText(ref, originalText, runtime.replacerText);
+			auto [str, update] = runtime.decideText(ref, originalText, runtime.replacerText);
+			return str;
 		}
 	}
 	break;
@@ -443,17 +446,8 @@ void Manager::setConstString(RE::TESForm* form, ConstData& entry, RE::TESObjectR
 			return;
 		}
 
-		auto replacerText = entry.decideText(ref, OrigString->GetFullName(), entry.replacerText);
-		if (replacerText)
-		{
-			OrigString->SetFullName(replacerText);
-			/*auto pl = RE::PlayerCharacter::GetSingleton();
-			if (ref && pl)
-			{
-				pl->UpdateCrosshairs();
-				SKSE::log::info("Run");
-			}*/
-		}
+		auto [str, update] = entry.decideText(ref, OrigString->GetFullName(), entry.replacerText);
+		StrHelper::fixedStringChange(OrigString->fullName, str, update);
 	}
 	break;
 	case TranslationType::kLoadScreenDescription: // player
@@ -465,7 +459,7 @@ void Manager::setConstString(RE::TESForm* form, ConstData& entry, RE::TESObjectR
 			return;
 		}
 
-		StrHelper::fixedStringChange(loadScreen->loadingText, entry.replacerText);
+		StrHelper::fixedStringChange(loadScreen->loadingText, entry.replacerText.c_str(), false);
 	}
 	break;
 	case TranslationType::kMagicDescription: // ref? Not sure
@@ -477,7 +471,7 @@ void Manager::setConstString(RE::TESForm* form, ConstData& entry, RE::TESObjectR
 			return;
 		}
 
-		StrHelper::fixedStringChange(effect->magicItemDescription, entry.replacerText);
+		StrHelper::fixedStringChange(effect->magicItemDescription, entry.replacerText.c_str(), false);
 	}
 	break;
 	case TranslationType::kShortName:
@@ -489,11 +483,8 @@ void Manager::setConstString(RE::TESForm* form, ConstData& entry, RE::TESObjectR
 			return;
 		}
 
-		auto replacerText = entry.decideText(ref, npc->shortName, entry.replacerText);
-		if (replacerText)
-		{
-			StrHelper::fixedStringChange(npc->shortName, replacerText);
-		}
+		auto [str, update] = entry.decideText(ref, npc->shortName, entry.replacerText);
+		StrHelper::fixedStringChange(npc->shortName, str, update);
 	}
 	break;
 	case TranslationType::kRegion: // player?
@@ -510,7 +501,7 @@ void Manager::setConstString(RE::TESForm* form, ConstData& entry, RE::TESObjectR
 			return;
 		}
 
-		StrHelper::fixedStringChange(word->translation, entry.replacerText);
+		StrHelper::fixedStringChange(word->translation, entry.replacerText.c_str(), false);
 	}
 	break;
 	case TranslationType::kButtonText1: // player

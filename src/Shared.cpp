@@ -11,34 +11,36 @@ bool ConditionData::buildConditions(const std::optional<std::vector<std::string>
 	return false;
 }
 
-const char* ConditionData::decideText(RE::TESObjectREFR* ref, const char* currentText, const char* replacerText)
+std::tuple<const char*, bool> ConditionData::decideText(RE::TESObjectREFR* ref, const char* currentText, const char* replacerText)
 {
 	if (!conditions)
-		return replacerText;
+		return { replacerText, false };
 
 	const bool conditionTrue = ref && conditions->IsTrue(ref, ref);
 	if (conditionTrue)
 	{
+		bool updateInterface = false;
 		if (!lastConditionState)
 		{
 			originalText = currentText;
+			updateInterface = true;
 		}
 
 		lastConditionState = true;
-		return replacerText;
+		return { replacerText, updateInterface };
 	}
 
 	if (lastConditionState)
 	{
 		lastConditionState = false;
-		return originalText.c_str();
+		return { originalText.c_str() , true };
 	}
 
 	if (!originalText.empty())
 	{
 		originalText.clear();
 	}
-	return nullptr;
+	return { nullptr, false };
 }
 
 ConstData::ConstData(const TranslationType type, const ParseData& entry) : translationType(type)

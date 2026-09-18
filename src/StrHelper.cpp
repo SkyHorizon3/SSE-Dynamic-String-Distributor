@@ -3,9 +3,21 @@
 
 namespace StrHelper
 {
-	void fixedStringChange(RE::BSFixedString& to, std::string_view from)
+	void fixedStringChange(RE::BSFixedString& to, const char* str, bool update)
 	{
-		RE::setBSFixedString(to, from.empty() ? EMPTY : from.data());
+		if (!str)
+			return;
+
+		const bool isEmpty = str[0] == '\0';
+		RE::setBSFixedString(to, isEmpty ? EMPTY : str);
+
+		if (update)
+		{
+			if (const auto pl = RE::PlayerCharacter::GetSingleton())
+			{
+				pl->UpdateCrosshairs();
+			}
+		}
 	}
 
 	void report(const RE::TESForm* const form)
@@ -61,7 +73,7 @@ namespace StrHelper
 		{
 			if (button && pos == (*index))
 			{
-				fixedStringChange(button->text, newString);
+				fixedStringChange(button->text, newString.c_str(), false);
 			}
 
 			pos++;
@@ -101,7 +113,7 @@ namespace StrHelper
 			const auto func = static_cast<RE::BGSEntryPointFunctionDataActivateChoice*>(data);
 			if (func && func->GetID() == (*index))
 			{
-				fixedStringChange(func->label, newString);
+				fixedStringChange(func->label, newString.c_str(), false);
 			}
 		}
 	}
@@ -126,7 +138,7 @@ namespace StrHelper
 			if (!mapData)
 				continue;
 
-			fixedStringChange(mapData->mapName, entry.replacerText);
+			fixedStringChange(mapData->mapName, entry.replacerText.c_str(), false);
 		}
 	}
 
@@ -172,7 +184,7 @@ namespace StrHelper
 				const auto func = static_cast<RE::BGSEntryPointFunctionDataText*>(data);
 				if (func)
 				{
-					fixedStringChange(func->text, newString);
+					fixedStringChange(func->text, newString.c_str(), false);
 				}
 			}
 
@@ -201,7 +213,7 @@ namespace StrHelper
 		{
 			if (objective && objective->index == (*index))
 			{
-				fixedStringChange(objective->displayText, newString);
+				fixedStringChange(objective->displayText, newString.c_str(), false);
 			}
 		}
 	}
@@ -214,19 +226,16 @@ namespace StrHelper
 		const auto it = overrideMap.find(form->formID);
 		if (it != overrideMap.end())
 		{
-			auto result = entry.decideText(ref, it->second, newString);
-			if (result)
-			{
-				fixedStringChange(it->second, result);
-			}
+			auto [str, update] = entry.decideText(ref, it->second, newString);
+			fixedStringChange(it->second, str, update);
 		}
 		else
 		{
 			RE::BSFixedString temp;
-			auto result = entry.decideText(ref, temp, newString);
-			if (result)
+			auto [str, update] = entry.decideText(ref, temp, newString);
+			if (str)
 			{
-				fixedStringChange(temp, result);
+				fixedStringChange(temp, str, update);
 				overrideMap.emplace(form->formID, temp);
 			}
 		}
@@ -245,8 +254,7 @@ namespace StrHelper
 		const auto data = marker ? marker->mapData : nullptr;
 		if (data)
 		{
-			const auto& newString = entry.replacerText;
-			data->locationName.SetFullName(newString.c_str());
+			fixedStringChange(data->locationName.fullName, entry.replacerText.c_str(), false);
 		}
 	}
 }

@@ -38,7 +38,7 @@ struct ParseData
 struct ConditionData
 {
 	bool buildConditions(const std::optional<std::vector<std::string>>& conditionList);
-	const char* decideText(RE::TESObjectREFR* ref, const char* currentText, const char* replacerText);
+	std::tuple<const char*, bool> decideText(RE::TESObjectREFR* ref, const char* currentText, const char* replacerText);
 
 	std::string originalText;
 	std::shared_ptr<RE::TESCondition> conditions;
@@ -48,7 +48,7 @@ struct ConditionData
 struct ConstData
 {
 	explicit ConstData(const TranslationType type, const ParseData& entry);
-	inline const char* decideText(RE::TESObjectREFR* ref, std::string_view origStr, std::string_view replaceStr)
+	inline std::tuple<const char*, bool> decideText(RE::TESObjectREFR* ref, std::string_view origStr, std::string_view replaceStr)
 	{
 		return data.decideText(ref, origStr.data(), replaceStr.data());
 	}
@@ -63,7 +63,7 @@ struct ConstData
 struct RuntimeData
 {
 	explicit RuntimeData(const ParseData& entry);
-	inline const char* decideText(RE::TESObjectREFR* ref, std::string_view origStr, std::string_view replaceStr)
+	inline std::tuple<const char*, bool> decideText(RE::TESObjectREFR* ref, std::string_view origStr, std::string_view replaceStr)
 	{
 		return data.decideText(ref, origStr.data(), replaceStr.data());
 	}

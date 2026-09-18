@@ -5,7 +5,7 @@ namespace StrHelper
 {
 	inline static constexpr const char* EMPTY = " ";
 
-	void fixedStringChange(RE::BSFixedString& to, std::string_view from);
+	void fixedStringChange(RE::BSFixedString& to, const char* str, bool update);
 	void report(const RE::TESForm* const form);
 
 	void setGameSettingString(const ConstData& entry);
