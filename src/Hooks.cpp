@@ -185,7 +185,7 @@ namespace Hook
 			{
 				// NPCs copy their FullName all the time
 				// also reload NPC_ SHRT here, gets copied afterwards
-				Manager::GetSingleton()->reloadConstTranslation(fromForm);
+				Manager::GetSingleton()->reloadConstTranslation(fromForm, nullptr);
 			}
 
 			func(to, from); // call original just for compatibility reasons
@@ -218,8 +218,8 @@ namespace Hook
 					const auto& form = entry.form;
 					if (!form)
 						continue;
-
-					mgr->reloadConstTranslation(form);
+					// TODO: check if NPC templates are handled correctly
+					mgr->reloadConstTranslation(form, nullptr);
 				}
 			}
 		}
@@ -232,44 +232,6 @@ namespace Hook
 			stl::write_thunk_call<ReconstructForms>(target1.address());
 		}
 	};
-
-	/*	struct TESNPCClone3D
-		{
-
-			// ref = ref; npc = baseObject
-			static RE::NiAVObject* thunk(RE::TESNPC* npcarg, RE::TESObjectREFR* ref)
-			{
-				auto result = func(npcarg, ref);
-
-				if (ref)
-				{
-					const auto base = ref->GetBaseObject();
-					const auto fullNameBase = RE::getFullNameFormIDForRef(*ref);
-					const std::string baseMessage = base ? std::format("{:08X} - {} - FullNameBase: {:08X}", base->GetFormID(), RE::FormTypeToString(base->GetFormType()), fullNameBase) : "Unknown";
-					SKSE::log::debug("Found Reference {:08X} - {} with base object {}", ref->GetFormID(), RE::FormTypeToString(ref->GetFormType()), baseMessage);
-					const auto npc = RE::TESForm::LookupByID<RE::TESNPC>(fullNameBase);
-					if (npc && npc->baseTemplateForm)
-					{
-						SKSE::log::debug("Found another template {:08X}", npc->baseTemplateForm->formID);
-						auto npc2 = npc->baseTemplateForm->As<RE::TESNPC>();
-						if (npc2 && npc2->baseTemplateForm)
-						{
-							SKSE::log::debug("Found another template 2222222 {:08X}", npc2->baseTemplateForm->formID);
-						}
-					}
-
-				}
-
-				return result;
-			}
-			static inline REL::Relocation<decltype(thunk)> func;
-
-			static void Install()
-			{
-				REL::Relocation<std::uintptr_t> Vtbl{ RE::VTABLE_TESNPC[0] };
-				func = Vtbl.write_vfunc(0x4A, &thunk);
-			}
-		};*/
 
 	struct MainUpdate
 	{

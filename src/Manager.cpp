@@ -354,7 +354,7 @@ const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t
 		if (it != m_runtimeMap1.end())
 		{
 			auto& runtime = it->second;
-			return runtime.data.decideText(ref, originalText, runtime.replacerText);
+			return runtime.decideText(ref, originalText, runtime.replacerText);
 		}
 	}
 	break;
@@ -364,7 +364,7 @@ const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t
 		if (itL != m_legacyMap.end())
 		{
 			auto& runtime = itL->second;
-			return runtime.data.decideText(ref, originalText, runtime.replacerText);
+			return runtime.decideText(ref, originalText, runtime.replacerText);
 		}
 	}
 	[[fallthrough]];
@@ -376,7 +376,7 @@ const char* Manager::getTranslation(const RE::FormID formID, const std::uint32_t
 		if (it != m_runtimeMap2.end())
 		{
 			auto& runtime = it->second;
-			return runtime.data.decideText(ref, originalText, runtime.replacerText);
+			return runtime.decideText(ref, originalText, runtime.replacerText);
 		}
 	}
 	break;
@@ -430,7 +430,7 @@ void Manager::parseTranslationFiles()
 	SKSE::log::debug("{} done! Time taken: {}", __FUNCTION__, duration);
 }
 
-void Manager::setConstString(RE::TESForm* form, const ConstData& entry)
+void Manager::setConstString(RE::TESForm* form, ConstData& entry, RE::TESObjectREFR* ref)
 {
 	switch (entry.translationType)
 	{
@@ -443,7 +443,11 @@ void Manager::setConstString(RE::TESForm* form, const ConstData& entry)
 			return;
 		}
 
-		OrigString->SetFullName(entry.replacerText.c_str());
+		auto replacerText = entry.decideText(ref, OrigString->GetFullName(), entry.replacerText);
+		if (replacerText)
+		{
+			OrigString->SetFullName(replacerText);
+		}
 	}
 	break;
 	case TranslationType::kLoadScreenDescription: // player
@@ -479,12 +483,16 @@ void Manager::setConstString(RE::TESForm* form, const ConstData& entry)
 			return;
 		}
 
-		StrHelper::fixedStringChange(npc->shortName, entry.replacerText);
+		auto replacerText = entry.decideText(ref, npc->shortName, entry.replacerText);
+		if (replacerText)
+		{
+			StrHelper::fixedStringChange(npc->shortName, replacerText);
+		}
 	}
 	break;
 	case TranslationType::kRegion: // player?
 	{
-		StrHelper::setRegionDataStrings(form, entry.replacerText);
+		StrHelper::setRegionDataStrings(form, entry);
 	}
 	break;
 	case TranslationType::kWordOfPower: // player???
@@ -501,37 +509,37 @@ void Manager::setConstString(RE::TESForm* form, const ConstData& entry)
 	break;
 	case TranslationType::kButtonText1: // player
 	{
-		StrHelper::setMessageBoxButtonStrings(form, entry.replacerText, entry.index);
+		StrHelper::setMessageBoxButtonStrings(form, entry);
 	}
 	break;
 	case TranslationType::kButtonText2: // player
 	{
-		StrHelper::setPerkMessageBoxButtonStrings(form, entry.replacerText, entry.index);
+		StrHelper::setPerkMessageBoxButtonStrings(form, entry);
 	}
 	break;
 	case TranslationType::kQuestObjective:
 	{
-		StrHelper::setQuestObjectiveStrings(form, entry.replacerText, entry.index);
+		StrHelper::setQuestObjectiveStrings(form, entry);
 	}
 	break;
 	case TranslationType::kPerkVerb:
 	{
-		StrHelper::setEntryPointStrings(form, entry.replacerText, entry.index);
+		StrHelper::setEntryPointStrings(form, entry);
 	}
 	break;
-	case TranslationType::kActivationText: // ref?
+	case TranslationType::kActivationText:
 	{
-		StrHelper::setActivateOverrideStrings(form, entry.replacerText);
+		StrHelper::setActivateOverrideStrings(form, entry, ref);
 	}
 	break;
 	case TranslationType::kReference: // ref
 	{
-		StrHelper::setReferenceStrings(form, entry.replacerText);
+		StrHelper::setReferenceStrings(form, entry);
 	}
 	break;
 	case TranslationType::kGameSetting: // no formID needed // player
 	{
-		StrHelper::setGameSettingString(entry.editor_id, entry.replacerText);
+		StrHelper::setGameSettingString(entry);
 	}
 	break;
 	default:
@@ -545,7 +553,7 @@ void Manager::runConstTranslation()
 	timer.start();
 
 	RE::TESForm* form = nullptr;
-	for (const auto& [runtimeFormID, entry] : m_constTranslation)
+	for (auto& [runtimeFormID, entry] : m_constTranslation)
 	{
 		form = nullptr;
 		if (entry.translationType != TranslationType::kGameSetting)
@@ -558,7 +566,7 @@ void Manager::runConstTranslation()
 			}
 		}
 
-		setConstString(form, entry);
+		setConstString(form, entry, nullptr);
 	}
 
 	timer.stop();
@@ -566,12 +574,28 @@ void Manager::runConstTranslation()
 	SKSE::log::debug("{} done! Time taken: {}", __FUNCTION__, duration);
 }
 
-void Manager::reloadConstTranslation(RE::TESForm* form)
+void Manager::reloadConstTranslation(RE::TESForm* form, RE::TESObjectREFR* ref)
 {
-	auto [begin, end] = m_constTranslation.equal_range(form->formID);
-	for (auto it = begin; it != end; it++)
+	auto range = m_constTranslation.equal_range(form->formID);
+	auto realForm = form;
+
+	// NPCs need special treatment since we need to get to the fullname base.
+	if (ref && form->Is(RE::FormType::NPC))
 	{
-		setConstString(form, it->second);
+		realForm = ref->GetBaseObject(); // the form we need to change the fullname on
+		if (range.first == range.second)
+		{
+			if (auto base = form->As<RE::TESActorBase>())
+			{
+				if (auto baseTemplate = base->baseTemplateForm) // the actual template record that contains the fullname and therefore is in the jsons
+					range = m_constTranslation.equal_range(baseTemplate->formID);
+			}
+		}
+	}
+
+	for (auto it = range.first; it != range.second; ++it)
+	{
+		setConstString(realForm, it->second, ref);
 	}
 }
 
@@ -584,13 +608,9 @@ void Manager::updateConditions(RE::TESObjectREFR* ref)
 	switch (base->GetFormType())
 	{
 	case RE::FormType::Activator:
-	{
-
-	}
-	break;
 	case RE::FormType::NPC:
 	{
-
+		reloadConstTranslation(base, ref);
 	}
 	break;
 	default:

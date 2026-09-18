@@ -10,7 +10,7 @@ public:
 
 	void parseTranslationFiles();
 	void runConstTranslation();
-	void reloadConstTranslation(RE::TESForm* form);
+	void reloadConstTranslation(RE::TESForm* form, RE::TESObjectREFR* ref);
 
 	const char* getTranslation(const RE::FormID formID, const std::uint32_t index, const TranslationType type, RE::TESObjectREFR* ref, std::string_view originalText);
 	void updateConditions(RE::TESObjectREFR* ref);
@@ -25,7 +25,7 @@ private:
 	TranslationType getTranslationType(std::string_view formType);
 	void processEntry(ParseData& entry, const std::string& file);
 	bool constTranslationContains(const RE::FormID formID, const TranslationType type, const std::optional<std::uint32_t> index) const;
-	void setConstString(RE::TESForm* form, const ConstData& entry);
+	void setConstString(RE::TESForm* form, ConstData& entry, RE::TESObjectREFR* ref);
 
 	StringMap<std::pair<RE::TESFile*, std::uint32_t>> m_loadOrder;
 	MultiMap<RE::FormID, ConstData> m_constTranslation;

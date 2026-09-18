@@ -15,8 +15,10 @@ namespace StrHelper
 		SKSE::log::error("Tried to cast {:08X} to an invalid form type - Actual Formtype: {} - Plugin: {}", form->formID, formtype, modname);
 	}
 
-	void setGameSettingString(const std::optional<std::string>& name, const std::string_view newString) // GMST DATA
+	void setGameSettingString(const ConstData& entry) // GMST DATA
 	{
+		const auto& name = entry.editor_id;
+		const auto& newString = entry.replacerText;
 		if (!name.has_value())
 		{
 			SKSE::log::error("Couldn't inject string \"{}\"! The editorID is missing!", newString);
@@ -33,12 +35,14 @@ namespace StrHelper
 
 		if (setting->GetType() == RE::Setting::Type::kString)
 		{
-			RE::setStringValue(setting, newString.data());
+			RE::setStringValue(setting, newString.c_str());
 		}
 	}
 
-	void setMessageBoxButtonStrings(RE::TESForm* form, std::string_view newString, const std::optional<std::uint32_t>& index) //MESG ITXT
+	void setMessageBoxButtonStrings(RE::TESForm* form, const ConstData& entry) //MESG ITXT
 	{
+		const auto& index = entry.index;
+		const auto& newString = entry.replacerText;
 		if (!index.has_value())
 		{
 			SKSE::log::error("Couldn't inject string \"{}\"! The index is missing!", newString);
@@ -64,8 +68,10 @@ namespace StrHelper
 		}
 	}
 
-	void setPerkMessageBoxButtonStrings(RE::TESForm* form, std::string_view newString, const std::optional<std::uint32_t>& index)  //PERK EPF2
+	void setPerkMessageBoxButtonStrings(RE::TESForm* form, const ConstData& entry)  //PERK EPF2
 	{
+		const auto& index = entry.index;
+		const auto& newString = entry.replacerText;
 		if (!index.has_value())
 		{
 			SKSE::log::error("Couldn't inject string \"{}\"! The index is missing!", newString);
@@ -79,12 +85,12 @@ namespace StrHelper
 			return;
 		}
 
-		for (const auto& entry : perk->perkEntries)
+		for (const auto& perkEntry : perk->perkEntries)
 		{
-			if (!entry || entry->GetType() != RE::PERK_ENTRY_TYPE::kEntryPoint)
+			if (!perkEntry || perkEntry->GetType() != RE::PERK_ENTRY_TYPE::kEntryPoint)
 				continue;
 
-			const auto* entryPoint = static_cast<RE::BGSEntryPointPerkEntry*>(entry);
+			const auto* entryPoint = static_cast<RE::BGSEntryPointPerkEntry*>(perkEntry);
 			if (!entryPoint)
 				continue;
 
@@ -100,7 +106,7 @@ namespace StrHelper
 		}
 	}
 
-	void setRegionDataStrings(RE::TESForm* form, std::string_view newString) //REGN RDMP
+	void setRegionDataStrings(RE::TESForm* form, const ConstData& entry) //REGN RDMP
 	{
 		const auto regionData = form->As<RE::TESRegion>();
 		const auto regionDataList = regionData ? regionData->dataList : nullptr;
@@ -120,12 +126,14 @@ namespace StrHelper
 			if (!mapData)
 				continue;
 
-			fixedStringChange(mapData->mapName, newString);
+			fixedStringChange(mapData->mapName, entry.replacerText);
 		}
 	}
 
-	void setEntryPointStrings(RE::TESForm* form, std::string_view newString, const std::optional<std::uint32_t>& index) //PERK EPFD
+	void setEntryPointStrings(RE::TESForm* form, const ConstData& entry) //PERK EPFD
 	{
+		const auto& index = entry.index;
+		const auto& newString = entry.replacerText;
 		if (!index.has_value())
 		{
 			SKSE::log::error("Couldn't inject string \"{}\"! The index is missing!", newString);
@@ -144,14 +152,14 @@ namespace StrHelper
 
 		for (std::int32_t i = entryCount - 1; i >= 0; --i)
 		{
-			const auto& entry = perk->perkEntries[i];
-			if (!entry)
+			const auto& perkEntry = perk->perkEntries[i];
+			if (!perkEntry)
 				continue;
 
-			if (entry->GetType() != RE::PERK_ENTRY_TYPE::kEntryPoint)
+			if (perkEntry->GetType() != RE::PERK_ENTRY_TYPE::kEntryPoint)
 				continue;
 
-			const auto* entryPoint = static_cast<RE::BGSEntryPointPerkEntry*>(entry);
+			const auto* entryPoint = static_cast<RE::BGSEntryPointPerkEntry*>(perkEntry);
 			if (!entryPoint)
 				continue;
 
@@ -172,8 +180,10 @@ namespace StrHelper
 		}
 	}
 
-	void setQuestObjectiveStrings(RE::TESForm* form, std::string_view newString, const std::optional<std::uint32_t>& index) //QUST NNAM
+	void setQuestObjectiveStrings(RE::TESForm* form, const ConstData& entry) //QUST NNAM
 	{
+		const auto& index = entry.index;
+		const auto& newString = entry.replacerText;
 		if (!index.has_value())
 		{
 			SKSE::log::error("Couldn't inject string: \"{}\"! The index is missing!", newString);
@@ -196,24 +206,33 @@ namespace StrHelper
 		}
 	}
 
-	void setActivateOverrideStrings(RE::TESForm* form, std::string_view newString)
+	void setActivateOverrideStrings(RE::TESForm* form, ConstData& entry, RE::TESObjectREFR* ref)
 	{
 		auto& overrideMap = RE::getActivateTextOverrideMap();
+		const auto& newString = entry.replacerText;
 
 		const auto it = overrideMap.find(form->formID);
 		if (it != overrideMap.end())
 		{
-			fixedStringChange(it->second, newString);
+			auto result = entry.decideText(ref, it->second, newString);
+			if (result)
+			{
+				fixedStringChange(it->second, newString);
+			}
 		}
 		else
 		{
 			RE::BSFixedString temp;
-			fixedStringChange(temp, newString);
-			overrideMap.emplace(form->formID, temp);
+			auto result = entry.decideText(ref, temp, newString);
+			if (result)
+			{
+				fixedStringChange(temp, newString);
+				overrideMap.emplace(form->formID, temp);
+			}
 		}
 	}
 
-	void setReferenceStrings(RE::TESForm* form, std::string_view newString)
+	void setReferenceStrings(RE::TESForm* form, const ConstData& entry)
 	{
 		const auto ref = form->As<RE::TESObjectREFR>();
 		if (!ref)
@@ -226,7 +245,8 @@ namespace StrHelper
 		const auto data = marker ? marker->mapData : nullptr;
 		if (data)
 		{
-			data->locationName.SetFullName(newString.data());
+			const auto& newString = entry.replacerText;
+			data->locationName.SetFullName(newString.c_str());
 		}
 	}
 }

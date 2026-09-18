@@ -11,10 +11,10 @@ bool ConditionData::buildConditions(const std::optional<std::vector<std::string>
 	return false;
 }
 
-const char* ConditionData::decideText(RE::TESObjectREFR* ref, std::string_view currentText, std::string_view replacerText)
+const char* ConditionData::decideText(RE::TESObjectREFR* ref, const char* currentText, const char* replacerText)
 {
 	if (!conditions)
-		return replacerText.data();
+		return replacerText;
 
 	const bool conditionTrue = ref && conditions->IsTrue(ref, ref);
 	if (conditionTrue)
@@ -25,7 +25,7 @@ const char* ConditionData::decideText(RE::TESObjectREFR* ref, std::string_view c
 		}
 
 		lastConditionState = true;
-		return replacerText.data();
+		return replacerText;
 	}
 
 	if (lastConditionState)
