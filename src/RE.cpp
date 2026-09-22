@@ -28,6 +28,11 @@ namespace RE
 
 	RE::TESActorBase* getNPCNameBase(RE::TESObjectREFR* ref)
 	{
+		// 000E0D79 - stormcloak guard
+		// 00037079 - whiterun guard
+		// 0010DEBB - imperial guard
+
+		//SKSE::log::info("BEGIN - {:08X} - name: {}", ref->formID, ref->GetName());
 		auto base = ref->GetBaseObject();
 		if (!base || base->IsNot(RE::FormType::NPC))
 			return nullptr;
@@ -40,9 +45,12 @@ namespace RE
 		{
 			auto extraList = ref->extraList.GetByType<RE::ExtraLeveledCreature>();
 			actor = extraList ? extraList->originalBase : nullptr;
+			//SKSE::log::info("originalBase - {:08X} - name - {}", actor->formID, actor->GetFullName());
+
 			if (actor && actor->actorData.templateUseFlags.any(RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kBaseData))
 			{
 				actor = extraList->templateBase;
+				//SKSE::log::info("templateBase - {:08X} - name - {}", actor->formID, actor->GetFullName());
 			}
 		}
 
@@ -58,7 +66,11 @@ namespace RE
 			actor = temp->As<RE::TESActorBase>();
 			if (!actor)
 				return nullptr;
+
+			//SKSE::log::info("template - {:08X} - name - {}", actor->formID, actor->GetFullName());
 		}
+
+		//SKSE::log::info("END - {:08X} - name: {}", ref->formID, ref->GetName());
 		return actor;
 	}
 
