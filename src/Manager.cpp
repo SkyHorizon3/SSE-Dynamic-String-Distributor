@@ -11,8 +11,9 @@ void Manager::LoadINI()
 	ini.LoadFile(path.c_str());
 
 	constexpr const char* section = "Debug";
-	m_debugLog = ini.GetBoolValue(section, "EnableDebugLog");
-	m_debugInfo = ini.GetBoolValue(section, "EnableDebugInfo");
+	m_debugLog = ini.GetBoolValue(section, "bEnableDebugLog");
+	m_debugInfo = ini.GetBoolValue(section, "bEnableDebugInfo");
+	m_updateInterval = std::max(0.0f, static_cast<float>(ini.GetDoubleValue(section, "fUpdateInterval")));
 }
 
 void Manager::enumerateLoadOrder()
@@ -577,6 +578,7 @@ void Manager::reloadConstTranslation(RE::TESForm* form, RE::TESObjectREFR* ref)
 	auto realForm = form;
 
 	// NPCs need special treatment since we need to get to the fullname base.
+	// Note that we're updating NPC forms that may have been reconstructed, too.
 	if (ref && form->Is(RE::FormType::NPC))
 	{
 		realForm = ref->GetBaseObject(); // the form we need to change the fullname on
@@ -584,8 +586,11 @@ void Manager::reloadConstTranslation(RE::TESForm* form, RE::TESObjectREFR* ref)
 		{
 			if (auto base = form->As<RE::TESActorBase>())
 			{
-				if (auto baseTemplate = base->baseTemplateForm) // the actual template record that contains the fullname and therefore is in the jsons
+				if (auto baseTemplate = base->baseTemplateForm)
+				{
+					// the actual template record that contains the fullname and therefore is in the jsons
 					range = m_constTranslation.equal_range(baseTemplate->formID);
+				}
 			}
 		}
 	}

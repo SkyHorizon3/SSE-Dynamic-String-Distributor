@@ -7,6 +7,7 @@ class Manager :
 public:
 	void LoadINI();
 	bool isDebugLogEnabled() const noexcept { return m_debugLog; }
+	float getTimeInterval() const noexcept { return m_updateInterval; }
 
 	void parseTranslationFiles();
 	void runConstTranslation();
@@ -36,4 +37,5 @@ private:
 	// INI
 	bool m_debugLog{ false };
 	bool m_debugInfo{ false };
+	float m_updateInterval{ 5.0f };  // normally around 5 seconds, changes with time scale
 };

@@ -177,10 +177,9 @@ namespace Hook
 
 	struct NPCFullNameCopyComponent
 	{
-		// TODO: verify that this really covers all templates
 		static void thunk(RE::TESFullName* to, RE::BaseFormComponent* from)
 		{
-			auto fromForm = skyrim_cast<RE::TESForm*>(from);
+			auto fromForm = skyrim_cast<RE::TESNPC*>(from);
 			if (fromForm)
 			{
 				// NPCs copy their FullName all the time
@@ -218,7 +217,7 @@ namespace Hook
 					const auto& form = entry.form;
 					if (!form)
 						continue;
-					// TODO: check if NPC templates are handled correctly
+
 					mgr->reloadConstTranslation(form, nullptr);
 				}
 			}
@@ -238,14 +237,20 @@ namespace Hook
 		static void thunk()
 		{
 			func();
+			const auto ui = RE::UI::GetSingleton();
+			if (ui && ui->GameIsPaused())
+				return;
 
-			static float* delta = reinterpret_cast<float*>(RELOCATION_ID(523660, 410199).address());
-			if (*delta <= 0.0f)
+			const auto bsTimer = RE::BSTimer::GetSingleton();
+			const auto delta = bsTimer ? bsTimer->delta : -1.0f;
+			if (delta <= 0.0f)
 				return;
 
 			static float counter = 0.0f;
-			counter += *delta;
-			if (counter < 4.0f) // normally around 4 seconds, changes with time scale
+			counter += delta;
+
+			const auto mgr = Manager::GetSingleton();
+			if (counter < mgr->getTimeInterval())
 				return;
 
 			counter = 0.0f;
@@ -254,7 +259,6 @@ namespace Hook
 			if (!tes)
 				return;
 
-			const auto mgr = Manager::GetSingleton();
 			const auto callback = [mgr](RE::TESObjectREFR* ref) -> RE::BSContainer::ForEachResult
 				{
 					mgr->updateConditions(ref);
@@ -262,7 +266,6 @@ namespace Hook
 				};
 
 			tes->ForEachReference(callback);
-			//tes->ForEachCell();
 		}
 		static inline REL::Relocation<decltype(thunk)> func;
 
