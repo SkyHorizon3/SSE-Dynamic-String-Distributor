@@ -166,11 +166,11 @@ namespace Hook
 		static void Install()
 		{
 			// datahandler compile files
-			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(13645, 13753), REL::Relocate(0x341, 0x363) };
+			REL::Relocation<std::uintptr_t> target1{ RELOCATION_ID(13645, 13753), REL::Relocate(0x341, 0x363, 0x32B) };
 			stl::write_thunk_call<DataHandlerInitAllForms>(target1.address());
 
 			// plugin hot reload
-			REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(13672, 13785), REL::Relocate(0xB05, 0xB8B) };
+			REL::Relocation<std::uintptr_t> target2{ REL::VariantID(13672, 13785, 0x1831F0), REL::Relocate(0xB05, 0xB8B, 0xB45) };
 			stl::write_thunk_call<DataHandlerInitAllForms>(target2.address());
 		}
 	};
@@ -193,7 +193,7 @@ namespace Hook
 
 		static void Install()
 		{
-			REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(14544, 14716) };
+			REL::Relocation<std::uintptr_t> target{ REL::VariantID(14544, 14716, 0x1A69B0) };
 			stl::hook_function_prologue<NPCFullNameCopyComponent, 6>(target.address());
 		}
 	};
