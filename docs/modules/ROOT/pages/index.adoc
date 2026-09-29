@@ -53,6 +53,7 @@ Each entry in the JSON array is an object with the following supported propertie
 | `editor_id` | String (Optional) | The EditorID of the record.
 | `index` | Integer (Optional) | Specifies the exact index for records containing multiple strings.
 | `original` | String (Optional) | Specifies the original string to be replaced. Deprecated since version 1.4.0!
+| `conditions` | String array (Optional) | Only replace the text when certain conditions are met. Since version 1.5.0!
 |===
 
 The JSON file and especially the included strings have to follow the JSON link:https://datatracker.ietf.org/doc/html/rfc8259[RFC 8259] standard! In other words the strings have to be link:https://www.freeformatter.com/json-escape.html#before-output[correctly escaped].
@@ -164,6 +165,29 @@ You can use these in the `type` field of your JSON configuration:
 ]
 ----
 
+== Conditions
+* Form types that currently support conditions: `ACTI FULL`,`ACTI RNAM`,`FLOR FULL`,`FLOR RNAM`,`NPC FULL`,`NPC SHRT`,`INFO NAM1`,`INFO RNAM`,`DIAL FULL`
+
+[source,json]
+----
+[
+    {
+        "form_id": "000E6C43|Skyrim.esm",
+        "type": "INFO NAM1",
+        "index": 2,
+        "string": "new sentence",
+        "conditions": ["Self IsOverEncumbered NONE NONE == 1"]
+    },
+    {
+        "form_id": "0x0176CD|Skyrim.esm",
+        "type": "FLOR FULL",
+        "string": "Replaced FLOR FULL DeadSalmon01",
+        "conditions": ["Self IsInInterior NONE NONE == 0 AND", "Self GetIsCurrentWeather KarthspireRedoubtFog NONE == 1"]
+    }
+]
+----
+* Note: Self is always the reference containing this form. For example for INFO NAM1 it's the speaker.
+
 For more examples visit link:https://github.com/SkyHorizon3/SSE-Dynamic-String-Distributor/blob/main/tests/generalTestAll.json[this file on GitHub].
 
 == Automation
@@ -181,11 +205,14 @@ The settings are located in `Data/SKSE/Plugins/DynamicStringDistributor.ini`. Th
 ----
 [Debug]
 ; Adds more logging during file parsing and logs subtitles (INFO NAM1)
-EnableDebugLog = false
-
-; Adds the FormID and Plugin as a prefix to all replacement strings in the game.
-; This is for example useful if you want to see if a string is modified by DSD.
-EnableDebugInfo = false
+bEnableDebugLog = false
+; Adds the FormID and plugin as a prefix to all replacement strings in the game.
+; This is useful, for example, if you want to check whether a string has been modified by DSD.
+bEnableDebugInfo = false
+; Update interval of reference translation reload. Lower: more updates, higher workload; Higher: fewer updates, lower workload
+; Interval is in seconds, but will scale with the game time scale
+; 0.0 or negative means no updates (which can lead to missing translations)
+fUpdateInterval = 5.0
 ----
 
 == About this documentation
