@@ -1,0 +1,29 @@
+name: Publish Modding Forge documentation
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "docs/**"
+
+permissions:
+  contents: read
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger documentation build
+        env:
+          GITLAB_TRIGGER_TOKEN: ${{ secrets.MF_DOCS_GITLAB_TRIGGER_TOKEN }}
+        run: |
+          curl --fail-with-body --request POST \
+            --form-string "token=${GITLAB_TRIGGER_TOKEN}" \
+            --form-string "ref=master" \
+            --form-string "variables[DOC_TRIGGER_KIND]=repository" \
+            --form-string "variables[DOC_SOURCE_URL]=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+            --form-string "variables[DOC_SOURCE_REF]=${GITHUB_REF_NAME}" \
+            --form-string "variables[DOC_SOURCE_SHA]=${GITHUB_SHA}" \
+            "https://code.moddingforge.com/api/v4/projects/30/trigger/pipeline"

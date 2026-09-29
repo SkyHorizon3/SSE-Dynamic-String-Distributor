@@ -186,7 +186,7 @@ You can use these in the `type` field of your JSON configuration:
     }
 ]
 ----
-* Note: Self is always the reference containing this form. For example for INFO NAM1 it's the speaker.
+* Note: Self is always the reference containing this form. For example for INFO NAM1 it is the speaker.
 
 For more examples visit link:https://github.com/SkyHorizon3/SSE-Dynamic-String-Distributor/blob/main/tests/generalTestAll.json[this file on GitHub].
 
