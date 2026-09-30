@@ -10,10 +10,13 @@ void Manager::LoadINI()
 	ini.SetUnicode();
 	ini.LoadFile(path.c_str());
 
-	constexpr const char* section = "Debug";
-	m_debugLog = ini.GetBoolValue(section, "bEnableDebugLog");
-	m_debugInfo = ini.GetBoolValue(section, "bEnableDebugInfo");
-	m_updateInterval = std::max(0.0f, static_cast<float>(ini.GetDoubleValue(section, "fUpdateInterval")));
+	constexpr const char* sectionGeneral = "General";
+	m_enablePlayerRef = ini.GetBoolValue(sectionGeneral, "bEnablePlayerRef");
+	m_updateInterval = std::max(0.0f, static_cast<float>(ini.GetDoubleValue(sectionGeneral, "fUpdateInterval")));
+
+	constexpr const char* sectionDebug = "Debug";
+	m_debugLog = ini.GetBoolValue(sectionDebug, "bEnableDebugLog");
+	m_debugInfo = ini.GetBoolValue(sectionDebug, "bEnableDebugInfo");
 }
 
 void Manager::enumerateLoadOrder()
@@ -562,6 +565,8 @@ void Manager::runConstTranslation()
 				SKSE::log::error("Couldn't find formID {:08X}!", runtimeFormID);
 				continue;
 			}
+			if (isPlayer(form))
+				continue;
 		}
 
 		setConstString(form, entry, nullptr);
@@ -581,6 +586,9 @@ void Manager::reloadConstTranslation(RE::TESForm* form, RE::TESObjectREFR* ref)
 	// Note that we're updating NPC forms that may have been reconstructed, too.
 	if (ref && form->Is(RE::FormType::NPC))
 	{
+		if (isPlayer(ref))
+			return;
+
 		realForm = ref->GetBaseObject(); // the form we need to change the fullname on
 		if (range.first == range.second)
 		{
@@ -619,4 +627,9 @@ void Manager::updateConditions(RE::TESObjectREFR* ref)
 	default:
 		break;
 	}
+}
+
+bool Manager::isPlayer(const RE::TESForm* const form) const
+{
+	return (form->IsPlayer() || form->IsPlayerRef()) && !m_enablePlayerRef;
 }

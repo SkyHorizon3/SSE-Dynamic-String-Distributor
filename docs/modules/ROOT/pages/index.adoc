@@ -166,6 +166,7 @@ You can use these in the `type` field of your JSON configuration:
 ----
 
 == Conditions
+* These are the same link:https://ck.uesp.net/wiki/Condition_Functions[Condition Functions] that are used in the CK
 * Form types that currently support conditions: `ACTI FULL`,`ACTI RNAM`,`FLOR FULL`,`FLOR RNAM`,`NPC FULL`,`NPC SHRT`,`INFO NAM1`,`INFO RNAM`,`DIAL FULL`
 
 [source,json]
@@ -203,16 +204,20 @@ The settings are located in `Data/SKSE/Plugins/DynamicStringDistributor.ini`. Th
 
 [source,ini]
 ----
+[General]
+; if true: also reload NPC_ FULL or NPC_ SHRT for the player reference which might overwrite the name given by the user.
+bEnablePlayerRef = false
+; Update interval of reference translation reload. Lower: more updates, higher workload; Higher: fewer updates, lower workload
+; Interval is in seconds, but will scale with the game time scale
+; 0.0 or negative means no updates (which can lead to missing translations)
+fUpdateInterval = 5.0
+
 [Debug]
 ; Adds more logging during file parsing and logs subtitles (INFO NAM1)
 bEnableDebugLog = false
 ; Adds the FormID and plugin as a prefix to all replacement strings in the game.
 ; This is useful, for example, if you want to check whether a string has been modified by DSD.
 bEnableDebugInfo = false
-; Update interval of reference translation reload. Lower: more updates, higher workload; Higher: fewer updates, lower workload
-; Interval is in seconds, but will scale with the game time scale
-; 0.0 or negative means no updates (which can lead to missing translations)
-fUpdateInterval = 5.0
 ----
 
 == About this documentation

@@ -27,6 +27,7 @@ private:
 	void processEntry(ParseData& entry, const std::string& file);
 	bool constTranslationContains(const RE::FormID formID, const TranslationType type, const std::optional<std::uint32_t> index) const;
 	void setConstString(RE::TESForm* form, ConstData& entry, RE::TESObjectREFR* ref);
+	bool isPlayer(const RE::TESForm* const form) const;
 
 	StringMap<std::pair<RE::TESFile*, std::uint32_t>> m_loadOrder;
 	MultiMap<RE::FormID, ConstData> m_constTranslation;
@@ -37,5 +38,6 @@ private:
 	// INI
 	bool m_debugLog{ false };
 	bool m_debugInfo{ false };
+	bool m_enablePlayerRef{ false };
 	float m_updateInterval{ 5.0f };  // normally around 5 seconds, changes with time scale
 };
