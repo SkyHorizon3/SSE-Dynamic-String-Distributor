@@ -2,16 +2,6 @@
 
 namespace RE
 {
-	namespace detail
-	{
-		bool isLeveledCreature(RE::TESObjectREFR* ref)
-		{
-			using func_t = decltype(&isLeveledCreature);
-			static REL::Relocation<func_t> func{ RELOCATION_ID(19824, 20229) };
-			return func(ref);
-		}
-	}
-
 	RE::Setting* setStringValue(RE::Setting* setting, const char* str)
 	{
 		using func_t = decltype(&setStringValue);
@@ -41,7 +31,7 @@ namespace RE
 		if (!actor)
 			return nullptr;
 
-		if (detail::isLeveledCreature(ref))
+		if (ref->IsLeveledCreature())
 		{
 			auto extraList = ref->extraList.GetByType<RE::ExtraLeveledCreature>();
 			actor = extraList ? extraList->originalBase : nullptr;

@@ -1,8 +1,8 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO alandtse/CommonLibVR
-    REF 25440f9a42cac6cc7c4f24c259d7f9abcac4e064
-    SHA512 b6878e6158136769e42ebd78a5efedeb9930153929e8aac45cec8ad519249da6ee77efcc64ed1348d971b6ddbeb30daac6e20a7c581d681b44a0bc56be3048a4
+    REF 5298302831d03a01b3b406f4b7b8128ee3bd7a44
+    SHA512 def109da89a27aa6bc67557745c09cd4d4ef3a60e845a59d3d7ed99654ecb8f957e262547e72c60cb3ad3f405741f85d6e3d96a46ff1c6bce7074c3fdfa48f35
     HEAD_REF ng
 )
 
@@ -35,6 +35,6 @@ file(INSTALL "${SOURCE_PATH2}/headers/openvr.h" DESTINATION ${CURRENT_PACKAGES_D
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/share")
 
-if(EXISTS "${SOURCE_PATH}/COPYING") # COPYING = new LICENSE
-    vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/COPYING")
+if(EXISTS "${SOURCE_PATH}/COPYING.txt") # COPYING.txt = new LICENSE
+    vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/COPYING.txt")
 endif() 
