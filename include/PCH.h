@@ -70,11 +70,11 @@ namespace stl
 {
 	using namespace SKSE::stl;
 
-	template <class T, size_t size = 5>
+	template <class T>
 	void write_thunk_call(std::uintptr_t a_src)
 	{
 		auto& trampoline = SKSE::GetTrampoline();
-		T::func = trampoline.write_call<size>(a_src, T::thunk);
+		T::func = trampoline.write_call<5>(a_src, T::thunk);
 	}
 
 	template <class T, std::size_t BYTES>

@@ -25,7 +25,7 @@ private:
 	std::tuple<RE::FormID, RE::TESFile*> extractFormIDAndPlugin(const std::string& formIDEntry, const std::string& file);
 	TranslationType getTranslationType(std::string_view formType);
 	void processEntry(ParseData& entry, const std::string& file);
-	bool constTranslationContains(const RE::FormID formID, const TranslationType type, const std::optional<std::uint32_t> index) const;
+	bool constTranslationContains(const RE::FormID formID, const TranslationType type, const std::optional<std::uint32_t> index, const bool ignoreIndex) const;
 	void setConstString(RE::TESForm* form, ConstData& entry, RE::TESObjectREFR* ref);
 	bool isPlayer(const RE::TESForm* const form) const;
 

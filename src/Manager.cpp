@@ -274,6 +274,12 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	}
 
 	const auto translationType = getTranslationType(entry.type);
+	const auto addConstTranslation = [&](bool ignoreIndex) {
+		if (!constTranslationContains(runtimeFormID, translationType, entry.index, ignoreIndex))
+		{
+			m_constTranslation.emplace(runtimeFormID, ConstData{ translationType, entry });
+		}
+		};
 	switch (translationType)
 	{
 	case TranslationType::kGameSetting:
@@ -285,15 +291,16 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	case TranslationType::kWordOfPower:
 	case TranslationType::kActivationText:
 	case TranslationType::kReference:
+	{
+		addConstTranslation(true);
+	}
+	break;
 	case TranslationType::kButtonText1:
 	case TranslationType::kButtonText2:
 	case TranslationType::kQuestObjective:
 	case TranslationType::kPerkVerb:
 	{
-		if (!constTranslationContains(runtimeFormID, translationType, entry.index))
-		{
-			m_constTranslation.emplace(runtimeFormID, ConstData{ translationType, entry });
-		}
+		addConstTranslation(false);
 	}
 	break;
 	case TranslationType::kRuntime1: // add to first runtime map
@@ -338,13 +345,13 @@ void Manager::processEntry(ParseData& entry, const std::string& file)
 	}
 }
 
-bool Manager::constTranslationContains(const RE::FormID formID, const TranslationType type, const std::optional<std::uint32_t> index) const
+bool Manager::constTranslationContains(const RE::FormID formID, const TranslationType type, const std::optional<std::uint32_t> index, const bool ignoreIndex) const
 {
 	const auto [begin, end] = m_constTranslation.equal_range(formID);
 	return std::any_of(begin, end, [&](const auto& pair) {
 		const auto& data = pair.second;
 		return data.translationType == type &&
-			data.index == index;
+			(ignoreIndex || data.index == index);
 		});
 }
 

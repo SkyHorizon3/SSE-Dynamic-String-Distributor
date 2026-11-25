@@ -21,6 +21,6 @@ namespace Utils
 
 	inline constexpr std::uint32_t lowU32(const std::uint64_t v) noexcept
 	{
-		return static_cast<uint32_t>(v);
+		return static_cast<std::uint32_t>(v);
 	}
 }

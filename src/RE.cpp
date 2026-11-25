@@ -110,7 +110,7 @@ namespace RE
 		case "BodyPartData"_h: return RE::OBJECT_TYPE::kBodyPartData;
 		case "AddOnNode"_h: return RE::OBJECT_TYPE::kAddOnNode;
 		case "MovableStatic"_h: return RE::OBJECT_TYPE::kMovableStatic;
-		case  "CameraShot"_h: return RE::OBJECT_TYPE::kCameraShot;
+		case "CameraShot"_h: return RE::OBJECT_TYPE::kCameraShot;
 		case "ImpactData"_h: return RE::OBJECT_TYPE::kImpactData;
 		case "ImpactDataSet"_h: return RE::OBJECT_TYPE::kImpactDataSet;
 		case "Quest"_h: return RE::OBJECT_TYPE::kQuest;
