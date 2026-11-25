@@ -579,6 +579,9 @@ void Manager::runConstTranslation()
 
 void Manager::reloadConstTranslation(RE::TESForm* form, RE::TESObjectREFR* ref)
 {
+	if (isPlayer(form))
+		return;
+
 	auto range = m_constTranslation.equal_range(form->formID);
 	auto realForm = form;
 
@@ -586,9 +589,6 @@ void Manager::reloadConstTranslation(RE::TESForm* form, RE::TESObjectREFR* ref)
 	// Note that we're updating NPC forms that may have been reconstructed, too.
 	if (ref && form->Is(RE::FormType::NPC))
 	{
-		if (isPlayer(ref))
-			return;
-
 		realForm = ref->GetBaseObject(); // the form we need to change the fullname on
 		if (range.first == range.second)
 		{
